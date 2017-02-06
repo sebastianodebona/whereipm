@@ -109,9 +109,8 @@ nax <- function(y, x) {
 # KERNEL ASSEMBLING
 #
 ######################################
-
-# Constructing starting kernel (initial density)
-
+# Constructing starting kernel to check everything works (initial density)
+check.init.kernels<-function(){
 par(mfrow=c(2,2))
 # survival kernel
   S <- diag(sx(density0))
@@ -137,24 +136,13 @@ par(mfrow=c(2,2))
 
 # Whole kernel
   K<- Pmatrix + Fmatrix
-  image(t(K), main='K') 
-  
-  
-  
-  
-# how long to run the simulation for
-  nsims<-60 # months
-# creating objects to fill  
-  pop.size.tosave<-array(NA,dim=c(n.bins,nsims+1))
-# filling with first initial densities
-  pop.size.tosave[,1]<-pop.size0
-  
-  K.list<-list()
-  
+  image(t(K), main='full kernel') 
+}  
+#check.init.kernels()
+##############################  
 
-# Function for calculating Kernel
+# Function for creating Kernel within simulation
 K.fun <- function(y,densities){
-
   S <- diag(sx(densities)) #surv kernel
   G <- outer(y, y, mox) # movement kernel
   # P kernel
@@ -164,13 +152,39 @@ K.fun <- function(y,densities){
   N <- outer(y, y, nax) # recruited position (natal dispersal)
   # F kernel
   Fmatrix <- h*as.matrix(N%*%R)
-
+  
   # Whole kernel
   K<- Pmatrix + Fmatrix
-  
   return(K)
 }
 
+
+
+
+
+#######################################
+#
+# SIMULATION
+#
+######################################
+
+# how long to run the simulation for
+  nsims<-60 # months
+
+# OBJECTS TO SAVE
+# 1) Population size
+  pop.size.tosave<-array(NA,dim=c(n.bins,nsims+1)) # creating array to fill wit population size
+  pop.size.tosave[,1]<-pop.size0 # filling with first initial densities
+
+# 2) Kernels
+  K.list<-list()
+  
+# 3) Population Spread
+  pop.spread<-rep(NA,nsims+1)
+  pop.spread[1]<-sum(((y-mean(y))^2)*pop.size0)
+  
+  
+  
 
 #Start <- Sys.time()
 # Loop for simulation
@@ -180,6 +194,7 @@ for(i in 1:nsims){
   K.list[[i]]<-K
   new.pop.size<-K%*%pop.size.tosave[,i]
   pop.size.tosave[,i+1]<-new.pop.size
+  pop.spread[i]<-
 }
 #Sys.time() - Start
 
@@ -198,15 +213,5 @@ abline(h=0,lty=2)
 }
 mtext('position (m/2)',1, outer=T)
 mtext('local population size', 2, outer=T)
-
-
-# #library(fields)
-# par(mfrow=c(2,3), oma=c(3,4,3,3),mar=c(3,3,1,2))
-# for(m in c(2,3,4,6,12,24)){
-#   image(t(K.list[[m]]))
-#   par(new=T)
-#   contour(t(K.list[[m]]), axes=F)
-#   legend('top', legend=paste('month= ',m, sep=''), bty='n', text.col='white')
-# }
 
 
