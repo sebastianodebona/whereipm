@@ -123,6 +123,6 @@ for(i in 1:nsims){
   #K.list[[i]]<-K
   new.pop.size<-K%*%pop.size.tosave[,i,k]
   pop.size.tosave[,i+1,k]<-new.pop.size
-  pop.spread[i+1,k]<- sum(((y-mean(y))^2)*new.pop.size)/(sum(new.pop.size)-1)
+  pop.spread[i+1,k]<- max(sum(((y-mean(y))^2)*new.pop.size)/(sum(new.pop.size)-1),0)
 }
 #Sys.time() - Start

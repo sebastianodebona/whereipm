@@ -52,7 +52,8 @@ nat.p <- as.numeric(natmod[['estimate']]['p']) # proportion of stationary indivi
 #$$$$$$$$$$$
 
 #here
-repr.multiplier<-seq(0.5,3,by=0.5)
+changed.param <-repr.multiplier<-seq(0.5,4,by=0.25)
+
 
 param.space<-expand.grid(surv.int=surv.int,surv.slo=surv.slo,surv.multiplier=surv.multiplier,
                          repr.int=repr.int,repr.slo=repr.slo,repr.multiplier=repr.multiplier,
@@ -98,7 +99,7 @@ K.list<-list()
 
 # 3) Population Spread
 pop.spread<-array(NA,dim=c(nsims+1,nrow(param.space)))
-pop.spread[1,]<-sum(((y-mean(y))^2)*pop.size0)/(sum(pop.size0)-1)
+pop.spread[1,]<-max(sum(((y-mean(y))^2)*pop.size0)/(sum(pop.size0)-1),0)
 
 
 
@@ -113,21 +114,25 @@ for(k in 1:nrow(param.space)){
 }
 
 # PLOTTING
-matplot(pop.spread, type='l',col=1:nrow(param.space))
+colourz<-colorRampPalette(c("red","yellow","springgreen","royalblue"))
 
-
-
-
-
-
-
+# plotting spread through time
+matplot(pop.spread, type='l',col=colourz(nrow(param.space)))
 
 # plotting total pop size through time
-par(mfrow=c(1,1))
-plot(colSums(pop.size.tosave), type='l', ylab='Total population size', xlab='months')
+matplot(colSums(pop.size.tosave), type='l', ylab='Total population size', xlab='months', col=colourz(nrow(param.space)))
+
+# plotting final pop spread aross parameter space
+plot(1:nrow(param.space),pop.spread[nsims+1,], type='l', xaxt='n',xlab='parameter value',ylab='final population spread')
+axis(1, at=1:nrow(param.space), labels=changed.param)
+# plotting final pop size aross parameter space
+plot(1:nrow(param.space),colSums(pop.size.tosave)[nsims+1,], type='l', xaxt='n',xlab='parameter value',ylab='final population spread')
+axis(1, at=1:nrow(param.space), labels=changed.param)
 
 
-# plotting population spread through time
+
+
+# plotting population spatial spread through time
 par(mfrow=c(2,3), oma=c(3,4,3,3),mar=c(3,3,1,2))
 for(m in c(2,3,4,6,12,24)){
 plot(pop.size.tosave[,m]~seq(1:n.bins), type='l', ylim=c(0,max(pop.size.tosave, na.rm=T)+1))
