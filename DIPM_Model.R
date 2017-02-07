@@ -17,6 +17,7 @@ Start<-Sys.time()
 source('DIPM_Parameters.R') # subsourcing DIPM_DataPrepping
 Sys.time()-Start
 
+#!!!!!! WARNING! Some models do not converge
 
 
 #######################################
@@ -25,6 +26,7 @@ Sys.time()-Start
 #
 ######################################
 
+# BASIC PARAMETERS
 
 # Survival
 surv.int <- coef(summary(surmod))['(Intercept)','Estimate'] #intercept of linear regression
@@ -42,6 +44,20 @@ disp.p <- as.numeric(movmod[['estimate']]['p']) # proportion of stationary indiv
 nat.stat <- as.numeric(natmod[['estimate']]['sigma_stat']) #variance of stationalry pop fraction
 nat.mob <- as.numeric(natmod[['estimate']]['sigma_mob']) #variance of mobile pop fraction
 nat.p <- as.numeric(natmod[['estimate']]['p']) # proportion of stationary individuals
+
+#$$$$$$$$$$$
+#
+# MODIFIED PARAMETERS
+#
+#$$$$$$$$$$$
+
+#here
+repr.multiplier<-seq(0.5,3,by=0.5)
+
+param.space<-expand.grid(surv.int=surv.int,surv.slo=surv.slo,surv.multiplier=surv.multiplier,
+                         repr.int=repr.int,repr.slo=repr.slo,repr.multiplier=repr.multiplier,
+                         disp.stat=disp.stat,disp.mob=disp.mob,disp.p=disp.p,
+                         nat.stat=nat.stat,nat.mob=nat.mob,nat.p=nat.p)
 
 
 # General Kernel specifications
@@ -71,29 +87,33 @@ density0<-pop.size0/h
 
 # how long to run the simulation for
 nsims<-60 # months
-param.space #how many parameter values (or value combinations) are explored
 
 # OBJECTS TO SAVE
 # 1) Population size
-pop.size.tosave<-array(NA,dim=c(n.bins,nsims+1,param.space)) # creating array to fill wit population size
-pop.size.tosave[,1]<-pop.size0 # filling with first initial densities
+pop.size.tosave<-array(NA,dim=c(n.bins,nsims+1,nrow(param.space))) # creating array to fill wit population size
+pop.size.tosave[,1,]<-pop.size0 # filling with first initial densities
 
 # 2) Kernels
 K.list<-list()
 
 # 3) Population Spread
-pop.spread<-rep(NA,nsims+1)
-pop.spread[1]<-sum(((y-mean(y))^2)*pop.size0)
+pop.spread<-array(NA,dim=c(nsims+1,nrow(param.space)))
+pop.spread[1,]<-sum(((y-mean(y))^2)*pop.size0)/(sum(pop.size0)-1)
 
 
 
+##############################################
+#
+# SIMULATION OVER PARAMETER SPACE
+#
+##############################################
 
+for(k in 1:nrow(param.space)){
+  source('DIPM_Simulation.R')
+}
 
-
-
-
-
-
+# PLOTTING
+matplot(pop.spread, type='l',col=1:nrow(param.space))
 
 
 

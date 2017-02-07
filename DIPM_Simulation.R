@@ -22,14 +22,14 @@ sx <- function(density) {
   # mean probability of survival
   # density is a vector of the SAME length of the bins vector, with local density for the midpoints
   # I can manually calculate the probability of survival per location (mediated by density) given the vector of spot densities
-  plogis(surv.int+surv.slo*density)*surv.multiplier
+  plogis(param.space$surv.int[k]+param.space$surv.slo[k]*density)*param.space$surv.multiplier[k]
 }
 
 # fertility function
 fx <- function(density) {
   # mean number of offspring produced:
   # I can manually calculate the probability of survival per location (mediated by density) given the vector of spot densities
-  exp(repr.int+repr.slo*density)*repr.multiplier
+  exp(param.space$repr.int[k]+param.space$repr.slo[k]*density)*param.space$repr.multiplier[k]
   #!!! given the high number of orphans, this still has to be corrected for underestimated reproductive output. This can be done by changing the repr.multiplier value
 }
 
@@ -37,16 +37,16 @@ fx <- function(density) {
 mox <- function(y, x) {
   # for the movement function I have a density INdependent probability distribution of movements, that has to be centered each time on the current position
   # the function calculates the probability of moving to y, if the distribution kernel is centred on x-mu (so on x if mu is 0, as by default)
-  disp.p*(1/(sqrt(2*pi*disp.stat^2)))*exp(-((y-x)^2/(2*disp.stat^2))) +
-    (1-disp.p)*(1/(sqrt(2*pi*disp.mob^2)))*exp(-((y-x)^2/(2*disp.mob^2)))
+  param.space$disp.p[k]*(1/(sqrt(2*pi*param.space$disp.stat[k]^2)))*exp(-((y-x)^2/(2*param.space$disp.stat[k]^2))) +
+    (1-param.space$disp.p[k])*(1/(sqrt(2*pi*param.space$disp.mob[k]^2)))*exp(-((y-x)^2/(2*param.space$disp.mob[k]^2)))
 }
 
 
 # natal dispersal function (new recruits position)
 nax <- function(y, x) {
   # the function calculates the probability of an foosrping moving to y, if distribution kernel is centred on x-mu (so on x if mu is 0, as by default), and if x-mu is the position of the mother
-  nat.p*(1/(sqrt(2*pi*nat.stat^2)))*exp(-((y-x)^2/(2*nat.stat^2))) +
-    (1-nat.p)*(1/(sqrt(2*pi*nat.mob^2)))*exp(-((y-x)^2/(2*nat.mob^2)))
+  param.space$nat.p[k]*(1/(sqrt(2*pi*param.space$nat.stat[k]^2)))*exp(-((y-x)^2/(2*param.space$nat.stat[k]^2))) +
+    (1-param.space$nat.p[k])*(1/(sqrt(2*pi*param.space$nat.mob[k]^2)))*exp(-((y-x)^2/(2*param.space$nat.mob[k]^2)))
 }
 
 
@@ -118,11 +118,11 @@ K.fun <- function(y,densities){
 #Start <- Sys.time()
 # Loop for simulation
 for(i in 1:nsims){
-  densities<-pop.size.tosave[,i]/h
-  K.fun(y=y,densities=densities)
-  K.list[[i]]<-K
-  new.pop.size<-K%*%pop.size.tosave[,i]
-  pop.size.tosave[,i+1]<-new.pop.size
-  pop.spread[i]<-
+  densities<-pop.size.tosave[,i,k]/h
+  K<-K.fun(y=y,densities=densities)
+  #K.list[[i]]<-K
+  new.pop.size<-K%*%pop.size.tosave[,i,k]
+  pop.size.tosave[,i+1,k]<-new.pop.size
+  pop.spread[i+1,k]<- sum(((y-mean(y))^2)*new.pop.size)/(sum(new.pop.size)-1)
 }
 #Sys.time() - Start
