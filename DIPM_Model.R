@@ -53,6 +53,7 @@ nat.p <- as.numeric(natmod[['estimate']]['p']) # proportion of stationary indivi
 
 #here
 changed.param <-repr.multiplier<-seq(0.5,4,by=0.25)
+changed.paramII <-nat.p<-nat.p*seq(0.5,2,by=0.1)
 
 
 param.space<-expand.grid(surv.int=surv.int,surv.slo=surv.slo,surv.multiplier=surv.multiplier,
