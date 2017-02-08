@@ -1,0 +1,30 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 #HEAD\
+Author: Sebastiano De Bona (sebastiano.debona@gmail.com)\
+Project: Chapter I Dispersal IPM\
+Last Modified: 08.Feb.2017\
+\
+\
+This project explores theoretically the relationship between density dependence and population spread during an invasion using an Integral Projection Model approach.\
+The individual based dataset collected in Trinidad during the Guppy CMR project is used to parameterise the model. The code included, altogether, constructs the IPM and evaluates the effect of different values across the parameter space on population viability, spread and speed of invasion.\
+\
+Datafile: the original datafile (Pedigree.csv) is available by contacting directly the author. A modified version (DIPMdata.RDa) ready to be processed into an IPM can be found here\
+\
+Codes:\
+- DIPM_Model.R: this is the final code that sources other codes and is self sufficient to complete the analyses. It extract parameters from model fitting, sources a second code (DIPM_Simulation) that constructs vital rates function, and IPM kernel and plots results.\
+\
+- DIPM_Data.R: this code creates a datafile with the necessary information to build the IPM. There is no need to run the code from scratch and the output of this code can be found as DIPMdata.RDa\
+\
+- DIPM_DataPrepping.R: makes slight changes to the dataset to enhance analyses.\
+\
+- DIPM_Parameters.R: fits models to real data in order to obtain biologically reasonable results from the IPM fitting. Takes about 8 minutes to run. Is sourced from DIPM_Model, and sources DIPM_DataPrepping.\
+\
+- DIPM_Simulation.R: DEPENDENT upon DIPM_Model.R, which feeds parameters. This code builds vital rate functions and kernel, and stores results.\
+\
+\
+#END}
