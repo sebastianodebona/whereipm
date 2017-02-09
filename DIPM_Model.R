@@ -117,18 +117,31 @@ for(k in 1:nrow(param.space)){
 # PLOTTING
 colourz<-colorRampPalette(c("red","yellow","springgreen","royalblue"))
 
+# IF ONE PARAM CHANGED
 # plotting spread through time
 matplot(pop.spread, type='l',col=colourz(nrow(param.space)))
-
 # plotting total pop size through time
 matplot(colSums(pop.size.tosave), type='l', ylab='Total population size', xlab='months', col=colourz(nrow(param.space)))
-
 # plotting final pop spread aross parameter space
 plot(1:nrow(param.space),pop.spread[nsims+1,], type='l', xaxt='n',xlab='parameter value',ylab='final population spread')
 axis(1, at=1:nrow(param.space), labels=changed.param)
 # plotting final pop size aross parameter space
 plot(1:nrow(param.space),colSums(pop.size.tosave)[nsims+1,], type='l', xaxt='n',xlab='parameter value',ylab='final population spread')
 axis(1, at=1:nrow(param.space), labels=changed.param)
+
+
+
+# IF TWO PARAMETERS CHANGED
+# creating matrix for countour plot
+
+param.mat<- matrix(NA, nrow=length(changed.param), ncol=length(changed.paramII))
+for(i in 1:length(changed.param)){
+  for(j in 1:length(changed.paramII)){
+    param.mat[i,j]<-pop.spread[nsims+1,which(param.space$repr.multiplier==changed.param[i] & param.space$nat.p==changed.paramII[j])]
+  }
+}
+
+filled.contour(x=changed.paramII,y=changed.param,z=t(param.mat), xlab='proportion of static',ylab='reproduction multiplier', main="Population spread")
 
 
 
