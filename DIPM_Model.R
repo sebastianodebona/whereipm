@@ -31,21 +31,21 @@ setwd('/Users/sebastianodebona/Documents/Research/Projects/Guppies/Dispersal/Cha
 
 # Survival
 surv.int <- 1.6 #intercept of linear regression
-surv.slo <- 0.01 #slope of linear regression
+surv.slo <- -0.05 #slope of linear regression
 surv.multiplier <- 1 # this value is multiplied to the mean survival probability
 # Reproduction
-repr.int <- -2.9 #intercept of linear regression
+repr.int <- -1.00 #intercept of linear regression
 repr.slo <- -0.01 #slope of linear regression
 repr.multiplier <- 1 # this value is multiplied to the mean number of offspring produced
 # Breeding Dispersal
 disp.stat <- 1.00 #variance of stationalry pop fraction
 disp.mob <- 15.00 #variance of mobile pop fraction
-disp.p.int <- 0.8 # proportion of stationary individuals at density 0
+disp.p <- 0.8 # proportion of stationary individuals at density 0
 disp.p.slo <- 0 # density dependence of proportion of adult dispersers
 # Natal Dispersal
 nat.stat <- 0.6 #variance of stationalry pop fraction
 nat.mob <- 9.50 #variance of mobile pop fraction
-nat.p.int <- 0.4 # proportion of stationary individuals at density 0
+nat.p <- 0.5 # proportion of stationary individuals at density 0
 nat.p.slo <- 0 # density dependence of proportion of natal dispersers
 
 
@@ -97,14 +97,14 @@ nsims<-100 # months
 
 # OBJECTS TO SAVE
 # 1) Population size
-pop.size.tosave<-array(NA,dim=c(n.bins,nsims+1,nrow(param.space))) # creating array to fill wit population size
+pop.size.tosave<-array(NA,dim=c(n.bins,nsims+1,nrow(ps))) # creating array to fill wit population size
 pop.size.tosave[,1,]<-pop.size0 # filling with first initial densities
 
 # 2) Kernels
 K.list<-list()
 
 # 3) Population Spread
-pop.spread<-array(NA,dim=c(nsims+1,nrow(param.space)))
+pop.spread<-array(NA,dim=c(nsims+1,nrow(ps)))
 pop.spread[1,]<-max(sum(((y-mean(y))^2)*pop.size0)/(sum(pop.size0)-1),0)
 
 
@@ -186,9 +186,9 @@ axis(1, at=1:nrow(ps), labels=changed.param)
 
 # plotting population spatial spread through time
 par(mfrow=c(2,3), oma=c(3,4,3,3),mar=c(3,3,1,2))
-for(m in c(2,3,4,6,12,24)){
-plot(pop.size.tosave[,m]~seq(1:n.bins), type='l', ylim=c(0,max(pop.size.tosave, na.rm=T)+1))
-legend('top', legend=paste('month= ',m, sep=''), bty='n')
+for(m in c(2,10,25,50,57,100)){
+plot(pop.size.tosave[,m,1]~seq(1:n.bins), type='l')
+legend('top', legend=paste('year = ',m, sep=''), bty='n')
 abline(h=0,lty=2)
 }
 mtext('position (m/2)',1, outer=T)

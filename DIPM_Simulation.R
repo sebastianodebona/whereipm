@@ -36,17 +36,28 @@ fx <- function(density) {
 # breeding dispersal function
 mox <- function(y, x) {
   # for the movement function I have a density INdependent probability distribution of movements, that has to be centered each time on the current position
-  # the function calculates the probability of moving to y, if the distribution kernel is centred on x-mu (so on x if mu is 0, as by default)
-  ps$disp.p[k]*(1/(sqrt(2*pi*ps$disp.stat[k]^2)))*exp(-((y-x)^2/(2*ps$disp.stat[k]^2))) +
-    (1-ps$disp.p[k])*(1/(sqrt(2*pi*ps$disp.mob[k]^2)))*exp(-((y-x)^2/(2*ps$disp.mob[k]^2)))
-}
+  # the function calculates the probability of moving to y, if the distribution kernel is centred on x
+  
+  # WARNING!!!
+  # I am here implementing a half dispersal kernel, with individuals moving only in one direction. To do so, I force y to be always > x, and double the halfed probability to restore the integral to be one.
+  ifelse(y<x,
+         0,
+    2*(ps$disp.p[k]*(1/(sqrt(2*pi*ps$disp.stat[k]^2)))*exp(-((y-x)^2/(2*ps$disp.stat[k]^2))) +
+    (1-ps$disp.p[k])*(1/(sqrt(2*pi*ps$disp.mob[k]^2)))*exp(-((y-x)^2/(2*ps$disp.mob[k]^2))))
+  )
+  }
 
 
 # natal dispersal function (new recruits position)
 nax <- function(y, x) {
   # the function calculates the probability of an foosrping moving to y, if distribution kernel is centred on x-mu (so on x if mu is 0, as by default), and if x-mu is the position of the mother
-  ps$nat.p[k]*(1/(sqrt(2*pi*ps$nat.stat[k]^2)))*exp(-((y-x)^2/(2*ps$nat.stat[k]^2))) +
-    (1-ps$nat.p[k])*(1/(sqrt(2*pi*ps$nat.mob[k]^2)))*exp(-((y-x)^2/(2*ps$nat.mob[k]^2)))
+  # WARNING!!!
+  # Same as for mox
+  ifelse(y<x,
+         0,
+  2*(ps$nat.p[k]*(1/(sqrt(2*pi*ps$nat.stat[k]^2)))*exp(-((y-x)^2/(2*ps$nat.stat[k]^2))) +
+    (1-ps$nat.p[k])*(1/(sqrt(2*pi*ps$nat.mob[k]^2)))*exp(-((y-x)^2/(2*ps$nat.mob[k]^2))))
+  )
 }
 
 
