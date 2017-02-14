@@ -13,9 +13,9 @@ rm(list=ls())
 
 setwd('/Users/sebastianodebona/Documents/Research/Projects/Guppies/Dispersal/Chapter I - Dispersal IPM')
 
-Start<-Sys.time()
-source('DIPM_Parameters.R') # subsourcing DIPM_DataPrepping
-Sys.time()-Start
+#Start<-Sys.time()
+#source('DIPM_Parameters.R') # subsourcing DIPM_DataPrepping
+#Sys.time()-Start
 
 #!!!!!! WARNING! Some models do not converge
 
@@ -30,21 +30,23 @@ Sys.time()-Start
 
 
 # Survival
-surv.int <- coef(summary(surmod))['(Intercept)','Estimate'] #intercept of linear regression
-surv.slo <- coef(summary(surmod))['spot.dens','Estimate'] #slope of linear regression
+surv.int <- 1.6 #intercept of linear regression
+surv.slo <- 0.01 #slope of linear regression
 surv.multiplier <- 1 # this value is multiplied to the mean survival probability
 # Reproduction
-repr.int <- coef(summary(repmod))['(Intercept)','Estimate'] #intercept of linear regression
-repr.slo <- coef(summary(repmod))['spot.dens','Estimate'] #slope of linear regression
+repr.int <- -2.9 #intercept of linear regression
+repr.slo <- -0.01 #slope of linear regression
 repr.multiplier <- 1 # this value is multiplied to the mean number of offspring produced
 # Breeding Dispersal
-disp.stat <- as.numeric(movmod[['estimate']]['sigma_stat']) #variance of stationalry pop fraction
-disp.mob <- as.numeric(movmod[['estimate']]['sigma_mob']) #variance of mobile pop fraction
-disp.p <- as.numeric(movmod[['estimate']]['p']) # proportion of stationary individuals
+disp.stat <- 1.00 #variance of stationalry pop fraction
+disp.mob <- 15.00 #variance of mobile pop fraction
+disp.p.int <- 0.8 # proportion of stationary individuals at density 0
+disp.p.slo <- 0 # density dependence of proportion of adult dispersers
 # Natal Dispersal
-nat.stat <- as.numeric(natmod[['estimate']]['sigma_stat']) #variance of stationalry pop fraction
-nat.mob <- as.numeric(natmod[['estimate']]['sigma_mob']) #variance of mobile pop fraction
-nat.p <- as.numeric(natmod[['estimate']]['p']) # proportion of stationary individuals
+nat.stat <- 0.6 #variance of stationalry pop fraction
+nat.mob <- 9.50 #variance of mobile pop fraction
+nat.p.int <- 0.4 # proportion of stationary individuals at density 0
+nat.p.slo <- 0 # density dependence of proportion of natal dispersers
 
 
 #$$$$$$$$$$$
@@ -54,12 +56,12 @@ nat.p <- as.numeric(natmod[['estimate']]['p']) # proportion of stationary indivi
 #$$$$$$$$$$$
 
 #here
-changed.param <-repr.multiplier<-4
-changed.paramII <-surv.slo<-seq(-0.2,0.2,by=0.02)
-changed.paramIII <- disp.p <- seq(0,1,by=0.05)
+# changed.param <-repr.multiplier<-4
+# changed.paramII <-surv.slo<-seq(-0.2,0.2,by=0.02)
+# changed.paramIII <- disp.p <- seq(0,1,by=0.05)
 
 
-param.space<-expand.grid(surv.int=surv.int,surv.slo=surv.slo,surv.multiplier=surv.multiplier,
+ps<-expand.grid(surv.int=surv.int,surv.slo=surv.slo,surv.multiplier=surv.multiplier,
                          repr.int=repr.int,repr.slo=repr.slo,repr.multiplier=repr.multiplier,
                          disp.stat=disp.stat,disp.mob=disp.mob,disp.p=disp.p,
                          nat.stat=nat.stat,nat.mob=nat.mob,nat.p=nat.p)
@@ -69,17 +71,17 @@ param.space<-expand.grid(surv.int=surv.int,surv.slo=surv.slo,surv.multiplier=sur
 # number of bins (how many the intervals to approximate continuity are)
 n.bins <- 200
 # min and max value of the state variable
-# I know it can't be less than 0 or higher than, lets say 110, since it's the position in the stream
+# I know it can't be less than 0 or higher than, lets say 100
 L <- 0
-U <- 110
+U <- 100
 # defining meshpoints (separating bins) and midpoints (central point of each bin)
 b <- L+c(0:n.bins)*(U-L)/n.bins # meshpoints
 y <- 0.5*(b[1:n.bins]+b[2:(n.bins+1)]) # midponts (basically, mean between consecutive meshpoints)
 h <- y[2]-y[1] # bin width (in meters)
+
+# SEEDING POPULATION
 # starting density vector
-# I have 30 individuals in the mid ~3 meters (6 bins), and that is my starting population. To calculate density, I have to calculate how many ind per bin length, and divide that number BY bin length (because my density is individual/meter)
-starting.ind.per.bin<-19/(3/h)
-pop.size0<-c(rep(0,(n.bins-6)/2),5,5,5,5,5,5,rep(0,(n.bins-6)/2))
+pop.size0<-c(30,rep(0,(n.bins-1)))
 density0<-pop.size0/h
 
 
@@ -91,7 +93,7 @@ density0<-pop.size0/h
 
 
 # how long to run the simulation for
-nsims<-60 # months
+nsims<-100 # months
 
 # OBJECTS TO SAVE
 # 1) Population size
@@ -114,7 +116,7 @@ pop.spread[1,]<-max(sum(((y-mean(y))^2)*pop.size0)/(sum(pop.size0)-1),0)
 ##############################################
 
 Start<-Sys.time()
-for(k in 1:nrow(param.space)){
+for(k in 1:nrow(ps)){
   source('DIPM_Simulation.R')
 }
 Sys.time()-Start
@@ -125,15 +127,15 @@ colourz<-colorRampPalette(c("red","yellow","springgreen","royalblue"))
 
 # IF ONE PARAMETER WAS CHANGED
 # plotting spread through time
-matplot(pop.spread, type='l',col=colourz(nrow(param.space)))
+matplot(pop.spread, type='l',col=colourz(nrow(ps)))
 # plotting total pop size through time
-matplot(colSums(pop.size.tosave), type='l', ylab='Total population size', xlab='months', col=colourz(nrow(param.space)))
+matplot(colSums(pop.size.tosave), type='l', ylab='Total population size', xlab='months', col=colourz(nrow(ps)))
 # plotting final pop spread aross parameter space
-plot(1:nrow(param.space),pop.spread[nsims+1,], type='l', xaxt='n',xlab='parameter value',ylab='final population spread')
-axis(1, at=1:nrow(param.space), labels=changed.param)
+plot(1:nrow(ps),pop.spread[nsims+1,], type='l', xaxt='n',xlab='parameter value',ylab='final population spread')
+axis(1, at=1:nrow(ps), labels=changed.param)
 # plotting final pop size aross parameter space
-plot(1:nrow(param.space),colSums(pop.size.tosave)[nsims+1,], type='l', xaxt='n',xlab='parameter value',ylab='final population spread')
-axis(1, at=1:nrow(param.space), labels=changed.param)
+plot(1:nrow(ps),colSums(pop.size.tosave)[nsims+1,], type='l', xaxt='n',xlab='parameter value',ylab='final population spread')
+axis(1, at=1:nrow(ps), labels=changed.param)
 
 
 
@@ -142,7 +144,7 @@ axis(1, at=1:nrow(param.space), labels=changed.param)
 param.mat<- matrix(NA, nrow=length(changed.paramII), ncol=length(changed.paramIII))
 for(i in 1:length(changed.paramII)){
   for(j in 1:length(changed.paramIII)){
-    param.mat[i,j]<-pop.spread[nsims+1,which(param.space$surv.slo==changed.paramII[i] & param.space$disp.p==changed.paramIII[j])]
+    param.mat[i,j]<-pop.spread[nsims+1,which(ps$surv.slo==changed.paramII[i] & ps$disp.p==changed.paramIII[j])]
   }
 }
 filled.contour(x=changed.paramIII,y=changed.paramII,z=t(param.mat), xlab='proportion of static (adults)',ylab='strength of dd for survival', main="Population spread")#,levels=c(0,2000,4000,6000,10000,15000,20000,25000,50000))
@@ -152,28 +154,28 @@ legend('topleft',legend='repr mult = 4',cex=0.8, box.lwd = 0, bg='transparent')
 pop.mat<-matrix(NA, nrow=length(changed.paramII), ncol=length(changed.paramIII))
 for(i in 1:length(changed.paramII)){
   for(j in 1:length(changed.paramIII)){
-    pop.mat[i,j]<-colSums(pop.size.tosave)[nsims+1,which(param.space$surv.slo==changed.paramII[i] & param.space$disp.p==changed.paramIII[j])]
+    pop.mat[i,j]<-colSums(pop.size.tosave)[nsims+1,which(ps$surv.slo==changed.paramII[i] & ps$disp.p==changed.paramIII[j])]
   }
 }
 filled.contour(x=changed.paramIII,y=changed.paramII,z=t(pop.mat), xlab='proportion of static (adults)',ylab='strength of dd for survival', main="Final population size")
 
 #the following bit of code fixes one of the two parameters and plots results when the other parameter is changed
-sub.param.space<-which(param.space$repr.multiplier==2.3)
-matplot(pop.spread[,sub.param.space], type='l',col=colourz(length(sub.param.space)),main='Population spread through time',ylab=expression(sigma^2),xlab='months',xlim=c(0,80))
-legend('right',legend=changed.paramII,col=colourz(length(sub.param.space)), lty=1, cex=0.8, title='survival slope')
+sub.ps<-which(ps$repr.multiplier==2.3)
+matplot(pop.spread[,sub.ps], type='l',col=colourz(length(sub.ps)),main='Population spread through time',ylab=expression(sigma^2),xlab='months',xlim=c(0,80))
+legend('right',legend=changed.paramII,col=colourz(length(sub.ps)), lty=1, cex=0.8, title='survival slope')
 legend('topleft',legend='repr.mult=2.3',cex=0.8)
 # plotting total pop size through time
-matplot(colSums(pop.size.tosave[,,sub.param.space]), type='l', main='Total population size', xlab='months',ylab='n individuals', col=colourz(length(sub.param.space)),xlim=c(0,80))
-legend('right',legend=changed.param,col=colourz(length(sub.param.space)), lty=1, cex=0.8,title='survival slope')
+matplot(colSums(pop.size.tosave[,,sub.ps]), type='l', main='Total population size', xlab='months',ylab='n individuals', col=colourz(length(sub.ps)),xlim=c(0,80))
+legend('right',legend=changed.param,col=colourz(length(sub.ps)), lty=1, cex=0.8,title='survival slope')
 legend('top',legend='repr.mult=2.3',cex=0.8)
 
 
 # plotting final pop spread aross parameter space
-plot(1:nrow(param.space),pop.spread[nsims+1,], type='l', xaxt='n',xlab='parameter value',ylab='final population spread')
-axis(1, at=1:nrow(param.space), labels=changed.param)
+plot(1:nrow(ps),pop.spread[nsims+1,], type='l', xaxt='n',xlab='parameter value',ylab='final population spread')
+axis(1, at=1:nrow(ps), labels=changed.param)
 # plotting final pop size aross parameter space
-plot(1:nrow(param.space),colSums(pop.size.tosave)[nsims+1,], type='l', xaxt='n',xlab='parameter value',ylab='final population spread')
-axis(1, at=1:nrow(param.space), labels=changed.param)
+plot(1:nrow(ps),colSums(pop.size.tosave)[nsims+1,], type='l', xaxt='n',xlab='parameter value',ylab='final population spread')
+axis(1, at=1:nrow(ps), labels=changed.param)
 
 
 

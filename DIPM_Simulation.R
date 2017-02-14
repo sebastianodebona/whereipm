@@ -22,14 +22,14 @@ sx <- function(density) {
   # mean probability of survival
   # density is a vector of the SAME length of the bins vector, with local density for the midpoints
   # I can manually calculate the probability of survival per location (mediated by density) given the vector of spot densities
-  plogis(param.space$surv.int[k]+param.space$surv.slo[k]*density)*param.space$surv.multiplier[k]
+  plogis(ps$surv.int[k]+ps$surv.slo[k]*density)*ps$surv.multiplier[k]
 }
 
 # fertility function
 fx <- function(density) {
   # mean number of offspring produced:
   # I can manually calculate the probability of survival per location (mediated by density) given the vector of spot densities
-  exp(param.space$repr.int[k]+param.space$repr.slo[k]*density)*param.space$repr.multiplier[k]
+  exp(ps$repr.int[k]+ps$repr.slo[k]*density)*ps$repr.multiplier[k]
   #!!! given the high number of orphans, this still has to be corrected for underestimated reproductive output. This can be done by changing the repr.multiplier value
 }
 
@@ -37,16 +37,16 @@ fx <- function(density) {
 mox <- function(y, x) {
   # for the movement function I have a density INdependent probability distribution of movements, that has to be centered each time on the current position
   # the function calculates the probability of moving to y, if the distribution kernel is centred on x-mu (so on x if mu is 0, as by default)
-  param.space$disp.p[k]*(1/(sqrt(2*pi*param.space$disp.stat[k]^2)))*exp(-((y-x)^2/(2*param.space$disp.stat[k]^2))) +
-    (1-param.space$disp.p[k])*(1/(sqrt(2*pi*param.space$disp.mob[k]^2)))*exp(-((y-x)^2/(2*param.space$disp.mob[k]^2)))
+  ps$disp.p[k]*(1/(sqrt(2*pi*ps$disp.stat[k]^2)))*exp(-((y-x)^2/(2*ps$disp.stat[k]^2))) +
+    (1-ps$disp.p[k])*(1/(sqrt(2*pi*ps$disp.mob[k]^2)))*exp(-((y-x)^2/(2*ps$disp.mob[k]^2)))
 }
 
 
 # natal dispersal function (new recruits position)
 nax <- function(y, x) {
   # the function calculates the probability of an foosrping moving to y, if distribution kernel is centred on x-mu (so on x if mu is 0, as by default), and if x-mu is the position of the mother
-  param.space$nat.p[k]*(1/(sqrt(2*pi*param.space$nat.stat[k]^2)))*exp(-((y-x)^2/(2*param.space$nat.stat[k]^2))) +
-    (1-param.space$nat.p[k])*(1/(sqrt(2*pi*param.space$nat.mob[k]^2)))*exp(-((y-x)^2/(2*param.space$nat.mob[k]^2)))
+  ps$nat.p[k]*(1/(sqrt(2*pi*ps$nat.stat[k]^2)))*exp(-((y-x)^2/(2*ps$nat.stat[k]^2))) +
+    (1-ps$nat.p[k])*(1/(sqrt(2*pi*ps$nat.mob[k]^2)))*exp(-((y-x)^2/(2*ps$nat.mob[k]^2)))
 }
 
 

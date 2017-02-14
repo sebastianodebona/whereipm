@@ -10,7 +10,7 @@
 #___________________________________________________________________________________
 
 # clearing env
-rm(list=ls(all=TRUE))
+#rm(list=ls(all=TRUE))
 
 # setting working directory and reading datafile
 setwd('/Users/sebastianodebona/Documents/Research/Projects/Guppies/Dispersal/Chapter I - Dispersal IPM')
