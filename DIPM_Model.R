@@ -30,15 +30,15 @@ setwd('/Users/sebastianodebona/Documents/Research/Projects/Guppies/Dispersal/Cha
 
 
 # Survival
-surv.int <- 1.6 #intercept of linear regression
-surv.slo <- -0.05 #slope of linear regression
-surv.multiplier <- 1 # this value is multiplied to the mean survival probability
+surv.int <- 1.6 #intercept of linear regression between survival (logit transformed) and density 
+surv.slo <- -0.05 #slope of linear regression between survival (logit transformed) and density 
+surv.multiplier <- 1 # this value is multiplied to the mean survival probability (survival buffering)
 # Reproduction
-repr.int <- -1.00 #intercept of linear regression
-repr.slo <- -0.01 #slope of linear regression
+repr.int <- -1.00 #intercept of linear regression (log transformed) and density 
+repr.slo <- -0.01 #slope of linear regression (log transformed) and density 
 repr.multiplier <- 1 # this value is multiplied to the mean number of offspring produced
 # Breeding Dispersal
-disp.stat <- 1.00 #variance of stationalry pop fraction
+disp.stat <- 1.00 #variance of stationary pop fraction
 disp.mob <- 15.00 #variance of mobile pop fraction
 disp.p <- 0.8 # proportion of stationary individuals at density 0
 disp.p.slo <- 0 # density dependence of proportion of adult dispersers
