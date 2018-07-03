@@ -1,0 +1,14 @@
+Package: dispersalIPM
+Title: Integral Projection Model to study dispersal
+Version: 0.1.0
+Authors@R: c(person("Seba", "De Bona", email = "sebastiano.debona@gmail.com", 
+                 role = c('aut','cre'))
+                 )
+Description: Here I can describe in length what this package is about
+License: MIT license
+URL: https://gitlab.com/sebadebona/dispersal-ipm
+BugReports: https://gitlab.com/sebadebona/dispersal-ipm/issues
+Encoding: UTF-8
+LazyData: true
+Imports: plyr
+RoxygenNote: 6.0.1
