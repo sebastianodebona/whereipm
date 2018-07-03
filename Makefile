@@ -1,6 +1,10 @@
 # Colours
+RED = "\\033[31m"
+YELLOW = "\\033[33m"
 GREEN = "\\033[92m"
 NC = "\\033[0m"
+RV = "\\033[7m"
+SB = "\\033[5m"
 
 # help
 .PHONY: help
@@ -15,17 +19,48 @@ help: Makefile
 .PHONY: document
 document:
 	@printf "\n"
-	@printf "Generating documentation\n"
+	@printf "$(GREEN)*** Generating documentation ***$(NC)\n"
 	@printf "\n"
 	Rscript -e 'devtools::document()'
 	
 ## install : install the package
 .PHONY: install
 install: document
+	@printf "\n"
+	@printf "$(GREEN)*** Installing package ***$(NC)\n"
+	@printf "\n"
 	Rscript -e 'devtools::install()'
-	
-## clean : remove man folder
-.PHONY:
+	@printf "\n"
+
+## clean : remove man folder and test output images
+.PHONY: clean
 clean:
+	@printf "\n"
+	@printf "$(YELLOW)*** Cleaning ***$(NC)\n"
+	@printf "\n"
 	rm -fr man/
+	rm -f sandbox/Rplots.pdf
+	@printf "\n"
+	
+## uninstall : uninstall the package
+.PHONY: uninstall
+uninstall:
+	@printf "\n"
+	@printf "$(RED)*** Uninstalling package ***$(NC)\n"
+	@printf "\n"
+	Rscript -e "tryCatch(remove.packages('dispersalIPM'), error = function(e) {})"
+	@printf "\n"
+
+## test : run test on package
+.PHONY: test
+test:
+	@printf "\n"
+	@printf "$(GREEN)$(FR)*** Running test ***$(NC)\n"
+	@printf "\n"
+	Rscript -e "devtools::test()"
+	@printf "\n"
+	
+## rehearse : unistall package, clean, install again and run test
+.PHONY: rehearse
+rehearse: uninstall clean install test
 	

@@ -68,7 +68,7 @@ ps<-expand.grid(surv.int=surv.int,surv.slo=surv.slo,surv.multiplier=surv.multipl
 
 # General Kernel specifications
 # number of bins (how many the intervals to approximate continuity are)
-n.bins <- 200
+n.bins <- 100
 # min and max value of the state variable
 # I know it can't be less than 0 or higher than, lets say 100
 L <- 0
@@ -92,7 +92,7 @@ density0<-pop.size0/h
 
 
 # how long to run the simulation for
-nsims<-100 # months
+nsims<-10 # months
 
 # OBJECTS TO SAVE
 # 1) Population size

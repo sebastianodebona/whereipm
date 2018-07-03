@@ -4,3 +4,4 @@
 *.png
 .Rapp.history
 man/
+sandbox/*.pdf
