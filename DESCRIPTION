@@ -1,10 +1,15 @@
-Package: dispersalIPM
-Title: Integral Projection Model to study dispersal
+Package: whereipm
+Title: Integral Projection Model to study spatial ecology of a population
 Version: 0.1.0
 Authors@R: c(person("Seba", "De Bona", email = "sebastiano.debona@gmail.com", 
                  role = c('aut','cre'))
                  )
-Description: Here I can describe in length what this package is about
+Description: This package parameterises spatial Integral Projection Models where the state 
+             variable is position in space along one dimension.
+             Vital rates of IPM here correspond to survival(S), reproduction(R), 
+             adult dispersal(G) and natal dispersal(I).
+             The model can include density-dependent vital rates, gradients across space
+             (i.e. latitudinal/altitudinal) etc. 
 License: MIT license
 URL: https://gitlab.com/sebadebona/dispersal-ipm
 BugReports: https://gitlab.com/sebadebona/dispersal-ipm/issues

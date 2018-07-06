@@ -48,7 +48,7 @@ uninstall:
 	@printf "\n"
 	@printf "$(RED)*** Uninstalling package ***$(NC)\n"
 	@printf "\n"
-	Rscript -e "tryCatch(remove.packages('dispersalIPM'), error = function(e) {})"
+	Rscript -e "tryCatch(remove.packages('whereipm'), error = function(e) {})"
 	@printf "\n"
 
 ## test : run test on package
