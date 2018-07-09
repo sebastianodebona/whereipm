@@ -1,5 +1,6 @@
-#' Hello
-#' This script allows git to track the R folder
+#' Print Hello
+#' 
+#' This silly function allows git to track the R folder
 #' 
 #' @export
 
