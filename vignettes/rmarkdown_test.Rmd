@@ -1,0 +1,113 @@
+---
+title: "Markdown test"
+author: "Seba De Bona"
+date: "9 July 2018"
+output: html_document
+---
+
+We can add here some text
+
+# One hash specifies a first level heading
+
+## Two hash, a second level one
+
+The more hash you add, the higher level heading you get (up to 8-9, but that would be crazy!)
+
+### Including R code
+R code can be included easily in the R markdown format.
+
+Code can be interspresed in the text, for example: `plyr` is a wonderful package.
+
+Also, chunks can be included.
+Just use the 'Insert' tab above, and select 'R'.
+Alternatively, you can use triple quotes (3x`) to open and close R code, making sure to specify the code (e.g. r), between curly brackets
+
+```{r}
+# just like this
+x <- rnorm(10)
+x
+# you can also plot!
+plot(x)
+```
+
+Back to plain text.
+
+## Adding lists
+
+Here is what you need for a list:
+
+- first, leave one empty line before the first element
+- then add as many dashes as elements of the list
+- as many as you need
+
+## More formatting options
+
+You can add **bold** text (using two asteriscs), or *italic* (just one).
+Math can be added too, bracketing a function within one \$ for equations embeded in the text, like $y = a + by$, or two \$$ or an equation block, such as: 
+$$F(x) = ax^2 + bx +c$$
+
+## Links
+
+Links can be added to! Let's visit the [RStudio website](https://rmarkdown.rstudio.com)!
+
+## More on code
+
+Code can be not only printed, but also evaluated inline: `mtcars` has `r nrow(mtcars)` rows. Adding 'r' after the backquote evaluates the code and returns the result.
+
+
+### Removing crap
+
+Sometimes, Rcode produces output that we don't want displayed in our Markdown file. We can remove messages by adding instructions to the header of the code specification, for example
+
+```{r}
+library(lme4)
+```
+
+differ from
+
+```{r, message=FALSE}
+library(lme4)
+```
+
+I can also ask R to **not** evaluate a displayed piece of code, using eval=FALSE
+
+```{r, eval=FALSE}
+x <- rnorm(10)
+y <- sample(x)
+```
+
+Or, the opposite, to not display a piece of evaluated code, using echo=FALSE
+
+```{r, echo=FALSE}
+x <- rnorm(2)
+```
+```{r}
+x
+```
+
+### Showing nice results
+
+Results can be shown in a prettier way than this:
+```{r}
+head(mtcars)
+```
+
+Tables can be included using \| to separate parts
+Here's a silly table:
+
+|country | price of baguettes|
+|--------|-------------------|
+| France | 1 euro |
+| Finland | 10 euros |
+
+You can also bracket some code within `knitr::kable((My code))` to return nice tables
+```{r}
+knitr::kable(head(mtcars))
+```
+
+The code to produce the table can be easily hidden
+```{r, echo=FALSE}
+knitr::kable(head(mtcars))
+```
+
+
