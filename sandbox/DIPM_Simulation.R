@@ -17,49 +17,9 @@
 #
 ######################################
 
-# survival function
-sx <- function(density) {
-  # mean probability of survival
-  # density is a vector of the SAME length of the bins vector, with local density for the midpoints
-  # I can manually calculate the probability of survival per location (mediated by density) given the vector of spot densities
-  plogis(ps$surv.int[k]+ps$surv.slo[k]*density)*ps$surv.multiplier[k]
-}
-
-# fertility function
-fx <- function(density) {
-  # mean number of offspring produced:
-  # I can manually calculate the probability of survival per location (mediated by density) given the vector of spot densities
-  exp(ps$repr.int[k]+ps$repr.slo[k]*density)*ps$repr.multiplier[k]
-  #!!! given the high number of orphans, this still has to be corrected for underestimated reproductive output. This can be done by changing the repr.multiplier value
-}
-
-# breeding dispersal function
-mox <- function(y, x, density) {
-  # for the movement function I have a density INdependent probability distribution of movements, that has to be centered each time on the current position
-  # the function calculates the probability of moving to y, if the distribution kernel is centred on x
-  
-  # WARNING!!!
-  # I am here implementing a half dispersal kernel, with individuals moving only in one direction. To do so, I force y to be always > x, and double the halfed probability to force the integral to be one.
-  
-  ifelse(y<x,
-         0,
-    2*(ps$disp.p[k]*(1/(sqrt(2*pi*ps$disp.stat[k]^2)))*exp(-((y-x)^2/(2*ps$disp.stat[k]^2))) +
-    (1-ps$disp.p[k])*(1/(sqrt(2*pi*ps$disp.mob[k]^2)))*exp(-((y-x)^2/(2*ps$disp.mob[k]^2))))
-  )
-  }
 
 
-# natal dispersal function (new recruits position)
-nax <- function(y, x) {
-  # the function calculates the probability of an offsrping moving to y, if distribution kernel is centred on x-mu (so on x if mu is 0, as by default), and if x-mu is the position of the mother
-  # WARNING!!!
-  # Same as for mox
-  ifelse(y<x,
-         0,
-  2*(ps$nat.p[k]*(1/(sqrt(2*pi*ps$nat.stat[k]^2)))*exp(-((y-x)^2/(2*ps$nat.stat[k]^2))) +
-    (1-ps$nat.p[k])*(1/(sqrt(2*pi*ps$nat.mob[k]^2)))*exp(-((y-x)^2/(2*ps$nat.mob[k]^2))))
-  )
-}
+# Now specified as package functions! sx, fx and gx
 
 
 
@@ -102,13 +62,13 @@ check.init.kernels<-function(){
 
 # Function for creating Kernel within simulation
 K.fun <- function(y,densities){
-  S <- diag(sx(densities)) #surv kernel
-  G <- outer(y, y, mox) # movement kernel
+  S <- diag(sx(s.int=surv.int, s.slo=surv.slo, density=densities)) #surv kernel
+  G <- outer(y, y, gx, p.stat=disp.p, s.stat=disp.stat, s.mob=disp.mob, unidirectional=T) # movement kernel
   # P kernel
   Pmatrix <- h*as.matrix(G%*%S)
   
-  R <- diag(fx(densities)) # reproduction
-  N <- outer(y, y, nax) # recruited position (natal dispersal)
+  R <- diag(fx(f.int = repr.int, f.slo=repr.slo, density=densities)) # reproduction
+  N <- outer(y, y, gx, p.stat=nat.p, s.stat=nat.stat, s.mob=nat.slo, unidirectional=T) # recruited position (natal dispersal)
   # F kernel
   Fmatrix <- h*as.matrix(N%*%R)
   

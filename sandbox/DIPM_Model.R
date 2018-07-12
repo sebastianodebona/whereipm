@@ -40,12 +40,10 @@ repr.multiplier <- 1 # this value is multiplied to the mean number of offspring 
 disp.stat <- 1.00 #variance of stationary pop fraction
 disp.mob <- 15.00 #variance of mobile pop fraction
 disp.p <- 0.8 # proportion of stationary adults at density 0
-disp.p.slo <- 0 # density dependence of proportion of adult dispersers
 # Natal Dispersal
 nat.stat <- 0.6 #variance of stationary pop fraction
 nat.mob <- 9.50 #variance of mobile pop fraction
 nat.p <- 0.5 # proportion of stationary juveniles at density 0
-nat.p.slo <- 0 # density dependence of proportion of natal dispersers
 
 
 #$$$$$$$$$$$
@@ -138,16 +136,16 @@ colourz<-colorRampPalette(c("red","yellow","springgreen","royalblue"))
 
 
 
-# IF TWO PARAMETERS CHANGED
-# creating matrix for countour plot to plot pop spread according to two params
-param.mat<- matrix(NA, nrow=length(changed.paramII), ncol=length(changed.paramIII))
-for(i in 1:length(changed.paramII)){
-  for(j in 1:length(changed.paramIII)){
-    param.mat[i,j]<-pop.spread[nsims+1,which(ps$surv.slo==changed.paramII[i] & ps$disp.p==changed.paramIII[j])]
-  }
-}
-filled.contour(x=changed.paramIII,y=changed.paramII,z=t(param.mat), xlab='proportion of static (adults)',ylab='strength of dd for survival', main="Population spread")#,levels=c(0,2000,4000,6000,10000,15000,20000,25000,50000))
-legend('topleft',legend='repr mult = 4',cex=0.8, box.lwd = 0, bg='transparent')
+# # IF TWO PARAMETERS CHANGED
+# # creating matrix for countour plot to plot pop spread according to two params
+# param.mat<- matrix(NA, nrow=length(changed.paramII), ncol=length(changed.paramIII))
+# for(i in 1:length(changed.paramII)){
+#   for(j in 1:length(changed.paramIII)){
+#     param.mat[i,j]<-pop.spread[nsims+1,which(ps$surv.slo==changed.paramII[i] & ps$disp.p==changed.paramIII[j])]
+#   }
+# }
+# filled.contour(x=changed.paramIII,y=changed.paramII,z=t(param.mat), xlab='proportion of static (adults)',ylab='strength of dd for survival', main="Population spread")#,levels=c(0,2000,4000,6000,10000,15000,20000,25000,50000))
+# legend('topleft',legend='repr mult = 4',cex=0.8, box.lwd = 0, bg='transparent')
 
 # # creating matrix for countour plot to plot pop SIZE according to two params
 # pop.mat<-matrix(NA, nrow=length(changed.paramII), ncol=length(changed.paramIII))
@@ -183,14 +181,14 @@ legend('topleft',legend='repr mult = 4',cex=0.8, box.lwd = 0, bg='transparent')
 
 
 
-# # plotting population spatial spread through time
-# par(mfrow=c(2,3), oma=c(3,4,3,3),mar=c(3,3,1,2))
-# for(m in c(2,10,25,50,57,100)){
-# plot(pop.size.tosave[,m,1]~seq(1:n.bins), type='l')
-# legend('top', legend=paste('year = ',m, sep=''), bty='n')
-# abline(h=0,lty=2)
-# }
-# mtext('position (m/2)',1, outer=T)
-# mtext('local population size', 2, outer=T)
+# plotting population spatial spread through time
+par(mfrow=c(2,3), oma=c(3,4,3,3),mar=c(3,3,1,2))
+for(m in c(2,10,25,50,57,100)){
+plot(pop.size.tosave[,m,1]~seq(1:n.bins), type='l')
+legend('top', legend=paste('year = ',m, sep=''), bty='n')
+abline(h=0,lty=2)
+}
+mtext('position (m/2)',1, outer=T)
+mtext('local population size', 2, outer=T)
 
 
