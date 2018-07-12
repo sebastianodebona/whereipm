@@ -1,4 +1,4 @@
 library(testthat)
-library(dispersalIPM)
+library(whereipm)
 
-test_check('dispersalIPM')
+test_check('whereipm')
