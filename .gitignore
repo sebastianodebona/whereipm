@@ -5,3 +5,6 @@
 .Rapp.history
 man/
 sandbox/*.pdf
+*.pdf
+*.html
+docs/
