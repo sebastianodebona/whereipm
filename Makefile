@@ -1,3 +1,6 @@
+# Stores root folder
+TOP_DIR=$(shell git rev-parse --show-toplevel)
+
 # Colours
 RED = "\\033[31m"
 YELLOW = "\\033[33m"
@@ -59,6 +62,15 @@ test:
 	@printf "\n"
 	Rscript -e "devtools::test()"
 	@printf "\n"
+	
+## coverage : determine test coverage
+.PHONY: coverage
+coverage:
+	@printf "\n"
+	@printf "$(GREEN)*** Determining test coverage ***$(NC)\n"
+	@printf "\n"
+	@mkdir -p docs/coverage/
+	@Rscript -e "library(covr); cov = package_coverage(); report(cov, \"$(TOP_DIR)/docs/coverage/coverage.html\"); print(paste(\"Coverage_percent: --\", round(percent_coverage(cov), 2), \"--\"))"
 	
 ## rehearse : unistall package, clean, install again and run test
 .PHONY: rehearse
