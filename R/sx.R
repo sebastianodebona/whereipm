@@ -15,10 +15,11 @@
 
 sx <- function(density, s.int, s.slo, s.multiplier=1) {
   
-  if(plogis(s.int+s.slo*density)*s.multiplier<=1){
-    plogis(s.int+s.slo*density)*s.multiplier
-  } else {
-    1
-  }
+
+      
+    ifelse(plogis(s.int+s.slo*density)*s.multiplier <=1, 
+           plogis(s.int+s.slo*density)*s.multiplier, 
+           1)
+  
 
 }
