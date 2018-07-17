@@ -1,6 +1,6 @@
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #
-# Density-dependent dispersal  during guppies colonisation of low-predation habitats
+# Density-dependent dispersal during guppies colonisation of low-predation habitats
 #
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # 
