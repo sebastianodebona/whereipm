@@ -1,4 +1,4 @@
-#' Dispersal function
+#' Movement function
 #'
 #' Calculates the probability to move from x to y, from a probability density function (i.e. a dispersal kernel curve). Dispersal can be density dependent (not yet implemented).
 #' 
