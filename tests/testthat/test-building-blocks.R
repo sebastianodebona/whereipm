@@ -2,8 +2,8 @@ context('Default parameter builders')
 
 test_that('create.kernel.params() works as expected',{
   kp <- create.kernel.params()
-  expect_length(kp, 3)
-  expect_setequal(names(kp), c("U", "L", "n.bins"))
+  expect_length(kp, 6)
+  expect_setequal(names(kp), c("U", "L", "n.bins", "y", "h", "b"))
 })
 
 test_that('create.vital.params() works as expected',{
