@@ -3,6 +3,8 @@
 export(build.kernel)
 export(create.kernel.params)
 export(create.vital.params)
+export(draw.pop.distr)
+export(draw.pop.dyn)
 export(gx)
 export(hello)
 export(runIPM)
