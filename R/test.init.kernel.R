@@ -18,7 +18,7 @@ test.init.kernel<-function(kernel.params, vital.params, init.pop, ...){
   if(missing(init.pop)){  # this sets default initial density if not provided
     init.density <- c(10, rep(0, kernel.params$n.bins-1))/kernel.params$h
   } else {
-    init.density <- init.pop.size/kernel.params$h
+    init.density <- init.pop/kernel.params$h
   }
 
   
