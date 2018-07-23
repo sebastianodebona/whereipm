@@ -14,7 +14,59 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-This vignette illustrates the use of package `whereipm`, which allows to build spatial IPMs to model population dynamics in space (not 'in Space'!).
+This vignette illustrates how to use the package `whereipm`, which allows you to build spatial IPMs. This models can project population spatial dynamics through time, and estimate the spread and speed of spread of such population.
+The vignette also functions as a notebook for the author to really know what he's doing.
+
+## What is a Spatial IPM? A few step back.
+
+The purpose of this vignette is to get hands down into building a Spatial IPM. But it's good to know IPMs are before building one. The easiest way to think of IPMs is as extentions of classical population matrices for continous values.
+
+### What is a population matrix
+
+Let's say you are interested in knowing how a population's size structure changes in time, as individuals grow, die, and new individuals (likely smaller than their parents) are born. To do that, we need to identify size classes. Lets say we group individuals based on size into $small$, $medium$ and $large$. Each size class has a class-specific survival probability, namely $\sigma_{S}$, $\sigma_{M}$ and $\sigma_{L}$. Moreover, individuals belonging to class $i$ can grow to another class $j$, with probability $m_{i,j}$, or remain in the same size class with probablity $m_{i,i} = 1 - \sum_{i\neq j} m_{i,j}$. Each individual can produce 1 offspring, with probability depending on its class, $\phi_{S}$, $\phi_{M}$ and $\phi_{L}$. Individuals are born of size $j$ from individuals of size $i$ with probability $g_{i,j}$.
+
+In our example, all individuals are born $small$, and only $large$ individuals reproduce, with probability $\phi_{L}$. Individuals can only grow from one size class to the next in one time step. Individuals cannot shrink.
+
+We can create a matrix that depicts the contribution of each size class $i$ at time $t$ to any  class $j$ at time $t+1$, based on its survival, growth, reproduction and offspring size. Each element of the table is derived by the general formula: 
+$$\alpha_{i,j} = \sum_{i=1, j=1}^n \sigma_{i} m_{i,j} + \phi_{i} g_{i,j}$$
+
+Our matrix will look like this:
+$$
+A= 
+\left[\begin{array}{cc} 
+\sigma_{S}(1-m_{S,M}) & 0 & \phi_{L}\\
+ \sigma_{S} m_{S,M}  & \sigma_{M} (1-m_{M,L}) & 0 \\
+0 & \sigma_{M}m_{M,L} & \sigma_{L}
+\end{array}\right]
+$$
+The beauty of this matrix is that it can be used to project what the population size structure will be at time $t+1$ given the population size per each size class at time $t$, using matrix multiplication.
+
+If $N = [n_{S}(t), n_{M}(t), n_{L}(t)]$ is a vector representing size structure (i.e. number of individuals of each class) at time $t$, then:
+
+
+$$
+\left[\begin{array}{cc} 
+\sigma_{S}(1-m_{S,M}) & 0 & \phi_{L}\\
+ \sigma_{S} m_{S,M}  & \sigma_{M} (1-m_{M,L}) & 0 \\
+0 & \sigma_{M}m_{M,L} & \sigma_{L}
+\end{array}\right]
+\left[\begin{array}{cc} 
+n_{S}(t)\\
+n_{M}(t)\\
+n_{L}(t)
+\end{array}\right]
+=
+\left[\begin{array}{cc} 
+n_{S}(t+1)\\
+n_{M}(t+1)\\
+n_{L}(t+1)
+\end{array}\right]
+$$
+
+### The limitations of population matrices
+
+Population matrices are a very powerful tool to study population biology, and are widely used. Many traits though, among which size, are continuous, and having to slit them into prefixed classes doesn't allow to capture the full range of variation among individuals.
+
 
 ## Let's begin!
 
@@ -23,15 +75,25 @@ First of all, you'll need to install the package:
 install.packages('whereipm')
 ```
 
-Or, if you already have it installed, just load it with:
+Or, if you already have it installed, just load it, using:
 ```{r}
 library(whereipm)
 ```
 
 
-## Easy start: a purely theoretical model
+## Let's keep it theoretical
 
-This package allows building IPMs from scratch, manually deciding on which parameters are to be used to build the IPM kernel.
+For a start, let's just say you're interested in knowing how these models work and look like, without needing to fit real data to them. This package allows building spatial IPMs from scratch, manually deciding on which parameters are to be used to build the IPM kernel. As you will learn, some functions even allow you generate default, uninformative parameters, so if you want you don't even have to decide.
+
+
+
+
+
+
+
+
+
+
 
 Also a quote using `>`:
 
