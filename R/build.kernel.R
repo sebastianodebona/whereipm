@@ -7,17 +7,11 @@
 #' @param kernel.params list of parameters to build the kernel (must include L, H and n.bins). See output of \code{create.kernel.params} for an example.
 #' @param vital.params list of parameters to determine vital rate functions. Follow format of the output of \code{create.vital.params}
 #' @param pop.size Vector of initial population size per position. The lenght of the vector must be equal to the number of bins specified in \code{kernel.params}. There is no default (as opposed to \code{\link{test.init.kernel}}), so population size \emph{must} be specified.
-#' @param ... additional arguments, such as \code{unidirectional} for movement functions (see \code{\link{gx}})
 #' @details As a preliminary step before, run a test with \code{\link{test.init.kernel}} with the same parameters, to check visually if the kernel builds without problems.
 #' 
 
-build.kernel <- function(kernel.params, vital.params, pop.size, ...){
+build.kernel <- function(kernel.params, vital.params, pop.size){
   
-  # deriving missing kernel parameters
-  # defining meshpoints (separating bins) and midpoints (central point of each bin)
-  b <- kernel.params$L+c(0:kernel.params$n.bins)*(kernel.params$U-kernel.params$L)/kernel.params$n.bins # meshpoints
-  y <- 0.5*(b[1:kernel.params$n.bins]+b[2:(kernel.params$n.bins+1)]) # midponts (basically, mean between consecutive meshpoints)
-  h <- (kernel.params$U-kernel.params$L)/kernel.params$n.bins
 
   # determining density
   density <- pop.size/kernel.params$h
@@ -28,22 +22,44 @@ build.kernel <- function(kernel.params, vital.params, pop.size, ...){
                s.slo=vital.params$s.slo, 
                s.multiplier=vital.params$s.multiplier))
   # movement kernel
-  G <- outer(kernel.params$y, kernel.params$y, 
-             FUN=gx, p.stat=vital.params$p.stat, 
-                     s.stat=vital.params$s.stat, 
-                     s.mob=vital.params$s.mob,
-             ...) # the dots allow to specify directionality (uni- or bi-) of the movement kernel
+  combs <- merge(data.frame(y=kernel.params$y), cbind(x=kernel.params$y, density.x=density))
+  combs$p <- gx_ln(y = combs[['y']], x = combs[['x']],
+                   density.x = combs[['density.x']],
+                   p.stat.int = vital.params$p.stat.int.ad,
+                   p.stat.slo = vital.params$p.stat.slo.ad,
+                   sigma.stat = vital.params$sigma.stat.ad, 
+                   mu.mob.int = vital.params$mu.mob.int.ad,
+                   mu.mob.slo = vital.params$mu.mob.slo.ad,
+                   sigma.mob = vital.params$sigma.mob.ad)
+  G <- matrix(NA, kernel.params$n.bins, kernel.params$n.bins)
+  G[1:length(unique(combs$x)),1:length(unique(combs$y))] <- combs$p
+  
   # reproduction
-  R <- diag(rx(density=density, 
-               r.int=vital.params$r.int, 
-               r.slo=vital.params$r.slo, 
-               r.multiplier=vital.params$r.multiplier))
+  R <- diag(rx(density = density, 
+               r.int = vital.params$r.int, 
+               r.slo = vital.params$r.slo, 
+               r.multiplier = vital.params$r.multiplier,
+               f.distribution = ifelse(is.null(vital.params$f.distribution),
+                                             'poisson',
+                                             vital.params$f.distribution),
+               f.int = ifelse(is.null(vital.params$f.int), 
+                              NA,
+                              vital.params$f.int),
+               f.slo = ifelse(is.null(vital.params$f.slo), 
+                              NA,
+                              vital.params$f.slo)))
   # recruited position (natal dispersal)
-  N <- outer(kernel.params$y, kernel.params$y, 
-             FUN=gx, p.stat=vital.params$p.stat.nat, 
-                     s.stat=vital.params$s.stat.nat, 
-                     s.mob=vital.params$s.mob.nat,
-                     ...) # the dots allow to specify directionality (uni- or bi-) of the movement
+  nombs <- merge(data.frame(y=kernel.params$y), cbind(x=kernel.params$y, density.x=density))
+  nombs$p <- gx_ln(y = combs[['y']], x = combs[['x']],
+                   density.x = combs[['density.x']],
+                   p.stat.int = vital.params$p.stat.int.nat,
+                   p.stat.slo = vital.params$p.stat.slo.nat,
+                   sigma.stat = vital.params$sigma.stat.nat, 
+                   mu.mob.int = vital.params$mu.mob.int.nat,
+                   mu.mob.slo = vital.params$mu.mob.slo.nat,
+                   sigma.mob = vital.params$sigma.mob.nat)
+  N <- matrix(NA, kernel.params$n.bins, kernel.params$n.bins)
+  N[1:length(unique(nombs$x)),1:length(unique(nombs$y))] <- nombs$p
   
   # P kernel
   Pmatrix <- kernel.params$h*as.matrix(G%*%S)

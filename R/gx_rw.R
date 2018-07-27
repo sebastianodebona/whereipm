@@ -1,6 +1,6 @@
-#' Movement function
+#' Movement function more Radinger & Wolter
 #'
-#' Calculates the probability to move from x to y, from a probability density function (i.e. a dispersal kernel curve). Dispersal can be density dependent (not yet implemented).
+#' Calculates the probability to move from x to y, from a probability density function (i.e. a dispersal kernel curve) defined as an overalp of two gaussian distributions. Dispersal can be density dependent (not yet implemented).
 #' 
 #' @export
 #' 
@@ -13,7 +13,7 @@
 #' @return The function returns a value for the probability of an individual being in y at t1 if it was in x at t0
 
 
-gx <- function(y, x, p.stat, s.stat, s.mob, unidirectional=FALSE) {
+gx_rw <- function(y, x, p.stat, s.stat, s.mob, unidirectional=FALSE) {
   # this produces for now a density INDEPENDENT movement probability.
   # The dispersal Kernel follows Radinger & Wolter 2014, Fish and Fisheries
   
