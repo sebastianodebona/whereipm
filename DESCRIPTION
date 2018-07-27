@@ -15,7 +15,8 @@ URL: https://gitlab.com/sebadebona/dispersal-ipm
 BugReports: https://gitlab.com/sebadebona/dispersal-ipm/issues
 Encoding: UTF-8
 LazyData: true
-Imports: plyr,
-         sticky,
-         plotly
+Imports: lme4,
+         plotly,
+         plyr,
+         sticky
 RoxygenNote: 6.0.1
