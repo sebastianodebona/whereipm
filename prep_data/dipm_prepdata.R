@@ -39,9 +39,9 @@ gmr <- read.csv("/Users/sebastianodebona/Documents/Research/Projects/Guppies/Gup
 # This step will come in handy later
 # I can add a column of individual survival to time t+1. I can make a very rough approximation, and given the very high recapture rate, say that if I never again capture an invidual, it means it's dead
 # defining when each individual was last captured (and never after that)
-# extracting information on the last capture for each individual
-last_capture <- plyr::ddply(gmr, c('FishID'), plyr::summarise, last_capture = max(sampling, na.rm=T))
-gmr <- merge(gmr, last_capture, by='FishID')
+# extracting information on the first and last capture for each individual
+fl_capture <- plyr::ddply(gmr, c('FishID'), plyr::summarise, first_capture = min(sampling, na.rm=T), last_capture = max(sampling, na.rm=T))
+gmr <- merge(gmr, fl_capture, by='FishID')
 # checking whether the individual is captured again after every capture instance. if not, considered dead.
 gmr$survived <- ifelse(gmr$sampling==gmr$last_capture, 0, 1)
 # checking if the already existing survival variable checks with the one I just created
@@ -70,12 +70,13 @@ data<-merge(data, pedigree.Table, by='FishID')
 
 #### REPRODUCTION ###############################################
 # trying to derive how many offspring are produced by each individual in a month
-recruited <- plyr::ddply(data, c('Maternity', 'sampling'), nrow)
-recruited <- recruited[recruited$Maternity!='',]
+recruited <- plyr::ddply(subset(data, sampling==first_capture), c('Maternity', 'sampling'), nrow)
 # renaming V1
 colnames(recruited)[ncol(recruited)] <- 'recruited'
+# defining the month when the mothers gave birth (two months before recruitment)
+recruited$birth.month <- as.numeric(recruited$sampling) - 2
 # merging this information back into the main dataset
-data <- merge(data, recruited, by.x = c('FishID', 'sampling'), by.y = c('Maternity', 'sampling'), all.x = T)
+data <- merge(data, recruited[,c('Maternity', 'birth.month', 'recruited')], by.x = c('FishID', 'sampling'), by.y = c('Maternity', 'birth.month'), all.x = T)
 table(data$recruited)
 
 
@@ -121,10 +122,6 @@ Sys.time() - start
 
 #### NATAL DISPERSAL #############################################
 # in order to estimate natal dispersal I'll take the offspring perspective. I need to find the first capture per each individual. And then check the mother's position two months before first capture (likely the month of birth for this fish). I may also remove all fish above a threshold length, to exclude "old" first captured individuals (which might have be born many months before)
-# the first capture corresponds to the lowest sampling value in the mark recapture file
-first_capture <- plyr::ddply(data, c('FishID'), plyr::summarize ,first_capture = min(sampling, na.rm=T))
-# what I created is a vector of first captures per each individual. I can now use 'match' to associate a first capture value to all fish
-data <- merge(data, first_capture, by = 'FishID', all.x = T)
 
 # Now I can check where each individual's mother was two months before the first capture. I will only add the mother's position once, in the row corresponding to the first capture.
 # One more step is needed to be able to compare adult and natal dispersal. Adult dispersal is calculated in a projective manner, finding the position at the next time step, but from the 'now' point of view (habitat, local and global density NOW). I then need to find those variables from the inset of natal dispersal (i.e. from the data belonging to the mother two months before first capture)
@@ -146,7 +143,7 @@ colnames(birth.info)[which(colnames(birth.info)%in% c('birth', 'distance', 'Habi
 birth.info <- merge(birth.info, subset(data, select = c('FishID', 'sampling', 'distance', 'Habitat', 'location', 'reach_l',  'loc_density')), by.x = c('Maternity', 'mid'), by.y = c('FishID', 'sampling'))
 colnames(birth.info)[which(colnames(birth.info)%in% c('mid', 'distance', 'Habitat', 'location', 'reach_l', 'loc_density'))] <- c('sampling.mid', 'distance.mid', 'habitat.mid', 'location.mid', 'reach_l.mid', 'loc_density.mid')
 # now merging back into main dataset
-data <- merge(data, birth.info, by = c('FishID', 'sampling'), all.x = T)
+data <- merge(data, birth.info[,-which(colnames(birth.info)=='Maternity')], by = c('FishID', 'sampling'), all.x = T)
 # for some reasons the number of rows increased :/
 
 # for someone to have a position at birth the have to have defined maternity and for the mother to be caught two months before the first capture of the offspring
@@ -174,13 +171,13 @@ data$sampling.birth<-as.factor(data$sampling.birth)
 
 ##### SCALING ##############################################
 # to improve model convergence, I will take some steps following 'https://rstudio-pubs-static.s3.amazonaws.com/33653_57fc7b8e5d484c909b615d8633c01d51.html'
-# 1) SCALING/CENTERING local and global density in the model
+# 1) SCALING (but not centering) local density and standard length in the model
 # 2) INCREASE ITERATIONS (later)
 # I will scale the variables but keep the original in the data frame
   
 # what needs to be scaled is not the local density vector in the data.frame, since values of local density are repeated once per each individual present in each pool and experiencing the same density. I need to scale it based on a vector of unique values of local densities found at each sampling and location
 loc <- plyr::ddply(data, c('sampling', 'location', 'loc_density'), nrow)
-loc$s_loc_density <- scale(loc$loc_density)
+loc$s_loc_density <- scale(loc$loc_density, center = F)
 data <- merge(data, loc[,c("sampling", "location", "s_loc_density")], by = c('sampling', 'location'))
 # now transferring attributes (scaling and centering value) from loc$s_loc_density to data$s_loc_density, so they can be retrieved later
 # attr(x, 'string') <- value assignes a value as an attribute to the object (e.g. vector) x, to be called 'string':
@@ -188,12 +185,14 @@ data <- merge(data, loc[,c("sampling", "location", "s_loc_density")], by = c('sa
 # the function sticky used here, from the package sticky, allows vector to retain the attributes even after subsetting, appending etc
 # see: https://cran.r-project.org/web/packages/sticky/vignettes/introduction.html
 data$s_loc_density <- sticky::sticky(data$s_loc_density)
-attr(data$s_loc_density, "scaled:center") <- attr(loc$s_loc_density, "scaled:center")
 attr(data$s_loc_density, "scaled:scale") <- attr(loc$s_loc_density, "scaled:scale")
+
+# transforming also density mid and birth
+data$s_loc_density.mid <- data$loc_density.mid/attr(loc$s_loc_density, "scaled:scale")
+data$s_loc_density.birth <- data$loc_density.birth/attr(loc$s_loc_density, "scaled:scale")
    
 # time will be scaled but not centered, to keep the intercept at 0 in the models
-data$s_time<-scale(data$time, center=F)
-data$s_time.birth<-scale(data$time.birth, center=F)
+data$s_SL<-scale(data$SL, center=F)
 
 
 ##### HABITAT ##############################################
