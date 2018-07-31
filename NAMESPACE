@@ -2,12 +2,12 @@
 
 export(build.kernel)
 export(create.kernel.params)
-export(create.vital.params)
 export(draw.pop.distr)
 export(draw.pop.dyn)
 export(gx_ln)
 export(gx_rw)
 export(hello)
+export(mock.vital.params)
 export(rm.NAs)
 export(runIPM)
 export(rx)

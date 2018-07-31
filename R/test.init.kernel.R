@@ -16,57 +16,26 @@ test.init.kernel<-function(kernel.params, vital.params, init.pop, ...){
   
   
   if(missing(init.pop)){  # this sets default initial density if not provided
-    init.density <- c(10, rep(0, kernel.params$n.bins-1))/kernel.params$h
-  } else {
-    init.density <- init.pop/kernel.params$h
-  }
-
+    init.pop <- c(rep(0, kernel.params$n.bins/2), 25, rep(0, (kernel.params$n.bins/2)-1))
+    }
   
-  # survival kernel
-  S <- diag(sx(density=init.density, 
-               s.int=vital.params$s.int, 
-               s.slo=vital.params$s.slo, 
-               s.multiplier=vital.params$s.multiplier))
-  # movement kernel
-  G <- outer(kernel.params$y,kernel.params$y, 
-             FUN=gx, p.stat=vital.params$p.stat, 
-                      s.stat=vital.params$s.stat, 
-                      s.mob=vital.params$s.mob)
-  # reproduction
-  R <- diag(rx(density=init.density, 
-               r.int=vital.params$r.int, 
-               r.slo=vital.params$r.slo, 
-               r.multiplier=vital.params$r.multiplier))
-  # recruited position (natal dispersal)
-  N <- outer(kernel.params$y,kernel.params$y, 
-             FUN=gx, p.stat=vital.params$p.stat.nat, 
-                     s.stat=vital.params$s.stat.nat, 
-                     s.mob=vital.params$s.mob.nat)
-  
-  # P kernel
-  Pmatrix <- kernel.params$h*as.matrix(G%*%S)
-  
-  # F kernel
-  Fmatrix <- kernel.params$h*as.matrix(N%*%R)
-
-  # Whole kernel
-  K<- Pmatrix + Fmatrix
-  
+    
+  K <- build.kernel(kernel.params, vital.params, pop.size = init.pop, test=T)
   
   op <- par()
   par(mfrow=c(2,2))
   
-  image(t(S), main='survival')
-  image(t(G),main='dispersal')
-  image(t(R), main='reproduction')
-  image(t(N),main='natal disp')
+  image(t(K$S), main='survival')
+  image(t(K$G),main='dispersal')
+  image(t(K$R), main='reproduction')
+  image(t(K$N),main='natal disp')
   
   par(ask=T)
-  image(t(Pmatrix),main='P kernel')
+  image(t(K$Pmatrix),main='P kernel')
   abline(0,1,lty=2)
-  image(t(Fmatrix), main='F kernel')
+  image(t(K$Fmatrix), main='F kernel')
   abline(0,1,lty=2)
-  image(t(K), main='full kernel') 
+  image(t(K$K), main='full kernel') 
   
   suppressWarnings(par(op))
 }  

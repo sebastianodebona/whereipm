@@ -10,7 +10,7 @@
 #' @details As a preliminary step before, run a test with \code{\link{test.init.kernel}} with the same parameters, to check visually if the kernel builds without problems.
 #' 
 
-build.kernel <- function(kernel.params, vital.params, pop.size){
+build.kernel <- function(kernel.params, vital.params, pop.size, test=F){
   
 
   # determining density
@@ -69,6 +69,10 @@ build.kernel <- function(kernel.params, vital.params, pop.size){
   # Whole kernel
   K<- Pmatrix + Fmatrix
   
-  return(K)
+  if(!test){
+    return(K)
+  } else if(test){
+    return(list(S = S, G = G, R = R, N = N, Pmatrix = Pmatrix, Fmatrix = Fmatrix, K = K))
+  }
   
 }
