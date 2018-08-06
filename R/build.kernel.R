@@ -7,6 +7,7 @@
 #' @param kernel.params list of parameters to build the kernel (must include L, H and n.bins). See output of \code{create.kernel.params} for an example.
 #' @param vital.params list of parameters to determine vital rate functions. Follow format of the output of \code{create.vital.params}
 #' @param pop.size Vector of initial population size per position. The lenght of the vector must be equal to the number of bins specified in \code{kernel.params}. There is no default (as opposed to \code{\link{test.init.kernel}}), so population size \emph{must} be specified.
+#' @param test Logic value defining whether all matrices (S, R, G, N, P and F) need to be saved for testing. Default if \code{FALSE}.
 #' @details As a preliminary step before, run a test with \code{\link{test.init.kernel}} with the same parameters, to check visually if the kernel builds without problems.
 #' 
 
