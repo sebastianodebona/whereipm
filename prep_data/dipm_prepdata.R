@@ -104,6 +104,17 @@ var_density <- cbind(sampling=1:62, density_var=var_density)
 data <- merge(data, var_density, by = c('sampling'), all.x = T)
 
 
+#### LANDSCAPE POP SIZE #############################################
+# at each time point, per location 
+landscape.pop.size <- plyr::ddply(data, c('sampling'), nrow)
+colnames(landscape.pop.size)[ncol(landscape.pop.size)] <- 'landscape.pop'
+# merging into main data
+data <- merge(data, landscape.pop.size, by=c('sampling'), all.x=T)
+
+# LANDSCAPE POPULATION DENSITY
+data$land_density <- data$landscape.pop/100
+
+
 #### MOVEMENT #################################################
 # next time position
 start <- Sys.time()
@@ -140,8 +151,8 @@ birth.info <- merge(birth.info, subset(data, select = c('FishID', 'sampling', 'd
 # Renaming
 colnames(birth.info)[which(colnames(birth.info)%in% c('birth', 'distance', 'Habitat', 'location', 'reach_l', 'loc_density'))] <- c('sampling.birth', 'distance.birth', 'habitat.birth', 'location.birth', 'reach_l.birth', 'loc_density.birth')
 # Now extracting same information for mid month
-birth.info <- merge(birth.info, subset(data, select = c('FishID', 'sampling', 'distance', 'Habitat', 'location', 'reach_l',  'loc_density')), by.x = c('Maternity', 'mid'), by.y = c('FishID', 'sampling'))
-colnames(birth.info)[which(colnames(birth.info)%in% c('mid', 'distance', 'Habitat', 'location', 'reach_l', 'loc_density'))] <- c('sampling.mid', 'distance.mid', 'habitat.mid', 'location.mid', 'reach_l.mid', 'loc_density.mid')
+birth.info <- merge(birth.info, subset(data, select = c('FishID', 'sampling', 'distance', 'Habitat', 'location', 'reach_l',  'loc_density', 'land_density')), by.x = c('Maternity', 'mid'), by.y = c('FishID', 'sampling'))
+colnames(birth.info)[which(colnames(birth.info)%in% c('mid', 'distance', 'Habitat', 'location', 'reach_l', 'loc_density', 'land_density'))] <- c('sampling.mid', 'distance.mid', 'habitat.mid', 'location.mid', 'reach_l.mid', 'loc_density.mid', 'land_density.mid')
 # now merging back into main dataset
 data <- merge(data, birth.info[,-which(colnames(birth.info)=='Maternity')], by = c('FishID', 'sampling'), all.x = T)
 # for some reasons the number of rows increased :/
@@ -193,6 +204,16 @@ data$s_loc_density.birth <- data$loc_density.birth/attr(loc$s_loc_density, "scal
    
 # time will be scaled but not centered, to keep the intercept at 0 in the models
 data$s_SL<-scale(data$SL, center=F)
+
+# scaling also landscape density
+land <- plyr::ddply(data, c('sampling', 'land_density'), nrow)
+land$s_land_density <- scale(land$land_density)
+data <- merge(data, land[,c("sampling", "s_land_density")], by = c('sampling'))
+# transferring attributes
+data$s_land_density <- sticky::sticky(data$s_land_density)
+attr(data$s_land_density, "scaled:scale") <- attr(land$s_land_density, "scaled:scale")
+# transforming also density mid and birth
+data$s_land_density.mid <- data$land_density.mid/attr(land$s_land_density, "scaled:scale")
 
 
 ##### HABITAT ##############################################
