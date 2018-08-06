@@ -4,22 +4,15 @@
 #
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+library(whereipm)
+
 # Defining vital rate parameters
 
-vp <- create.vital.params(s.int = 0,
-                    s.slo = -0.05,
-                    r.int = log(2),
-                    r.slo = -0.01,
-                    p.stat = 0.8,
-                    s.stat = 1,
-                    s.mob = 2,
-                    p.stat.nat = .5,
-                    s.stat.nat = 0.6,
-                    s.mob.nat = 4)
+vp <- mock.vital.params()
 
 
 # Defining kernel parameters
-kp <- create.kernel.params(L = 0, U = 100, n.bins = 200)
+kp <- create.kernel.params(L = -50, U = 50, n.bins = 100)
 # check why weird stuff happens when U/n.bins is changed
 
 
@@ -27,6 +20,7 @@ kp <- create.kernel.params(L = 0, U = 100, n.bins = 200)
 
 #test.init.kernel(kernel.params = kp, vital.params = vp)
 
+K <- build.kernel(kp, vp, pop.size = pop0, test=T)
 
 # Defining the initial population size
 pop0 <- c(rep(0, kp$n.bins/2-1), 30, rep(0, kp$n.bins/2))
@@ -34,11 +28,11 @@ pop0 <- c(rep(0, kp$n.bins/2-1), 30, rep(0, kp$n.bins/2))
 
 # Running the IPM
 
-IPM <- runIPM(kp, vp, init.pop = pop0, niter=20, unidirectional=F)
+IPM <- runIPM(kp, vp, init.pop = pop0, niter=25, unidirectional=F)
 # 3d plot of population size through time and space
 plotly::plot_ly(x=1:ncol(IPM$pop.size), y=rev(kp$y), z=IPM$pop.size, type="contour")
 # another way to do it
-draw.pop.dyn(IPM.model = IPM, breaks=20)
+draw.pop.dyn(IPM.model = IPM, breaks=25)
 
 
 
@@ -54,105 +48,19 @@ str(data)
 data$recruited <- ifelse(is.na(data$recruited), 0, data$recruited)
 
 # subsetting for sex, habitat and time (here I am building a model for females in pools, only in the early phase)
-data.early <- subset(data, Habitat=='P' & sex=='F' & time<35 & time>=12)
-data.late <- subset(data, Habitat=='P' & sex=='F' & time>=61-23)
+data.early <- subset(data, Habitat=='P' & sex=='F' & time>=1 & time<=12)
+data.mid <- subset(data, Habitat=='P' & sex=='F' & time>=26 & time>=37)
+data.late <- subset(data, Habitat=='P' & sex=='F' & time>=51 & time<=62)
 
-# running models to extract vital rate parameters for Early and Late phase
+source('DIPM_RunModels.R')
 
-#### Survival ####+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-e.survival <- lme4::glmer(survived ~ 1 +
-                                   + (1|FishID) + (1|reach) + (1|sampling),
-                        data=data.early,
-                        family=binomial,
-                        lme4::glmerControl(optimizer=c('bobyqa')))
-summary(e.survival)
-# in early phase survival is not affectd by density
-l.survival <- lme4::glmer(survived ~ s_loc_density +
-                            + (1|FishID) + (1|reach) + (s_loc_density|sampling),
-                          data=data.late,
-                          family=binomial,
-                          lme4::glmerControl(optimizer=c('bobyqa')))
-summary(l.survival)
-# in late phase survival is positively affected by density
+# parameters for Kernel
+# kernel parameters
+kp <- create.kernel.params(L=-500, U=500, n.bins = 1000)
+# Defining the initial population size
+pop0 <- c(rep(0, kp$n.bins/2-1), 10, rep(0, kp$n.bins/2))
 
-#### Recruitment ####+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-e.recruit <- glmmTMB::glmmTMB(recruited ~ 1 +
-                              + (1|FishID) + (1|reach) + (1|sampling),
-                            zi = ~ 1 +
-                              + (1|FishID) + (1|reach)  + (1|sampling),
-                            family=list(family="truncated_poisson", link="log"),
-                            data=rm.NAs(data.early, 'recruited', fixEff=c('s_loc_density')))
-# in the early phase, density affects the number of offspring but not the probability to produce any.
-l.recruit <- glmmTMB::glmmTMB(recruited ~ 1 +
-                                + (1|FishID) + (1|reach) + (1|sampling),
-                              zi = ~ s_loc_density +
-                                + (1|FishID) + (1|reach)  + (s_loc_density|sampling),
-                              family=list(family="truncated_poisson", link="log"),
-                              data=rm.NAs(data.late, 'recruited', fixEff=c('s_loc_density')))
-# the late phase is not affected by density
-summary(e.recruit)
-summary(l.recruit)
-
-#### Adult dispersal probability ####+++++++++++++++++++++++++++++++++++++++++++++++++
-e.dispersal.p <- lme4::glmer(p_moving ~ s_loc_density +
-                                 + (1|FishID) + (1|reach) + (s_loc_density|sampling),
-                               family = 'binomial',
-                               data = data.early,
-                               lme4::glmerControl(optimizer=c('bobyqa')))
-# small negative effect of density on dispersal (high density, low dispersal) in early phase
-l.dispersal.p <- lme4::glmer(p_moving ~ s_loc_density +
-                               + (1|FishID) + (1|reach) + (s_loc_density|sampling),
-                             family = 'binomial',
-                             data = data.late,
-                             lme4::glmerControl(optimizer=c('bobyqa')))
-# strong positive effect of density on dispersal in the late phase
-summary(e.dispersal.p)
-summary(l.dispersal.p)
-
-#### Adult dispersal distance ####+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-e.dispersal.dist <- lme4::lmer(log(dist_moved) ~ s_loc_density +
-                                        + (1|FishID) + (1|reach) + (s_loc_density|sampling),
-                               data = data.early)
-car::Anova(e.dispersal.dist, type='III')
-# early phase distance does not depend on density
-l.dispersal.dist <- lme4::lmer(log(dist_moved) ~ 1 +
-                                 + (1|FishID) + (1|reach) + (1|sampling),
-                               data = data.late)
-car::Anova(l.dispersal.dist, type='III')
-# neither late phase dispersal distance does
-summary(e.dispersal.dist)
-summary(l.dispersal.dist)
-
-#### Natal dispersal probability ####++++++++++++++++++++++++++++++++++++++++++++++++
-e.natal.p <- lme4::glmer(p_natal ~ 1 +
-                                   + (1|Maternity) + (1|reach.birth) + (1|sampling.birth),
-                                 family = 'binomial',
-                                 data = data.early,
-                                 lme4::glmerControl(optimizer=c('bobyqa')))
-# no effect of local density early on
-l.natal.p <- lme4::glmer(p_natal ~ 1 +
-                           + (1|Maternity) + (1|reach.birth) + (1|sampling.birth),
-                         family = 'binomial',
-                         data = data.late,
-                         lme4::glmerControl(optimizer=c('bobyqa')))
-# no effect late either
-summary(e.natal.p)
-summary(l.natal.p)
-
-#### Natal dispersal distance ####++++++++++++++++++++++++++++++++++++++++++++++++
-e.natal.dist <- lme4::lmer(log(dist_natal) ~ 1 + 
-                                     + (1|Maternity) + (1|reach.birth) + (1|sampling.birth),
-                                   data = data.early)
-car::Anova(e.natal.dist, type = 'III')
-# no effect of density on distance in early phase
-l.natal.dist <- lme4::lmer(log(dist_natal) ~ s_loc_density.mid  + 
-                             + (1|Maternity) + (1|reach.birth) + (s_loc_density.mid|sampling.birth),
-                           data = data.late)
-car::Anova(l.natal.dist, type = 'III')
-# neither in late
-summary(e.natal.dist)
-summary(l.natal.dist)
-
+#### EARLY IPM ####
 # Storing values into vital params list, divided into early and late
 # given local density is scaled (but not centered) the estimates for the slope have to be transformed back to the non-scaled value.
 vp.early <- list(s.int = summary(e.survival)$coefficients['(Intercept)','Estimate'],
@@ -163,14 +71,14 @@ vp.early <- list(s.int = summary(e.survival)$coefficients['(Intercept)','Estimat
                  r.slo = 0,
                  r.multiplier = 1,
                  f.int = summary(e.recruit)$coefficients$cond['(Intercept)','Estimate'],
-                 f.slo = 0,
+                 f.slo = summary(e.recruit)$coefficients$cond['s_loc_density','Estimate']/attr(data$s_loc_density, 'scaled:scale'),
                  distribution = 'ztpoisson',
                  
                  p.stat.int.ad = summary(e.dispersal.p)$coefficients['(Intercept)','Estimate'],
-                 p.stat.slo.ad = summary(e.dispersal.p)$coefficients['s_loc_density','Estimate']/attr(data$s_loc_density, 'scaled:scale'),
+                 p.stat.slo.ad = 0,
                  sigma.stat.ad = 0.25, 
                  mu.mob.int.ad = summary(e.dispersal.dist)$coefficients['(Intercept)','Estimate'],
-                 mu.mob.slo.ad = summary(e.dispersal.dist)$coefficients['(Intercept)','Estimate']/attr(data$s_loc_density, 'scaled:scale'),
+                 mu.mob.slo.ad = 0,
                  sigma.mob.ad = sqrt(sum(as.data.frame(lme4::VarCorr(e.dispersal.dist))[,'sdcor'])),
                  
                  p.stat.int.nat = summary(e.natal.p)$coefficients['(Intercept)','Estimate'],
@@ -181,25 +89,59 @@ vp.early <- list(s.int = summary(e.survival)$coefficients['(Intercept)','Estimat
                  sigma.mob.nat = sqrt(sum(as.data.frame(lme4::VarCorr(e.natal.dist))[,'sdcor']))
 )
 
-kp <- create.kernel.params()
+# Running the IPM for the early stage
+IPM.early <- runIPM(kp, vp.early, init.pop = pop0, niter=12)
+plotly::plot_ly(x=1:ncol(IPM.early$pop.size), y=rev(kp$y), z=log(IPM.early$pop.size+1), type="contour")
+# another way to do it
+draw.pop.dyn(IPM.model = IPM.early, breaks=15, Hue='Reds')
+# population explodes after 15 months: we probably need to set a limit to population growth rate manually, since survival is not density dependent.
+####+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+#### MID IPM ####
+vp.mid <- list(s.int = summary(m.survival)$coefficients['(Intercept)','Estimate'],
+                s.slo = summary(m.survival)$coefficients['s_loc_density','Estimate']/attr(data$s_loc_density, 'scaled:scale'),
+                s.multiplier = 1,
+                
+                r.int = summary(m.recruit)$coefficients$zi['(Intercept)','Estimate'],
+                r.slo = summary(m.recruit)$coefficients$zi['s_loc_density','Estimate']/attr(data$s_loc_density, 'scaled:scale'),
+                r.multiplier = 1,
+                f.int = summary(m.recruit)$coefficients$cond['(Intercept)','Estimate'],
+                f.slo = summary(m.recruit)$coefficients$cond['s_loc_density','Estimate']/attr(data$s_loc_density, 'scaled:scale'),
+                f.distribution = 'ztpoisson',
+                
+                p.stat.int.ad = summary(m.dispersal.p)$coefficients['(Intercept)','Estimate'],
+                p.stat.slo.ad = summary(m.dispersal.p)$coefficients['s_loc_density','Estimate']/attr(data$s_loc_density, 'scaled:scale'),
+                sigma.stat.ad = 0.25, 
+                mu.mob.int.ad = summary(m.dispersal.dist)$coefficients['(Intercept)','Estimate'],
+                mu.mob.slo.ad = summary(m.dispersal.dist)$coefficients['s_loc_density','Estimate']/attr(data$s_loc_density, 'scaled:scale'),
+                sigma.mob.ad = sqrt(sum(as.data.frame(lme4::VarCorr(m.dispersal.dist))[,'sdcor'])),
+                
+                p.stat.int.nat = summary(m.natal.p)$coefficients['(Intercept)','Estimate'],
+                p.stat.slo.nat = summary(m.natal.p)$coefficients['s_loc_density.mid','Estimate']/attr(data$s_loc_density, 'scaled:scale'),
+                sigma.stat.nat = 0.25, 
+                mu.mob.int.nat = summary(m.natal.dist)$coefficients['(Intercept)','Estimate'],
+                mu.mob.slo.nat = summary(m.natal.dist)$coefficients['s_loc_density.mid','Estimate']/attr(data$s_loc_density, 'scaled:scale'),
+                sigma.mob.nat = sqrt(sum(as.data.frame(lme4::VarCorr(m.natal.dist))[,'sdcor']))
+)
 
-# Defining the initial population size
-pop0 <- c(rep(0, kp$n.bins/2-1), 10, rep(0, kp$n.bins/2))
 
 # Running the IPM for the early stage
-IPM <- runIPM(kp, vp.early, init.pop = pop0, niter=15)
-plotly::plot_ly(x=1:ncol(IPM$pop.size), y=rev(kp$y), z=IPM$pop.size, type="contour")
+IPM.mid <- runIPM(kp, vp.mid, init.pop = pop0, niter = 36)
+plotly::plot_ly(x=1:ncol(IPM.mid$pop.size), y=rev(kp$y), z=IPM.mid$pop.size, type="contour")
 # another way to do it
-draw.pop.dyn(IPM.model = IPM, breaks=15)
+draw.pop.dyn(IPM.model = IPM.mid, breaks=48, Hue='Blues')
+plot(IPM.mid$pop.spread + 0.5, col='darkblue', type='o')
+plot(colSums(IPM.mid$pop.size), col='darkblue')
+plot(IPM.mid$pop.size[which(IPM.late$y==0.5),], col='darkblue')
+####++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-# population explodes after 15 months: we probably need to set a limit to population growth rate manually, since survival is not density dependent.
+#### LATE IPM ####
 vp.late <- list(s.int = summary(l.survival)$coefficients['(Intercept)','Estimate'],
                  s.slo = summary(l.survival)$coefficients['s_loc_density','Estimate']/attr(data$s_loc_density, 'scaled:scale'),
                  s.multiplier = 1,
                  
                  r.int = summary(l.recruit)$coefficients$zi['(Intercept)','Estimate'],
-                 r.slo = summary(l.recruit)$coefficients$zi['s_loc_density','Estimate'],
+                 r.slo = 0,
                  r.multiplier = 1,
                  f.int = summary(l.recruit)$coefficients$cond['(Intercept)','Estimate'],
                  f.slo = 0,
@@ -213,22 +155,64 @@ vp.late <- list(s.int = summary(l.survival)$coefficients['(Intercept)','Estimate
                  sigma.mob.ad = sqrt(sum(as.data.frame(lme4::VarCorr(l.dispersal.dist))[,'sdcor'])),
                  
                  p.stat.int.nat = summary(l.natal.p)$coefficients['(Intercept)','Estimate'],
-                 p.stat.slo.nat = 0,
+                 p.stat.slo.nat = summary(l.natal.p)$coefficients['(Intercept)','Estimate']/attr(data$s_loc_density, 'scaled:scale'),
                  sigma.stat.nat = 0.25, 
                  mu.mob.int.nat = summary(l.natal.dist)$coefficients['(Intercept)','Estimate'],
-                 mu.mob.slo.nat = summary(l.natal.dist)$coefficients['s_loc_density.mid','Estimate'],
+                 mu.mob.slo.nat = 0,
                  sigma.mob.nat = sqrt(sum(as.data.frame(lme4::VarCorr(l.natal.dist))[,'sdcor']))
 )
 
-kp <- create.kernel.params(L=-150, U=150, n.bins = 300)
 # increasing the space will also increase the maximum population size. This is because at the moment, individuals that overcome the boundaries are lost forever, whereby they could and should move back into the frame we are looking at or produce offspring that would do so.
 # a smart way around it is to change the scale of movement distances (mu of the lognormal distributions), which can be lowered to a tenth or hundredth of its current value. This way we'll be projecting movements in tens or hundreds of meters instead of actual meters.
 
-# Defining the initial population size
-pop0 <- c(rep(0, kp$n.bins/2-1), 30, rep(0, kp$n.bins/2))
 
 # Running the IPM for the LATE stage
-IPM <- runIPM(kp, vp.late, init.pop = pop0, niter=120)
-plotly::plot_ly(x=kp$y, y=1:ncol(IPM$pop.size), z=t(IPM$pop.size), type="contour")
+IPM.late <- runIPM(kp, vp.late, init.pop = pop0, niter=36)
+plotly::plot_ly(y=kp$y, x=1:ncol(IPM.late$pop.size), z=IPM.late$pop.size, type="contour")
 # another way to do it
-draw.pop.dyn(IPM.model = IPM, breaks=50)
+draw.pop.dyn(IPM.model = IPM.late, breaks=48, Hue='Greens')
+plot(IPM.late$pop.spread + 0.5, col='darkgreen')
+plot(colSums(IPM.late$pop.size), col='darkgreen')
+plot(IPM.late$pop.size[which(IPM.late$y==0.5),], col='darkgreen')
+
+
+
+# creating array to store results of perturbation analyses
+perturbation <- array(NA, dim = c(4,14,3), dimnames = list(c('speed', 'acceleration', 'lambda', 'pop'), c('s.int', 's.slo',  'r.int',  'r.slo', 'f.int',  'f.slo',  'p.stat.int.ad','p.stat.slo.ad',  'mu.mob.int.ad', 'mu.mob.slo.ad', 'p.stat.int.nat','p.stat.slo.nat', 'mu.mob.int.nat', 'mu.mob.slo.nat'), c('IPM.early', 'IPM.mid', 'IPM.late')))
+
+phases <- list(IPM.early, IPM.mid, IPM.late)
+params <- list(early = c('s.int',  'r.int', 'f.int', 'f.slo', 'p.stat.int.ad',  'mu.mob.int.ad', 'p.stat.int.nat', 'mu.mob.int.nat'),
+               mid = c('s.int', 's.slo',  'r.int',  'r.slo', 'f.int',  'f.slo',  'p.stat.int.ad','p.stat.slo.ad',  'mu.mob.int.ad', 'mu.mob.slo.ad', 'p.stat.int.nat','p.stat.slo.nat', 'mu.mob.int.nat', 'mu.mob.slo.nat'), 
+               late = c('s.int', 's.slo',  'r.int', 'f.int',  'p.stat.int.ad','p.stat.slo.ad',  'mu.mob.int.ad', 'p.stat.int.nat','p.stat.slo.nat', 'mu.mob.int.nat'))
+
+start <- Sys.time()
+for(I in 1:length(phases)){
+  for(j in 1:length(params[[I]])){
+    temp <- perturb(orig.IPM = phases[[I]], epsilon = 0.01, par = params[[I]][j])
+    perturbation[, params[[I]][[j]], I] <- unlist(temp)
+  }
+}
+Sys.time() - start
+
+
+save(perturbation, file = 'sensitivity.rds')
+
+
+
+
+oopt <- ani.options(interval = 0.5, nmax = 48)
+for (i in 1:ani.options("nmax")) {
+  if(i==1){
+    plot(0, xlim=range(IPM.mid$y), ylim=c(0, max(IPM.mid$pop.size)), col='white')
+  }
+  draw.pop.distr(x=IPM.mid$y, pop=IPM.mid$pop.size[,i], col='darkgreen', new.plot = F)
+  ani.pause()
+}
+ani.options(oopt)
+
+saveHTML({ani.options(interval = 0.05, nmax = 50)
+  brownian.motion(pch = 21, cex = 5, col = "red", bg = "yellow")},
+  img.name = "bm_plot", ani.height = 300, ani.width = 550,
+    title = "Demonstration of the Brownian Motion",
+  description = c("Random walk on the 2D plane: for each point",
+                  "(x, y), x = x + rnorm(1) and y = y + rnorm(1)."))
