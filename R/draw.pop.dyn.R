@@ -16,7 +16,7 @@ draw.pop.dyn <- function(IPM.model, Hue='Blues', breaks=10){
   plot(0, xlim=c(min(IPM.model$y), max(IPM.model$y)), ylim=c(0, max(IPM.model$pop.size)), col='white', ylab='population size', xlab='space')
   
   # creating a vector to select columns from the population projection
-  selector <- round(seq(1,IPM.model$n.iterations, length.out = breaks))
+  selector <- round(seq(1,IPM.model$n.iterations+1, length.out = breaks))
   
   # determining the vector of colour values
   colorz <- as.list(grDevices::colorRampPalette(RColorBrewer::brewer.pal(9,Hue)[2:9])(breaks))
