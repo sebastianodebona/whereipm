@@ -7,8 +7,8 @@ test_that('create.kernel.params() works as expected',{
 })
 
 test_that('create.vital.params() works as expected',{
-  kp <- create.vital.params()
-  expect_length(kp, 12)
+  kp <- mock.vital.params()
+  expect_length(kp, 20)
 })
 
 context('Vital rate functions working')

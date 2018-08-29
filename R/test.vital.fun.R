@@ -10,7 +10,7 @@
 test.vital.fun <- function(type){
   
   kp <- create.kernel.params()
-  vp <- create.vital.params()
+  vp <- mock.vital.params()
   
   if(type=='S'){
     
@@ -35,7 +35,7 @@ test.vital.fun <- function(type){
     b <- kp$L+c(0:kp$n.bins)*(kp$U-kp$L)/kp$n.bins # meshpoints
     y <- 0.5*(b[1:kp$n.bins]+b[2:(kp$n.bins+1)])
     
-    G <- outer(y,y, FUN=gx, p.stat=vp$p.stat, 
+    G <- outer(y,y, FUN=gx_rw, p.stat=vp$p.stat, 
                s.stat=vp$s.stat, 
                s.mob=vp$s.mob)
     image(t(G))
