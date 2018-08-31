@@ -18,12 +18,12 @@ kp <- create.kernel.params(L = -50, U = 50, n.bins = 100)
 
 # Testing the initial kernel
 
+# Defining the initial population size
+pop0 <- c(rep(0, kp$n.bins/2-1), 30, rep(0, kp$n.bins/2))
+
 #test.init.kernel(kernel.params = kp, vital.params = vp)
 
 K <- build.kernel(kp, vp, pop.size = pop0, test=T)
-
-# Defining the initial population size
-pop0 <- c(rep(0, kp$n.bins/2-1), 30, rep(0, kp$n.bins/2))
 
 
 # Running the IPM
@@ -90,11 +90,12 @@ vp.early <- list(s.int = summary(e.survival)$coefficients['(Intercept)','Estimat
 )
 
 # Running the IPM for the early stage
+start <- Sys.time()
 IPM.early <- runIPM(kp, vp.early, init.pop = pop0, niter=12)
-plotly::plot_ly(x=1:ncol(IPM.early$pop.size), y=rev(kp$y), z=log(IPM.early$pop.size+1), type="contour")
+Sys.time() - start
+plotly::plot_ly(x=1:ncol(IPM.early$pop.size), y=rev(kp$y), z=IPM.early$pop.size, type="contour")
 # another way to do it
-draw.pop.dyn(IPM.model = IPM.early, breaks=15, Hue='Reds')
-# population explodes after 15 months: we probably need to set a limit to population growth rate manually, since survival is not density dependent.
+quick.plot(IPM.early, 'Early')
 ####+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #### MID IPM ####
@@ -126,13 +127,12 @@ vp.mid <- list(s.int = summary(m.survival)$coefficients['(Intercept)','Estimate'
 
 
 # Running the IPM for the early stage
+start <- Sys.time()
 IPM.mid <- runIPM(kp, vp.mid, init.pop = pop0, niter = 36)
+Sys.time() -start
 plotly::plot_ly(x=1:ncol(IPM.mid$pop.size), y=rev(kp$y), z=IPM.mid$pop.size, type="contour")
 # another way to do it
-draw.pop.dyn(IPM.model = IPM.mid, breaks=48, Hue='Blues')
-plot(IPM.mid$pop.spread + 0.5, col='darkblue', type='o')
-plot(colSums(IPM.mid$pop.size), col='darkblue')
-plot(IPM.mid$pop.size[which(IPM.late$y==0.5),], col='darkblue')
+quick.plot(IPM.mid, 'Mid')
 ####++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #### LATE IPM ####
@@ -167,52 +167,13 @@ vp.late <- list(s.int = summary(l.survival)$coefficients['(Intercept)','Estimate
 
 
 # Running the IPM for the LATE stage
-IPM.late <- runIPM(kp, vp.late, init.pop = pop0, niter=36)
+start <- Sys.time()
+IPM.late <- runIPM(kp, vp.late, init.pop = pop0, niter= 36)
+Sys.time() - start
 plotly::plot_ly(y=kp$y, x=1:ncol(IPM.late$pop.size), z=IPM.late$pop.size, type="contour")
 # another way to do it
-draw.pop.dyn(IPM.model = IPM.late, breaks=48, Hue='Greens')
-plot(IPM.late$pop.spread + 0.5, col='darkgreen')
-plot(colSums(IPM.late$pop.size), col='darkgreen')
-plot(IPM.late$pop.size[which(IPM.late$y==0.5),], col='darkgreen')
-
-
-
-# creating array to store results of perturbation analyses
-perturbation <- array(NA, dim = c(4,14,3), dimnames = list(c('speed', 'acceleration', 'lambda', 'pop'), c('s.int', 's.slo',  'r.int',  'r.slo', 'f.int',  'f.slo',  'p.stat.int.ad','p.stat.slo.ad',  'mu.mob.int.ad', 'mu.mob.slo.ad', 'p.stat.int.nat','p.stat.slo.nat', 'mu.mob.int.nat', 'mu.mob.slo.nat'), c('IPM.early', 'IPM.mid', 'IPM.late')))
-
-phases <- list(IPM.early, IPM.mid, IPM.late)
-params <- list(early = c('s.int',  'r.int', 'f.int', 'f.slo', 'p.stat.int.ad',  'mu.mob.int.ad', 'p.stat.int.nat', 'mu.mob.int.nat'),
-               mid = c('s.int', 's.slo',  'r.int',  'r.slo', 'f.int',  'f.slo',  'p.stat.int.ad','p.stat.slo.ad',  'mu.mob.int.ad', 'mu.mob.slo.ad', 'p.stat.int.nat','p.stat.slo.nat', 'mu.mob.int.nat', 'mu.mob.slo.nat'), 
-               late = c('s.int', 's.slo',  'r.int', 'f.int',  'p.stat.int.ad','p.stat.slo.ad',  'mu.mob.int.ad', 'p.stat.int.nat','p.stat.slo.nat', 'mu.mob.int.nat'))
-
-start <- Sys.time()
-for(I in 1:length(phases)){
-  for(j in 1:length(params[[I]])){
-    temp <- perturb(orig.IPM = phases[[I]], epsilon = 0.01, par = params[[I]][j])
-    perturbation[, params[[I]][[j]], I] <- unlist(temp)
-  }
-}
-Sys.time() - start
-
-
-save(perturbation, file = 'sensitivity.rds')
+quick.plot(IPM.late, 'Late')
 
 
 
 
-oopt <- ani.options(interval = 0.5, nmax = 48)
-for (i in 1:ani.options("nmax")) {
-  if(i==1){
-    plot(0, xlim=range(IPM.mid$y), ylim=c(0, max(IPM.mid$pop.size)), col='white')
-  }
-  draw.pop.distr(x=IPM.mid$y, pop=IPM.mid$pop.size[,i], col='darkgreen', new.plot = F)
-  ani.pause()
-}
-ani.options(oopt)
-
-saveHTML({ani.options(interval = 0.05, nmax = 50)
-  brownian.motion(pch = 21, cex = 5, col = "red", bg = "yellow")},
-  img.name = "bm_plot", ani.height = 300, ani.width = 550,
-    title = "Demonstration of the Brownian Motion",
-  description = c("Random walk on the 2D plane: for each point",
-                  "(x, y), x = x + rnorm(1) and y = y + rnorm(1)."))
