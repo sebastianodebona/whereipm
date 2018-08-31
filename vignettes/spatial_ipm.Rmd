@@ -65,8 +65,17 @@ $$
 
 ### The limitations of population matrices
 
-Population matrices are a very powerful tool to study population biology, and are widely used. Many traits though, among which size, are continuous, and having to slit them into prefixed classes doesn't allow to capture the full range of variation among individuals.
+Population matrices are a very powerful tool to study population biology, and are widely used. Many traits though are continuous, and having to split them into prefixed classes doesn't allow to capture the full range of variation among individuals.
 
+### Integral Projection Models
+
+Instead of thinking about classes and class-specific life-histories, we can envision a continuos function that correlates a trait (e.g. size, or position in space) to vital rates (e.g. survival, reproduction, growth etc). We can then discretize this function into very small chunks. This is pretty much what an IPM does. 
+
+### Space?
+
+Position along a one dimensional axis is nothing less than a continuous 'trait' that can be attributed to an individual. In case an environmental gradient is present, position itself can affect life history traits. In addition to this, a position in space can be linked to a certain local density, and this will also affect vital rates.
+
+If space becomes our trait, the four function describing vital rates become Survival, Reproduction (both position-specific, and density-dependent), Adult dispersal (the equivalent of growth in a size based IPM) and Natal dispersal (corresponding to the inheritance function).
 
 ## Let's begin!
 
@@ -81,9 +90,8 @@ library(whereipm)
 ```
 
 
-## Let's keep it theoretical
 
-For a start, let's just say you're interested in knowing how these models work and look like, without needing to fit real data to them. This package allows building spatial IPMs from scratch, manually deciding on which parameters are to be used to build the IPM kernel. As you will learn, some functions even allow you generate default, uninformative parameters, so if you want you don't even have to decide.
+
 
 
 
