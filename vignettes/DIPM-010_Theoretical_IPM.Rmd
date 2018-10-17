@@ -1,0 +1,123 @@
+---
+title: "Theoretical IPM"
+author: "Seba De Bona"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+    theme: lumen
+---
+
+This vignettes builds an ipm using the framework provided by the package `whereipm` using mock values for the parameters and running a short simulation.
+
+## Setup & Initialising
+
+Let's begin by loading the package
+
+```{r}
+library(whereipm)
+```
+
+### Vital rates
+
+An IPM is defined by a series of vital rate parameters. These describe what is the survival prbability of individuals given a certain trait, what their reproduction, and how traits change through time.
+
+We can use the function `mock.vital.params` to generate some vital parameters.
+
+```{r}
+vp <- mock.vital.params()
+```
+
+### Kernel parameters
+
+The kernel itself also requires some parameters, which define the size of the grid and it's grain. For example, we can here create a kernel space that spans between -50 and 50 meters, with a grid of a meter.
+
+```{r}
+kp <- create.kernel.params(L = -50, U = 50, n.bins = 100)
+
+# check why weird stuff happens when  U/n.bin changes
+```
+
+### Initial population
+
+The last ingredient we need is an initial population, organised in space. For simplicity, let's assume 30 individuals are introduced in the center of our linear space.
+
+```{r}
+pop0 <- c(rep(0, kp$n.bins/2-1), 30, rep(0, kp$n.bins/2))
+```
+
+### Testing the initial kernel
+
+Using the function `test.init.kernel` we can have a quick glance at our initial kernel, to perform a visual evaluation. The plotting area will ask to press 'Enter' when ready to proceed with the visualisation of the following plots
+
+```{r, eval = F}
+test.init.kernel(kernel.params = kp, vital.params = vp)
+```
+```{r, echo = F}
+K <- build.kernel(kp, vp, pop.size = pop0, test=T)
+
+op <- par()
+  par(mfrow=c(2,4))
+  
+  image(t(K$S), main='survival')
+  image(t(log(K$G)),main='adult \ndispersal')
+  image(t(K$R), main='reproduction')
+  image(t(log(K$N)),main='natal \ndispersal')
+  
+  image(t(log(K$Pmatrix)),main='P kernel')
+  abline(0,1,lty=2)
+  image(t(log(K$Fmatrix)), main='F kernel')
+  abline(0,1,lty=2)
+  image(t(log(K$K)), main='full kernel') 
+  
+  suppressWarnings(par(op))
+```
+
+Note that here (but not as a default of the function `test.init.kernel`) all kernel are in a log scale, to better appreciate the otherwise very steep decrease in probability as moving away from the diagonal.
+
+As a visual check, a few things can be noted:
+
+1. the structure of the kernels is the following (as described in Into);
+```{r, echo = F, fig.height=2, fig.width=6}
+par(oma=c(0,0,0,0), mar=c(0,0,0,0))
+plot(0, col="white", xaxt = "n", yaxt = "n", xlab = "", ylab = "", bty = "n", ylim = c(0,1), xlim = c(1,3.2))
+text(x = rep(1.6, 4), y = c(.2,.3, .7,.8), 
+     labels = c("natal dispersal", "reproduction", "adult dispersal", "survival"),
+     pos = 2)
+text(x = rep(2, 2), y = c(.25, .75),
+     labels = c("P matrix", "F matrix"), pos = 4)
+segments(x0 = 1.6, x1 = 1.7, y0=c(.2,.3, .7,.8))
+segments(x0 = 1.7, y0 = c(.2,.7), y1 = c(.3, .8))
+segments(x0 = 1.7, x1 = 2, y0=c(.25, .75))
+text(x = 2.8, y = .5, labels = "full kernel", pos = 4)
+segments(x0 = 2.3, x1 = 2.4, y0=c(.25,.75))
+segments(x0 = 2.4, y0 = .25, y1 = .75)
+segments(x0 = 2.4, x1 = 2.8, y0 = .5)
+```
+2. the *survival* and *reproduction* kernel should be diagonal kernels (solid color everywhere else);
+3. All other kernels should have higher values on the diagonal, and decreasing values moving away from it. This if at least some individuals are philopatric (remain in their current position);
+4. If any density-dependent dispersal was assumed, a central vertical line should be visible in the corresponding dispersal kernels (cascading down onto P-matrix/F-matrix and ful kernel)
+
+## Running the IPM
+
+Now we are ready to run the simulation using Integral Projection Modelling. The function `runIPM` allows to use the vital parameters, kernel parameters and initial population size to build and run the IPM. We can use `niter` to decide on the number of simulations. Here, let's try 25 time steps.
+
+```{r}
+IPM <- runIPM(kp, vp, init.pop = pop0, niter=25, unidirectional=F)
+```
+
+We can now use some external tools and some shipped with the package, to visualise the output.
+The function `plotly::plot_ly` is extremely convenient to visualise in 3 dimensions, here time (x), space (y) and population size (z).
+
+```{r}
+# 3d plot of population size through time and space
+plotly::plot_ly(x=1:ncol(IPM$pop.size), y=rev(kp$y), z=IPM$pop.size, type="contour")
+```
+
+Another way to do it is to use the function `draw.pop.dyn`, which plots the population distribution at each months, with increasingly dark colours from a palette.
+
+```{r}
+draw.pop.dyn(IPM.model = IPM, breaks=25)
+```

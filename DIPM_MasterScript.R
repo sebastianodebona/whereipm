@@ -4,37 +4,6 @@
 #
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-library(whereipm)
-
-# Defining vital rate parameters
-
-vp <- mock.vital.params()
-
-
-# Defining kernel parameters
-kp <- create.kernel.params(L = -50, U = 50, n.bins = 100)
-# check why weird stuff happens when U/n.bins is changed
-
-
-# Testing the initial kernel
-
-# Defining the initial population size
-pop0 <- c(rep(0, kp$n.bins/2-1), 30, rep(0, kp$n.bins/2))
-
-#test.init.kernel(kernel.params = kp, vital.params = vp)
-
-K <- build.kernel(kp, vp, pop.size = pop0, test=T)
-
-
-# Running the IPM
-
-IPM <- runIPM(kp, vp, init.pop = pop0, niter=25, unidirectional=F)
-# 3d plot of population size through time and space
-plotly::plot_ly(x=1:ncol(IPM$pop.size), y=rev(kp$y), z=IPM$pop.size, type="contour")
-# another way to do it
-draw.pop.dyn(IPM.model = IPM, breaks=25)
-
-
 
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Now with REAL DATA

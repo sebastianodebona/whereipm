@@ -27,6 +27,8 @@ navbar:
       menu:
         - text: "Introduction"
           href: articles/DIPM-000_Intro.html
+        - text: "Theoretical IPM"
+          href: articles/DIPM-010_Theoretical_IPM.html
         
   right:
     - icon: fa-gitlab fa-lg
