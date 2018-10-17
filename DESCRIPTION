@@ -1,5 +1,5 @@
 Package: whereipm
-Title: Integral Projection Model to study spatial ecology of a population
+Title: Integral Projection Model to study the spatial ecology of a population
 Version: 0.1.0
 Authors@R: c(person("Seba", "De Bona", email = "sebastiano.debona@gmail.com", 
                  role = c('aut','cre'))
