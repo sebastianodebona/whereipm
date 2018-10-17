@@ -1,0 +1,33 @@
+### * url
+
+url: https://sebadebona.gitlab.io/dispersal-ipm/
+
+### * home
+
+home:
+  links:
+    - text: Browse source code at
+      href: https://gitlab.com/sebadebona/dispersal-ipm
+
+### * template
+      
+template:
+  params:
+    bootswatch: flatly
+
+### * navbar
+
+navbar:
+  left:
+    - icon: fa-home fa-lg
+      href: index.html
+    - text: "Reference"
+      href: reference/index.html
+    - text: "Analyses"
+      menu:
+        - text: "Introduction"
+          href: articles/DIPM-000_Intro.html
+        
+  right:
+    - icon: fa-gitlab fa-lg
+      href: https://gitlab.com/sebadebona/dispersal-ipm
