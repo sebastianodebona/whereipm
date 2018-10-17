@@ -11,7 +11,7 @@ installAndRender:
   stage: build
   script:
     # Install missing R packages
-    - Rscript -e 'install.packages(c("lme4", "plyr", "plotly", "sticky", "tidyverse", "RColorBrewer", "grDevices", "nlme", "stargazer", "roxygen2","car", "magick", "kable"))'
+    - Rscript -e 'install.packages(c("lme4", "glmmTMB", "plyr", "plotly", "sticky", "tidyverse", "RColorBrewer", "grDevices", "nlme", "stargazer", "roxygen2","car", "magick", "kable"))'
     # Build and install our package
     - Rscript -e "devtools::document(); devtools::install()"
     # Run pkgdown, including manuscript material preparation

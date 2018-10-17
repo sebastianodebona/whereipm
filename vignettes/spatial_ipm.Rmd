@@ -1,5 +1,5 @@
 ---
-title: "How to build a Spatial IPM"
+title: "Why a Spatial IPM?"
 author: "Seba De Bona"
 date: "`r Sys.Date()`"
 output:
@@ -76,34 +76,3 @@ Instead of thinking about classes and class-specific life-histories, we can envi
 Position along a one dimensional axis is nothing less than a continuous 'trait' that can be attributed to an individual. In case an environmental gradient is present, position itself can affect life history traits. In addition to this, a position in space can be linked to a certain local density, and this will also affect vital rates.
 
 If space becomes our trait, the four function describing vital rates become Survival, Reproduction (both position-specific, and density-dependent), Adult dispersal (the equivalent of growth in a size based IPM) and Natal dispersal (corresponding to the inheritance function).
-
-## Let's begin!
-
-First of all, you'll need to install the package:
-```{r, eval=FALSE}
-install.packages('whereipm')
-```
-
-Or, if you already have it installed, just load it, using:
-```{r}
-library(whereipm)
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Also a quote using `>`:
-
-> "He who gives up [code] safety for [code] speed deserves neither."
-([via](https://twitter.com/hadleywickham/status/504368538874703872))
