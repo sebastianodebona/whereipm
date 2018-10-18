@@ -20,7 +20,6 @@ Loading the required packages.
 
 ```{r}
 library(tidyverse)
-library(sticky)
 ```
 
 Loading the raw data files.
@@ -388,30 +387,41 @@ loc <- loc %>% select( -loc_density)
 data <- data %>% left_join(loc, by = c("sampling", "location"))
 # Sanity check
 stopifnot(NROW_CHECK == nrow(data))
-# now transferring attributes (scaling and centering value) from loc$s_loc_density to data$s_loc_density, so they can be retrieved later
-# attr(x, 'string') <- value assignes a value as an attribute to the object (e.g. vector) x, to be called 'string':
-# see: https://stat.ethz.ch/R-manual/R-devel/library/base/html/attr.html
-# the function sticky used here, from the package sticky, allows vector to retain the attributes even after subsetting, appending etc
-# see: https://cran.r-project.org/web/packages/sticky/vignettes/introduction.html
-data$s_loc_density <- sticky(data$s_loc_density)
-attr(data$s_loc_density, "scaled:center") <- attr(loc$s_loc_density, "scaled:center")
-attr(data$s_loc_density, "scaled:scale") <- attr(loc$s_loc_density, "scaled:scale")
 
-land <- data %>% select(sampling, land_density) %>%
+#   Previously transferring attributes (scaling and centering value) from loc$s_loc_density
+# to data$s_loc_density, so they can be retrieved later.
+#   attr(x, 'string') <- value assignes a value as an attribute to the object (e.g. vector) x,
+# to be called 'string':
+# see: https://stat.ethz.ch/R-manual/R-devel/library/base/html/attr.html
+#   The function sticky, from the package sticky, allows vector to retain the
+# attributes even after subsetting, appending etc
+# see: https://cran.r-project.org/web/packages/sticky/vignettes/introduction.html
+#   Now this approach has been replaced, since attributes conflict with some tidyverse 
+# functions (e.g. sticky)
+
+# I am now creating a list that stores all attributes and can be retrieved later:
+scalingAttr <- list(loc_density = list(scale = attr(loc$s_loc_density, "scaled:scale"),
+                                       center = attr(loc$s_loc_density, "scaled:center")))
+
+
+land <- data %>% select(sampling, land_density, time) %>%
     unique()
 land$s_land_density <- scale(land$land_density)
-land <- land %>% select( -land_density)
+
+# time will be scaled but not centered, to keep the intercept at 0 in the models
+land$s_time <- scale(land$time, center = F)
+land <- land %>% select( -c(land_density, time))
 data <- data %>% left_join(land, by = "sampling")
 # Sanity check
 stopifnot(NROW_CHECK == nrow(data))
-# transferring attributes
-data$s_land_density <- sticky(data$s_land_density)
-attr(data$s_land_density, "scaled:center") <- attr(land$s_land_density, "scaled:center")
-attr(data$s_land_density, "scaled:scale") <- attr(land$s_land_density, "scaled:scale")
+
+# storing attributes
+scalingAttr$land_density <- list(scale = attr(land$s_land_density, "scaled:scale"),
+                                 center = attr(land$s_land_density, "scaled:center"))
+scalingAttr$time <- list(scale = attr(land$s_time, "scaled:scale"))
     
-# time will be scaled but not centered, to keep the intercept at 0 in the models
-data$s_time <- sticky(scale(data$time, center=F))
-data$s_time.birth <- sticky(scale(data$time.birth, center=F))
+# scaling also time.birth
+data$s_time.birth <- data$time.birth/attr(land$s_time, "scaled:scale")
 ```
 
 ### Habitat
@@ -520,4 +530,5 @@ stopifnot(NROW_CHECK == nrow(data))
 # Saving dataset in an R dataset format
 ipmdata = data
 save(ipmdata, file=file.path(here::here(), 'data', 'ipmdata.rda'))
+save(scalingAttr, file = file.path(here::here(), 'data', 'scalingAttr.rda'))
 ```
