@@ -36,7 +36,7 @@ navbar:
         - text: "Analyses"
         - text: -------------------------------------
         - text: "Vital rate models: phases"
-        - text: articles/DIPM-020_Vital_rate_models.Rmd
+        - text: articles/DIPM-020_Vital_rate_models.html
           
         
   right:
