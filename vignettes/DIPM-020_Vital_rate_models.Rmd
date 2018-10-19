@@ -27,20 +27,24 @@ data <- ipmdata
 
 To study how the evolution of dispersal and life-history affects the spatial ecology of the population we are splitting the 5 years of observation in 3 phases:
 
-1. Early phase, between a month after introduction and month 12;
-2. Mid phase, between month 26 and 37;
-3. Late pahse, between month 51 and 62.
+1. Early phase, between a month after introduction and month 16;
+2. Mid phase, between month 27 and 36;
+3. Late pahse, between month 47 and 62.
+
+The length of the phases is biased to allow more similar sample sizes, which should allow similar power to find significant results.
 
 I will also subset the dataset to include only pools, and only females.
 
 ```{r}
-# subsetting for sex, habitat and time (here I am building a model for females in pools, only in the early phase)
+# subsetting for sex, habitat and time. 
+# Here I am considering only females since for males the number of offspring sired
+# is complicated by sperm storage in females.
 data.early <- data %>%
-  filter(Habitat == "P" & sex == "F" & time>=1 & time<=20)
-data.mid <- data %>%
-  filter(Habitat=="P" & sex=="F" & time>=21 & time<=41)
+  filter(sex == "F" & Habitat=='P' & time>=1 & time<=16)
+data.mid <- data %>% 
+  filter(sex == "F" & Habitat=='P' & time>=27 & time<=36)
 data.late <- data %>%
-  filter(Habitat=='P' & sex=='F' & time>=42 & time<=62)
+  filter(sex == "F" & Habitat=='P' & time>=47 & time<=62)
 ```
 
 ## Models
@@ -57,15 +61,18 @@ I will run 6 model trios, for different life-history and dispersal traits:
 ### Survival
 
 ```{r, results = "asis"}
-e.survival <- lme4::glmer(survival ~ s_loc_density +
-                            + (1|FishID) + (1|reach) + (s_loc_density|sampling),
+# For survival, Local density is the only covariate.
+# Random effects include individual identity, reach and sampling.
+
+e.survival <- lme4::glmer(survival ~ 1 +
+                            + (1|FishID) + (1|reach) + (1|sampling),
                           data=data.early,
                           family=binomial,
                           lme4::glmerControl(optimizer=c('bobyqa')))
 # in early phase survival is not affectd by density
 
-m.survival <- lme4::glmer(survival ~ s_loc_density +
-                            + (1|FishID) + (1|reach) + (s_loc_density|sampling),
+m.survival <- lme4::glmer(survival ~ 1 +
+                            + (1|FishID) + (1|reach) + (1|sampling),
                           data=data.mid,
                           family=binomial,
                           lme4::glmerControl(optimizer=c('bobyqa')))
@@ -76,12 +83,13 @@ l.survival <- lme4::glmer(survival ~ s_loc_density +
                           data=data.late,
                           family=binomial,
                           lme4::glmerControl(optimizer=c('bobyqa')))
-# in late phase survival is not affected by density
+# in late phase survival is positively affected by density
 
 stargazer::stargazer(e.survival, m.survival, l.survival,
                      type = "html",
                      title = "Models for survival",
                      report = "vcsp*",
+                     covariate.labels = "Local density",
                      column.labels = c("Early phase", "Mid phase", "Late phase"),
                      dep.var.caption = "Survival probability",
                      dep.var.labels = "")
@@ -90,32 +98,35 @@ stargazer::stargazer(e.survival, m.survival, l.survival,
 ### Recruitment
 
 ```{r, results = "asis"}
+# For recruitment, the random effect structure is simplified, excluding a random slope for sampling.
+
 e.recruit <- glmmTMB::glmmTMB(recruited ~ s_loc_density +
-                                + (1|FishID) + (s_loc_density|sampling),
+                                + (1|FishID) + (1|reach) + (1|sampling),
                               ziformula = ~ 1 +
-                                + (1|FishID)+  (1|sampling),
+                                + (1|FishID) +  (1|reach) + (1|sampling),
                               family="truncated_poisson"(link="log"),
                               data = data.early,
                               na.action = na.omit)
-# in the early phase, density affects the number of offspring but not the probability to produce any.
+# in the early phase, density negatively affects the number of offspring but not the probability to produce any.
 m.recruit <- glmmTMB::glmmTMB(recruited ~ s_loc_density +
-                                + (1|FishID) + (s_loc_density|sampling),
+                                + (1|FishID) + (1|reach) + (1|sampling),
                               zi = ~ 1 +
-                                + (1|FishID) + (1|sampling),
+                                + (1|FishID) + (1|reach) + (1|sampling),
                               family="truncated_poisson"(link="log"),
                               data=data.mid,
                               na.action = na.omit)
-# in the mid phase number of offspring is negatively affected by density
-l.recruit <- glmmTMB::glmmTMB(recruited ~ s_loc_density +
-                                + (1|FishID) + (s_loc_density|sampling),
+# in the mid phase number of offspring is negatively affected by density (not probability)
+l.recruit <- glmmTMB::glmmTMB(recruited ~ 1 +
+                                + (1|FishID)+ (1|reach) + (1|sampling),
                               zi = ~ 1 +
-                                + (1|FishID) +  (1|sampling),
+                                + (1|FishID)+ (1|reach) +  (1|sampling),
                               family="truncated_poisson"(link="log"),
                               data=data.late,
                               na.action = na.omit)
 # the late phase is not affected by density
 
 sjPlot::tab_model(e.recruit, m.recruit, l.recruit,
+                  show.icc = F, show.aic = F, show.se = T, show.est = T,
                   pred.labels = "Local density",
                   dv.labels = c("Early phase", "Mid phase", "Late phase"),
                   show.ci = F)
@@ -129,17 +140,17 @@ e.dispersal.p <- lme4::glmer(p_moving ~ s_loc_density +
                              family = 'binomial',
                              data = data.early,
                              lme4::glmerControl(optimizer=c('bobyqa')))
-# no effect of density on dispersal in early phase
-m.dispersal.p <- lme4::glmer(p_moving ~ s_loc_density +
-                               + (1|FishID) + (1|reach) + (s_loc_density|sampling),
+# stong but not significant negative effect of density in early phase
+m.dispersal.p <- lme4::glmer(p_moving ~ 1 +
+                               + (1|FishID) + (1|reach) + (1|sampling),
                              family = 'binomial',
                              data = data.mid,
                              lme4::glmerControl(optimizer=c('bobyqa')))
-# positive density dependent dispersal probability for the mid part (higher dispersal at high density)
+# no effect in the mid phase
 l.dispersal.p <- lme4::glmer(p_moving ~ s_loc_density +
                                + (1|FishID) + (1|reach) + (s_loc_density|sampling),
                              family = 'binomial',
-                             data = data,
+                             data = data.late,
                              lme4::glmerControl(optimizer=c('bobyqa')))
 # strong positive effect of density on dispersal in the late phase
 
@@ -147,6 +158,7 @@ stargazer::stargazer(e.dispersal.p, m.dispersal.p, l.dispersal.p,
                      type = "html",
                      title = "Adult dispersal probability",
                      report = "vcsp*",
+                     covariate.labels = "Local density",
                      column.labels = c("Early phase", "Mid phase", "Late phase"),
                      dep.var.caption = "Dispersal probability",
                      dep.var.labels = "")
@@ -155,16 +167,16 @@ stargazer::stargazer(e.dispersal.p, m.dispersal.p, l.dispersal.p,
 ### Adult dispersal distance
 
 ```{r, results = "asis"}
-e.dispersal.dist <- lme4::lmer(log(dist_moved) ~ s_loc_density +
+e.dispersal.dist <- lme4::lmer(log(dist_moved) ~ 1 +
                                  + (1|FishID) + (1|reach) + (1|sampling),
                                data = data.early)
 # early phase distance does not depend on density
-m.dispersal.dist <- lme4::lmer(log(dist_moved) ~ s_loc_density +
-                                 + (1|FishID) + (1|reach) + (s_loc_density|sampling),
+m.dispersal.dist <- lme4::lmer(log(dist_moved) ~ 1 +
+                                 + (1|FishID) + (1|reach) + (1|sampling),
                                data = data.mid)
 # neither does the mid phase
-l.dispersal.dist <- lme4::lmer(log(dist_moved) ~ s_loc_density +
-                                 + (1|FishID) + (1|reach) + (s_loc_density|sampling),
+l.dispersal.dist <- lme4::lmer(log(dist_moved) ~ 1 +
+                                 + (1|FishID) + (1|reach) + (1|sampling),
                                data = data.late)
 # and neither the late phase
 
@@ -177,23 +189,23 @@ stargazer::stargazer(e.dispersal.dist, m.dispersal.dist, l.dispersal.dist,
                      dep.var.labels = "")
 ```
 
-
 ### Natal dispersal probability
 
 ```{r, results = "asis"}
-e.natal.p <- lme4::glmer(p_natal ~ s_loc_density.mid +
+# Since the DDD paper show importance of landscape density on natal dispersal, here I include it in the analyses
+e.natal.p <- lme4::glmer(p_natal ~ s_loc_density.mid*s_land_density.mid +
                            + (1|Maternity) + (1|reach.birth) + (s_loc_density.mid|sampling.birth),
                          family = 'binomial',
                          data = data.early,
                          lme4::glmerControl(optimizer=c('bobyqa')))
-# strong negative density dependence early on
+# strong negative density dependence early on, modulated by landscape density
 m.natal.p <- lme4::glmer(p_natal ~ s_loc_density.mid +
                            + (1|Maternity) + (1|reach.birth) + (s_loc_density.mid|sampling.birth),
                          family = 'binomial',
                          data = data.mid,
                          lme4::glmerControl(optimizer=c('bobyqa')))
-# strong negative density dependence in the middle
-l.natal.p <- lme4::glmer(p_natal ~ s_loc_density.mid +
+# negative density dependence in the middle
+l.natal.p <- lme4::glmer(p_natal ~ 1 +
                            + (1|Maternity) + (1|reach.birth) + (s_loc_density.mid|sampling.birth),
                          family = 'binomial',
                          data = data.late,
@@ -204,6 +216,8 @@ stargazer::stargazer(e.natal.p, m.natal.p, l.natal.p,
                      type = "html",
                      title = "Natal dispersal probability",
                      report = "vcsp*",
+                     covariate.labels = c("Local density", "Landscape density",
+                                          "Local x Landscape desity"),
                      column.labels = c("Early phase", "Mid phase", "Late phase"),
                      dep.var.caption = "Dispersal probability",
                      dep.var.labels = "")
@@ -212,16 +226,16 @@ stargazer::stargazer(e.natal.p, m.natal.p, l.natal.p,
 ### Natal dispersal distance
 
 ```{r, results = "asis"}
-e.natal.dist <- lme4::lmer(log(dist_natal) ~ s_loc_density.mid + 
-                             + (1|Maternity) + (1|reach.birth) + (s_loc_density.mid|sampling.birth),
+e.natal.dist <- lme4::lmer(log(dist_natal) ~ 1 + 
+                             + (1|Maternity) + (1|reach.birth) + (1|sampling.birth),
                            data = data.early)
 # no effect of density on distance in early phase
-m.natal.dist <- lme4::lmer(log(dist_natal) ~ s_loc_density.mid + 
-                             + (1|Maternity) + (1|reach.birth) + (s_loc_density.mid|sampling.birth),
+m.natal.dist <- lme4::lmer(log(dist_natal) ~ 1 + 
+                             + (1|Maternity) + (1|reach.birth) + (1|sampling.birth),
                            data = data.mid)
-# higher distance at higher density in the mid phase
-l.natal.dist <- lme4::lmer(log(dist_natal) ~ s_loc_density.mid  + 
-                             + (1|Maternity) + (1|reach.birth) + (s_loc_density.mid|sampling.birth),
+# no effect in mid phase
+l.natal.dist <- lme4::lmer(log(dist_natal) ~ 1  + 
+                             + (1|Maternity) + (1|reach.birth) + (1|sampling.birth),
                            data = data.late)
 # no effect in late
 
@@ -232,4 +246,24 @@ stargazer::stargazer(e.natal.dist, m.natal.dist, l.natal.dist,
                      column.labels = c("Early phase", "Mid phase", "Late phase"),
                      dep.var.caption = "Dispersal distance",
                      dep.var.labels = "")
+```
+
+## Storing models
+
+I will store models as a tibble.
+
+```{r}
+# storing data and models
+vitalRateModels <- tibble(phase = c("early", "mid", "late"),
+                          data = list(data.early, data.mid, data.late),
+                          survival = list(e.survival, m.survival, l.survival),
+                          recruit = list(e.recruit, m.recruit, l.recruit),
+                          adDispersal = list(e.dispersal.p, m.dispersal.p, l.dispersal.p),
+                          adDistance = list(e.dispersal.dist, 
+                                            m.dispersal.dist, l.dispersal.dist),
+                          natDispersal = list(e.natal.p, m.natal.p, l.natal.p),
+                          natDistance = list(e.natal.dist, m.natal.dist, l.natal.dist))
+
+# saving models
+saveRDS(vitalRateModels, file = file.path(here::here(), "results", "vitalRateModels.rds"))
 ```
