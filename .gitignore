@@ -10,3 +10,4 @@ sandbox/*.pdf
 docs/
 Images4talk/
 data/
+results/*rds
