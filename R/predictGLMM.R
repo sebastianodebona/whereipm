@@ -38,14 +38,14 @@ predictGLMM <- function(x, model,
   # now evaluating link type
   if(link == "logit"){
     
-    y = plogis(alpha + beta*x)
+    y = plogis(alpha + beta*((x-centeringValue)/scalingValue))
     
   } else if (link == "log"){
     
-    y = exp(alpha + beta*x)
+    y = exp(alpha + beta*((x-centeringValue)/scalingValue))
     
   } else if (link == "n")
     
-    y = alpha + beta*x
+    y = alpha + beta*((x-centeringValue)/scalingValue)
   
 }
