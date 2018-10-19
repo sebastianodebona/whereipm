@@ -16,7 +16,7 @@ installAndRender:
     - Rscript -e "devtools::document(); devtools::install()"
     # Run pkgdown, including manuscript material preparation
     - Rscript -e "install.packages('pkgdown')"
-    - Rscript -e "pkgdown::build_site()"
+    - make pkgdown
   artifacts:
     paths:
     - docs
