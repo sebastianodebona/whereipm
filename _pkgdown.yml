@@ -25,10 +25,19 @@ navbar:
       href: reference/index.html
     - text: "Analyses"
       menu:
+        - text: -------------------------------------
         - text: "Introduction"
+        - text: -------------------------------------
+        - text: "What is a spatial IPM?"
           href: articles/DIPM-000_Intro.html
         - text: "Theoretical IPM"
           href: articles/DIPM-010_Theoretical_IPM.html
+        - text: -------------------------------------
+        - text: "Analyses"
+        - text: -------------------------------------
+        - text: "Vital rate models: phases"
+        - text: articles/DIPM-020_Vital_rate_models.Rmd
+          
         
   right:
     - icon: fa-gitlab fa-lg
