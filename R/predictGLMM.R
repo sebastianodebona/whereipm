@@ -5,24 +5,24 @@
 #' @export
 #' 
 #' @param x Vector of values for independent variable to be used to predict response variable.
-#' @param model Fitted GLMM.
+#' @param Coefs Table of coefficients (extracted as e.g. \code{summary(model)$coefficients}) from a fitted GLMM.
 #' @param scalingValue If x contains natural values but the model is fitted with scaled values, this parameter un-scales the coefficients
 #' @param centeringValue If x contains natural values but the model is fitted with centered values, this parameter un-centers the coefficients.
 #' @param covariateString A string identifying the covariate on which the response variable depends (used by \code{grepl}). Default is local density \code{"loc_density"}
-#' @param link Link function used by fitted model: \code{"logit"}, \code{"log"}, \code{"n"}.
+#' @param link Link function used by fitted model: \code{"logit"}, \code{"log"}, \{"truncated-pois"} \code{"n"}.
 #' 
 
-predictGLMM <- function(x, model, 
+predictGLMM <- function(x, Coefs, 
                         scalingValue = 1, 
                         centeringValue = 0,
                         covariateString = "loc_density",
                         link){
   
   # extracting model intercept
-  alpha = summary(model)$coefficients['(Intercept)','Estimate']
+  alpha = Coefs['(Intercept)','Estimate']
     
   # establishing whether the covariate is in the model (as fixed effect) or not
-  if(sum(grepl(covariateString, rownames(summary(model)$coefficients))) == 0){
+  if(sum(grepl(covariateString, rownames(Coefs))) == 0){
     
     beta = 0
   
@@ -30,8 +30,7 @@ predictGLMM <- function(x, model,
     
     # taking the first estimate which checks with the pattern covariateString (main effect)
     # this averages out possible other covariates
-    beta = summary(model)$coefficients[grep(covariateString, 
-                                            rownames(summary(model)$coefficients))[1],'Estimate'] 
+    beta = Coefs[grep(covariateString, rownames(Coefs))[1],'Estimate'] 
     
   }
   
@@ -44,8 +43,15 @@ predictGLMM <- function(x, model,
     
     y = exp(alpha + beta*((x-centeringValue)/scalingValue))
     
-  } else if (link == "n")
+  } else if (link == "n"){
     
     y = alpha + beta*((x-centeringValue)/scalingValue)
-  
+
+  } else if (link == "truncated-pois"){
+    
+    y = untruncZTP(alpha + beta*((x-centeringValue)/scalingValue))
+    
+  }
+
+  return(y)
 }
