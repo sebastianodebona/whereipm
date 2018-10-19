@@ -73,7 +73,7 @@ install: data document
 
 ## clean : delete all files and folders generated during building process
 .PHONY: clean
-clean: clean-data clean-man clean-docs clean-vignettes
+clean: clean-data clean-man clean-docs clean-vignettes clean-results
 	@printf "\n"
 	@printf "$(GREEN)*** Cleaned generated files and folders ***$(NC)\n"
 	@printf "\n"
@@ -103,13 +103,25 @@ clean-docs:
 
 ### ** clean-vignettes
 
-## clean-vignettes : remove html, rda and rds files from the vignettes/ folder
+## clean-vignettes : remove html files from the vignettes/ folder
 .PHONY: clean-vignettes
 clean-vignettes:
 	@printf "\n"
 	@printf "$(GREEN)*** Cleaning vignettes/ folder ***$(NC)\n"
 	@printf "\n"
 	rm -f vignettes/*.html
+	
+### ** clean-results
+
+## clean-results : remove rda and rds files from the results/ folder
+.PHONY: clean-results
+clean-results:
+	@printf "\n"
+	@printf "$(GREEN)*** Cleaning results/ folder ***$(NC)\n"
+	@printf "\n"
+	rm -f results/*.rds
+	rm -f results/*.rda
+
 
 ### ** uninstall
 	
