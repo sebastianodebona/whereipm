@@ -193,53 +193,6 @@ dev.off()
 
 
 
-# SURVIVAL
-dens <- seq(0, 50, length.out = 100)
-s.e <- function(x){plogis(summary(e.survival)$coefficients['(Intercept)','Estimate'] + 0*x)}
-s.m <- function(x){plogis(summary(m.survival)$coefficients['(Intercept)','Estimate'] + (summary(m.survival)$coefficients['s_loc_density','Estimate']/attr(data$s_loc_density, 'scaled:scale'))*x)}
-s.l <- function(x){plogis(summary(l.survival)$coefficients['(Intercept)','Estimate'] + (summary(l.survival)$coefficients['s_loc_density','Estimate'])*x)}
-
-png(filename = "Images/Surv", width = 9, height = 10, units = "cm", res = 300)
-plot(s.e(dens) ~ dens, ylim = c(0,1), type = 'l', col = '#AE1A12', lwd = 2, xaxt = 'n', yaxt = 'n', xlab = 'density (n/m)', ylab = '')
-lines(s.m(dens) ~ dens, col = '#114085', lwd = 2)
-lines(s.l(dens) ~ dens, col = '#258646', lwd = 2)
-axis(1, at=c(0,10,20,30,40, 50), labels = c(0,10,20,30,40, 50))
-axis(2, at=c(0,.25,.5,.75,1), las = 2)
-mtext('p', side = 2, las=2, line=3)
-dev.off()
-
-# REPRODUCTION PROBABILITY
-dens <- seq(0, 50, length.out = 100)
-r.e <- function(x){1-plogis(summary(e.recruit)$coefficients$zi['(Intercept)','Estimate'] + 0*x)}
-r.m <- function(x){1-plogis(summary(m.recruit)$coefficients$zi['(Intercept)','Estimate'] + (summary(m.recruit)$coefficients$zi['s_loc_density','Estimate']/attr(data$s_loc_density, 'scaled:scale'))*x)}
-r.l <- function(x){1-plogis(summary(l.recruit)$coefficients$zi['(Intercept)','Estimate'] + 0*x)}
-
-png(filename = "Images/Repr", width = 9, height = 10, units = "cm", res = 300)
-plot(r.e(dens) ~ dens, ylim = c(0,1), type = 'l', col = '#AE1A12', lwd = 2, xaxt = 'n', yaxt = 'n', xlab = 'density (n/m)', ylab = '')
-lines(r.m(dens) ~ dens, col = '#114085', lwd = 2)
-lines(r.l(dens) ~ dens, col = '#258646', lwd = 2)
-axis(1, at=c(0,10,20,30,40, 50), labels = c(0,10,20,30,40, 50))
-axis(2, at=c(0,.25,.5,.75,1), las = 2)
-mtext('p', side = 2, las=2, line=3)
-dev.off()
-
-
-# OFFSPRING NUMBER
-dens <- seq(0, 50, length.out = 100)
-o.e <- function(x){untruncZTP(summary(e.recruit)$coefficients$cond['(Intercept)','Estimate'] + (summary(e.recruit)$coefficients$cond['s_loc_density','Estimate']/attr(data$s_loc_density, 'scaled:scale'))*x)}
-o.m <- function(x){untruncZTP(summary(m.recruit)$coefficients$cond['(Intercept)','Estimate'] + (summary(m.recruit)$coefficients$cond['s_loc_density','Estimate']/attr(data$s_loc_density, 'scaled:scale'))*x)}
-o.l <- function(x){untruncZTP(summary(l.recruit)$coefficients$cond['(Intercept)','Estimate'] + 0*x)}
-
-png(filename = "Images/OffN", width = 9, height = 10, units = "cm", res = 300)
-plot(o.e(dens) ~ dens, ylim = c(1,3), type = 'l', col = '#AE1A12', lwd = 2, xaxt = 'n', yaxt = 'n', xlab = 'density (n/m)', ylab = '')
-lines(o.m(dens) ~ dens, col = '#114085', lwd = 2)
-lines(o.l(dens) ~ dens, col = '#258646', lwd = 2)
-axis(1, at=c(0,10,20,30,40, 50), labels = c(0,10,20,30,40, 50))
-axis(2, at=c(0,1, 2, 3), las = 2)
-mtext('n', side = 2, las=2, line=2)
-dev.off()
-
-
 
 # creating array to store results of perturbation analyses
 perturbation <- array(NA, dim = c(4,14,3), dimnames = list(c('speed', 'acceleration', 'lambda', 'pop'), c('s.int', 's.slo',  'r.int',  'r.slo', 'f.int',  'f.slo',  'p.stat.int.ad','p.stat.slo.ad',  'mu.mob.int.ad', 'mu.mob.slo.ad', 'p.stat.int.nat','p.stat.slo.nat', 'mu.mob.int.nat', 'mu.mob.slo.nat'), c('IPM.early', 'IPM.mid', 'IPM.late')))
