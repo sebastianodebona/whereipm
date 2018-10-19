@@ -22,7 +22,7 @@ predictGLMM <- function(x, model,
   alpha = summary(model)$coefficients['(Intercept)','Estimate']
     
   # establishing whether the covariate is in the model (as fixed effect) or not
-  if(sum(grepl(covariateString, rownames(summary(model)$coefficients))) = 0){
+  if(sum(grepl(covariateString, rownames(summary(model)$coefficients))) == 0){
     
     beta = 0
   
@@ -31,7 +31,7 @@ predictGLMM <- function(x, model,
     # taking the first estimate which checks with the pattern covariateString (main effect)
     # this averages out possible other covariates
     beta = summary(model)$coefficients[grep(covariateString, 
-                                            rownames(summary(model)$coefficients)))[1],'Estimate'] 
+                                            rownames(summary(model)$coefficients))[1],'Estimate'] 
     
   }
   
