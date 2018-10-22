@@ -22,51 +22,6 @@ image_write(animation, "Images/Early.gif")
 
 
 
-# some random graphs for plotting
-x <- 0:100
-
-png(filename = "Images/Surv", width = 6, height = 7.5, units = "cm", res = 300)
-survival <- function(x){plogis(1.5 - 0.02*x)}
-curve(survival(x), ylim = c(0,1), xlim = c(0,100), ylab = '', xlab = '', yaxt = 'n', xaxt='n')
-dat <- data.frame(y = rbinom(length(x), 1, prob = survival(x) + rnorm(length(x), 0, 0.03)), x = x)
-points(y~x, pch = 16, cex = 0.8, data = dat[sample(x, 50),])
-axis(2, at = c(0,.5,1), labels = c('0.0','0.5','1.0'), las = 2)
-axis(1, at = c(0, 50, 100), labels = c(0, 50, 100))
-dev.off()
-
-
-png(filename = "Images/Fert", width = 6, height = 7.5, units = "cm", res = 300)
-offspring <- function(x){exp(0.6 - 0.02*x)}
-curve(offspring(x), ylim = c(0,4), xlim = c(0,100), ylab = '', xlab = '', yaxt = 'n', xaxt='n')
-dat <- data.frame(y = rpois(length(x), lambda = offspring(x) + rnorm(length(x), 0, 0.04)), x = x)
-points(y~x, pch = 16, cex = 0.8, data = dat[sample(x, 50),])
-axis(2, at = c(0,2,4), labels = c('0','2','4'), las = 2)
-axis(1, at = c(0, 50, 100), labels = c(0, 50, 100))
-dev.off()
-
-
-x <- seq(0, 80, length.out=100)
-y <- dnorm(x)
-plot(y~x, type='l')
-
-# figuring out lognormal density function
-
-sigma=1
-mu=1.5
-
-png(filename = "Images/NDisp", width = 6, height = 7.5, units = "cm", res = 300)
-p <- 0.2
-x <- seq(-50, 50, by=1)
-y1 <- ifelse(x>=0, p*dnorm(x, mean = 0, sd = 0.15) + ((1-p)/2)*dlnorm(x, meanlog = mu, sdlog = sigma), p*dnorm(x, mean = 0, sd = 0.25) + ((1-p)/2)*dlnorm(-x, meanlog = mu, sdlog = sigma))
-plot(y1~x, col='black', xlim = c(-55, 55), ylim = c(0,1), type='l', xaxt = 'n', yaxt = 'n', xlab = '', ylab='')
-axis(2, at = c(0,.5,1), labels = c('0','.5','1'), las = 2)
-axis(1, at = c(-50, 0, 50), labels = c(-50, 0, 50))
-dev.off()
-
-hist(data.early$dist_moved, breaks=20, ylim=c(0,300))
-n <- nrow(data.early)
-lines(y1*n~x, col='red')
-
 
 # testing gx_ln function
 x <- rep(0, 200)
@@ -75,7 +30,7 @@ y <- seq(-99, 100)
 p <- gx_ln(y = combs[['y']], x = combs[['x']],
       density.x = combs[['density.x']],
       p.stat.int = summary(e.dispersal.p)$coefficients['(Intercept)','Estimate'],
-      p.stat.slo = summary(e.dispersal.p)$coefficients['s_loc_density','Estimate']/attr(data$s_loc_density, 'scaled:scale'),
+      p.stat.slo = summary(e.dispersal.p)$coefficients['s_loc_density','Estimate']/scalingAttr$loc_density$scale,
       sigma.stat = 0.25, 
       mu.mob.int = summary(e.dispersal.dist)$coefficients['(Intercept)','Estimate'],
       mu.mob.slo = 0,
@@ -97,38 +52,7 @@ mat[x,y] <- p
 image(t(log(mat)))
 
 
-# drawing vital rates and dispersal through time
-# DISPESAL PROBABILITY
-dens <- seq(0, 50, length.out = 100)
 
-p.e <- function(x){plogis(summary(e.dispersal.p)$coefficients['(Intercept)','Estimate'] + 0*x)}
-p.m <- function(x){plogis(summary(m.dispersal.p)$coefficients['(Intercept)','Estimate'] + (summary(m.dispersal.p)$coefficients['s_loc_density','Estimate']/attr(data$s_loc_density, 'scaled:scale'))*x)}
-p.l <- function(x){plogis(summary(l.dispersal.p)$coefficients['(Intercept)','Estimate'] + (summary(l.dispersal.p)$coefficients['s_loc_density','Estimate']/attr(data$s_loc_density, 'scaled:scale'))*x)}
-
-png(filename = "Images/ADispModel", width = 9, height = 10, units = "cm", res = 300)
-plot(p.e(dens) ~ dens, ylim = c(0,1), type = 'l', col = '#AE1A12', lwd = 2, xaxt = 'n', yaxt = 'n', xlab = 'density (n/m)', ylab = '')
-lines(p.m(dens) ~ dens, col = '#114085', lwd = 2)
-lines(p.l(dens) ~ dens, col = '#258646', lwd = 2)
-axis(1, at=c(0,10,20,30,40, 50), labels = c(0,10,20,30,40, 50))
-axis(2, at=c(0,.25,.5,.75,1), las = 2)
-mtext('p', side = 2, las=2, line=3)
-dev.off()
-
-
-# ADULT DISPERSAL DISTANCE
-dens <- seq(0, 50, length.out = 100)
-mu.e <- function(x){exp(summary(e.dispersal.dist)$coefficients['(Intercept)','Estimate'] + 0*x)}
-mu.m <- function(x){exp(summary(m.dispersal.dist)$coefficients['(Intercept)','Estimate'] + (summary(m.dispersal.dist)$coefficients['s_loc_density','Estimate']/attr(data$s_loc_density, 'scaled:scale'))*x)}
-mu.l <- function(x){exp(summary(l.dispersal.dist)$coefficients['(Intercept)','Estimate'] + 0*x)}
-
-png(filename = "Images/ADistModel", width = 9, height = 10, units = "cm", res = 300)
-plot(mu.e(dens) ~ dens, type = 'l', ylim = c(3,9), col = '#AE1A12', lwd = 2, xaxt = 'n', yaxt = 'n', xlab = 'density (n/m)', ylab = '')
-lines(mu.m(dens) ~ dens, col = '#114085', lwd = 2)
-lines(mu.l(dens) ~ dens, col = '#258646', lwd = 2)
-axis(1, at=c(0,10,20,30,40, 50), labels = c(0,10,20,30,40, 50))
-axis(2, at=c(2, 4, 6, 8, 10), las = 2)
-mtext('m', side = 2, las=2, line=2)
-dev.off()
 
 # Drawing estimated distribution kernels given parameter estimates
 k.e <- function(i){
@@ -190,7 +114,6 @@ par(new = T)
 lines(I(k.l(50) - 0.66) ~ I(space + 20), col = '#258646')
 segments(x0=20, y0=-.66, y1=1.4, lty = 2, col = 'grey88')
 dev.off()
-
 
 
 
