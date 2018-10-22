@@ -106,17 +106,14 @@ dens <- seq(0, 50, length.out = 100)
 s.e = predictGLMM(x = dens, 
                   Coefs = summary(e.survival)$coefficients, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  centeringValue = scalingAttr$loc_density$center,
                   link = "logit")
 s.m = predictGLMM(x = dens, 
                   Coefs = summary(m.survival)$coefficients, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  centeringValue = scalingAttr$loc_density$center,
                   link = "logit")
 s.l = predictGLMM(x = dens, 
                   Coefs = summary(l.survival)$coefficients, 
-                  scalingValue = scalingAttr$loc_density$scale,
-                  centeringValue = scalingAttr$loc_density$center,
+                  scalingValue = scalingAttr$loc_density$scale,,
                   link = "logit")
             
 
@@ -174,33 +171,27 @@ sjPlot::tab_model(e.recruit, m.recruit, l.recruit,
 r.e = 1- predictGLMM(x = dens, 
                   Coefs = summary(e.recruit)$coefficients$zi, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  centeringValue = scalingAttr$loc_density$center,
                   link = "logit")
 r.m = 1- predictGLMM(x = dens, 
                   Coefs = summary(m.recruit)$coefficients$zi, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  centeringValue = scalingAttr$loc_density$center,
                   link = "logit")
 r.l = 1- predictGLMM(x = dens, 
                   Coefs = summary(l.recruit)$coefficients$zi, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  centeringValue = scalingAttr$loc_density$center,
                   link = "logit")
 # Offspring number
 o.e = predictGLMM(x = dens, 
                   Coefs = summary(e.recruit)$coefficients$cond, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  centeringValue = scalingAttr$loc_density$center,
                   link = "truncated-pois")
 o.m = predictGLMM(x = dens, 
                   Coefs = summary(m.recruit)$coefficients$cond, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  centeringValue = scalingAttr$loc_density$center,
                   link = "truncated-pois")
 o.l = predictGLMM(x = dens, 
                   Coefs = summary(l.recruit)$coefficients$cond, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  centeringValue = scalingAttr$loc_density$center,
                   link = "truncated-pois")
 
 par(mfrow = c(1,2))
@@ -288,33 +279,27 @@ stargazer::stargazer(e.dispersal.dist, m.dispersal.dist, l.dispersal.dist,
 dp.e <- predictGLMM(x = dens, 
                   Coefs = summary(e.dispersal.p)$coefficients, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  centeringValue = scalingAttr$loc_density$center,
                   link = "logit")
 dp.m <- predictGLMM(x = dens, 
                   Coefs = summary(m.dispersal.p)$coefficients, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  centeringValue = scalingAttr$loc_density$center,
                   link = "logit")
 dp.l <- predictGLMM(x = dens, 
                   Coefs = summary(l.dispersal.p)$coefficients, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  centeringValue = scalingAttr$loc_density$center,
                   link = "logit")
 # Distance
 dd.e <- predictGLMM(x = dens, 
                   Coefs = summary(e.dispersal.dist)$coefficients, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  centeringValue = scalingAttr$loc_density$center,
                   link = "log")
 dd.m <- predictGLMM(x = dens, 
                   Coefs = summary(m.dispersal.dist)$coefficients, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  centeringValue = scalingAttr$loc_density$center,
                   link = "log")
 dd.l <- predictGLMM(x = dens, 
                   Coefs = summary(l.dispersal.dist)$coefficients, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  centeringValue = scalingAttr$loc_density$center,
                   link = "log")
 
 # plots
@@ -402,33 +387,27 @@ stargazer::stargazer(e.natal.dist, m.natal.dist, l.natal.dist,
 np.e <- predictGLMM(x = dens, 
                   Coefs = summary(e.natal.p)$coefficients, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  centeringValue = scalingAttr$loc_density$center,
                   link = "logit")
 np.m <- predictGLMM(x = dens, 
                   Coefs = summary(m.natal.p)$coefficients, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  centeringValue = scalingAttr$loc_density$center,
                   link = "logit")
 np.l <- predictGLMM(x = dens, 
                   Coefs = summary(l.natal.p)$coefficients, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  centeringValue = scalingAttr$loc_density$center,
                   link = "logit")
 # Distance
 nd.e <- predictGLMM(x = dens, 
                   Coefs = summary(e.natal.dist)$coefficients, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  centeringValue = scalingAttr$loc_density$center,
                   link = "log")
 nd.m <- predictGLMM(x = dens, 
                   Coefs = summary(m.natal.dist)$coefficients, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  centeringValue = scalingAttr$loc_density$center,
                   link = "log")
 nd.l <- predictGLMM(x = dens, 
                   Coefs = summary(l.natal.dist)$coefficients, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  centeringValue = scalingAttr$loc_density$center,
                   link = "log")
 
 # plots
