@@ -1,0 +1,149 @@
+---
+title: "Real data IPM - Phases"
+author: "Seba De Bona"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+    theme: lumen
+---
+
+Here, we run an IPM using real data. Vital rates models were fit in the previous vignette, and refer to three distinct phases ("early", "mid" and "late") during the colonisation process.
+
+## Setup
+
+Here we load the data.
+
+```{r}
+library(whereipm)
+library(tidyverse)
+
+# loading the data
+data <- ipmdata
+```
+
+And the models previously run.
+
+```{r}
+vitalRateModels <- readRDS(file.path(here::here(), "results", "vitalRateModels.rds"))
+```
+
+## Parameters and initial Population
+
+Here we define kernel parameters and initial population size.
+
+```{r}
+# kernel parameters
+kp <- create.kernel.params(L=-500, U=500, n.bins = 1000)
+# initial population size
+pop0 <- c(rep(0, kp$n.bins/2-1), 10, rep(0, kp$n.bins/2))
+```
+
+And we extract the vital rates parameters from the models fitted in the [previous vignette](sebadebona.gitlab.io/dispersal-ipm/articles/DIPM-020_Vital_rate_models.html).
+
+```{r}
+# First I need to extract the info in the model to make it easier to handle
+Models <- vitalRateModels %>%
+  transmute(
+    survival = map(survival, broom::tidy),
+    recruit = map(recruit, broom.mixed::tidy),
+    adDispersal = map(adDispersal, broom::tidy),
+    adDistance = map(adDistance, broom::tidy),
+    natDispersal = map(natDispersal, broom::tidy),
+    natDistance = map(natDistance, broom::tidy))
+
+# Storing values into vital params list, divided into early, mid and late
+# given local density is scaled (but not centered) the estimates for the slope have to be transformed back to the non-scaled value.
+
+# Using a general loop to do so for the three phases:
+
+for(i in 1:dim(vitalRateModels)[1]){
+ 
+  temp.vp <- list(s.int = Models$survival[[i]]%>%
+                   filter(group == "fixed",
+                          term == "(Intercept)") %>%
+                   pull(estimate),
+                 s.slo = (Models$survival[[i]]%>%
+                   filter(group == "fixed",
+                          term == "s_loc_density") %>%
+                   pull(estimate))/scalingAttr$loc_density$scale,
+                 s.multiplier = 1,
+                 
+                 r.int = Models$recruit[[i]]%>%
+                   filter(effect == "fixed",
+                          component == "zi",
+                          term == "(Intercept)") %>%
+                   pull(estimate),
+                 r.slo = (Models$recruit[[i]]%>%
+                   filter(effect == "fixed",
+                          component == "zi",
+                          term == "s_loc_density") %>%
+                   pull(estimate))/scalingAttr$loc_density$scale,
+                 r.multiplier = 1,
+                 f.int = Models$recruit[[i]]%>%
+                   filter(effect == "fixed",
+                          component == "cond",
+                          term == "(Intercept)") %>%
+                   pull(estimate),
+                 f.slo = (Models$recruit[[i]]%>%
+                   filter(effect == "fixed",
+                          component == "cond",
+                          term == "s_loc_density") %>%
+                   pull(estimate))/scalingAttr$loc_density$scale,
+                 distribution = 'ztpoisson',
+                 
+                 p.stat.int.ad = Models$adDispersal[[i]]%>%
+                   filter(effect == "fixed",
+                          term == "(Intercept)") %>%
+                   pull(estimate),
+                 p.stat.slo.ad = (Models$adDispersal[[i]]%>%
+                   filter(effect == "fixed",
+                          term == "s_loc_density") %>%
+                   pull(estimate))/scalingAttr$loc_density$scale,
+                 sigma.stat.ad = 0.25, 
+                 mu.mob.int.ad = Models$adDistance[[i]]%>%
+                   filter(effect == "fixed",
+                          term == "(Intercept)") %>%
+                   pull(estimate),
+                 mu.mob.slo.ad = (Models$adDistance[[i]]%>%
+                   filter(effect == "fixed",
+                          term == "s_loc_density") %>%
+                   pull(estimate))/scalingAttr$loc_density$scale,
+                 sigma.mob.ad = Models$adDistance[[i]]%>%
+                   filter(effect == "ran_pars") %>%
+                   pull(estimate) %>%
+                   sum %>%
+                   sqrt,
+                 
+                 p.stat.int.nat = Models$natDispersal[[i]]%>%
+                   filter(effect == "fixed",
+                          term == "(Intercept)") %>%
+                   pull(estimate),
+                 p.stat.slo.nat = (Models$natDispersal[[i]]%>%
+                   filter(effect == "fixed",
+                          term == "s_loc_density.mid") %>%
+                   pull(estimate))/scalingAttr$loc_density$scale,
+                 sigma.stat.nat = 0.25, 
+                 mu.mob.int.nat = Models$natDistance[[i]]%>%
+                   filter(effect == "fixed",
+                          term == "(Intercept)") %>%
+                   pull(estimate),
+                 mu.mob.slo.nat = (Models$natDistance[[i]]%>%
+                   filter(effect == "fixed",
+                          term == "s_loc_density") %>%
+                   pull(estimate))/scalingAttr$loc_density$scale,
+                 sigma.mob.nat = Models$natDistance[[i]]%>%
+                   filter(effect == "ran_pars") %>%
+                   pull(estimate) %>%
+                   sum %>%
+                   sqrt)
+ 
+  # replacing empty elements with zeros
+  temp.vp <- rapply(temp.vp, function(x) ifelse(length(x)==0,0,x))
+  
+  # renaming list
+  assign(paste("vp", vitalRateModels$phase[i], sep = "."), temp.vp)
+}
+```
