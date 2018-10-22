@@ -381,7 +381,9 @@ For some reason, when left joining `s_loc_density` and `s_land_density`, this ar
 loc <- data %>% select(sampling, location, loc_density) %>%
     unique()
 
-loc$s_loc_density <- scale(loc$loc_density)
+# I will only scale, but not center, local density. 
+# This makes it easier to convert model preditions between scaled and unscaled values
+loc$s_loc_density <- scale(loc$loc_density, center = FALSE)
 loc <- loc %>% select( -loc_density)
 
 data <- data %>% left_join(loc, by = c("sampling", "location"))
@@ -400,8 +402,7 @@ stopifnot(NROW_CHECK == nrow(data))
 # functions (e.g. sticky)
 
 # I am now creating a list that stores all attributes and can be retrieved later:
-scalingAttr <- list(loc_density = list(scale = attr(loc$s_loc_density, "scaled:scale"),
-                                       center = attr(loc$s_loc_density, "scaled:center")))
+scalingAttr <- list(loc_density = list(scale = attr(loc$s_loc_density, "scaled:scale")))
 
 
 land <- data %>% select(sampling, land_density, time) %>%
