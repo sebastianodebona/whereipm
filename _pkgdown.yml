@@ -25,7 +25,6 @@ navbar:
       href: reference/index.html
     - text: "Analyses"
       menu:
-        - text: -------------------------------------
         - text: "Introduction"
         - text: -------------------------------------
         - text: "What is a spatial IPM?"
@@ -36,7 +35,7 @@ navbar:
         - text: "Analyses"
         - text: -------------------------------------
         - text: "Vital rate models: phases"
-        - text: articles/DIPM-020_Vital_rate_models.html
+          href: articles/DIPM-020_Vital_rate_models.html
           
         
   right:
