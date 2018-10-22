@@ -71,8 +71,70 @@ Population matrices are a very powerful tool to study population biology, and ar
 
 Instead of thinking about classes and class-specific life-histories, we can envision a continuos function that correlates a trait (e.g. size, or position in space) to vital rates (e.g. survival, reproduction, growth etc). We can then discretize this function into very small chunks. This is pretty much what an IPM does. 
 
+```{r, echo = F, fig.height=3, fig.width=6}
+x <- 1:100
+# Darwing  a few plots to exemplify vital function of a trait
+par(mfrow = c(1,2))
+# survival
+survival <- function(x){plogis(0.4 + 0.02*x)}
+curve(survival(x), ylim = c(0,1), xlim = c(0,100), ylab = "probability", xlab = "position (x)", yaxt = 'n', xaxt='n', main = "survival", las = 2)
+dat <- data.frame(y = rbinom(length(x), 1, prob = survival(x) + rnorm(length(x), 0, 0.03)), x = x)
+points(y~x, pch = 16, cex = 0.8, data = dat[sample(x, 50),])
+axis(2, at = c(0,.5,1), labels = c('0.0','0.5','1.0'), las = 2)
+axis(1, at = c(0, 50, 100), labels = c(0, 50, 100))
+# reproduction
+offspring <- function(x){exp(0.8 - 0.02*x)}
+curve(offspring(x), ylim = c(0,4), xlim = c(0,100), ylab = 'n. offpsring', xlab = 'position (x)', yaxt = 'n', xaxt='n', main = "offspring")
+dat <- data.frame(y = rpois(length(x), lambda = offspring(x) + rnorm(length(x), 0, 0.04)), x = x)
+points(y~x, pch = 16, cex = 0.8, data = dat[sample(x, 50),])
+axis(2, at = c(0,2,4), labels = c('0','2','4'), las = 2)
+axis(1, at = c(0, 50, 100), labels = c(0, 50, 100))
+```
+
 ### Space?
 
 Position along a one dimensional axis is nothing less than a continuous 'trait' that can be attributed to an individual. In case an environmental gradient is present, position itself can affect life history traits. In addition to this, a position in space can be linked to a certain local density, and this will also affect vital rates.
 
 If space becomes our trait, the four function describing vital rates become Survival, Reproduction (both position-specific, and density-dependent), Adult dispersal (the equivalent of growth in a size based IPM) and Natal dispersal (corresponding to the inheritance function).
+
+```{r, echo = F, fig.height=6, fig.width = 6}
+x <- 0:100
+# Darwing  a few plots to exemplify vital function of a trait
+par(mfrow = c(2,2))
+# survival
+survival <- function(x){plogis(0.4 + 0.02*x)}
+curve(survival(x), ylim = c(0,1), xlim = c(0,100), ylab = "probability", xlab = "position (x)", yaxt = 'n', xaxt='n', main = "survival", las = 2)
+dat <- data.frame(y = rbinom(length(x), 1, prob = survival(x) + rnorm(length(x), 0, 0.03)), x = x)
+points(y~x, pch = 16, cex = 0.8, data = dat[sample(x, 50),])
+axis(2, at = c(0,.5,1), labels = c('0.0','0.5','1.0'), las = 2)
+axis(1, at = c(0, 50, 100), labels = c(0, 50, 100))
+# reproduction
+offspring <- function(x){exp(0.8 - 0.02*x)}
+curve(offspring(x), ylim = c(0,4), xlim = c(0,100), ylab = 'n. offpsring', xlab = 'position (x)', yaxt = 'n', xaxt='n', main = "offspring")
+dat <- data.frame(y = rpois(length(x), lambda = offspring(x) + rnorm(length(x), 0, 0.04)), x = x)
+points(y~x, pch = 16, cex = 0.8, data = dat[sample(x, 50),])
+axis(2, at = c(0,2,4), labels = c('0','2','4'), las = 2)
+axis(1, at = c(0, 50, 100), labels = c(0, 50, 100))
+
+# dispersal
+x <- seq(-50, 50, by=1)
+y <- function(x, mu, sigma, p){
+  ifelse(x>=0, (p/2)*dnorm(x, mean = 0, sd = 0.15) + ((1-p)/2)*dlnorm(x, meanlog = mu, sdlog = sigma), (p/2)*dnorm(x, mean = 0, sd = 0.25) + ((1-p)/2)*dlnorm(-x, meanlog = mu, sdlog = sigma))}
+plot(y(x, 5, 1, 0.3)~x, col=wesanderson::wes_palette("IsleofDogs1", 3)[1], xlim = c(-55, 55), ylim = c(0,.5), type='l', xaxt = 'n', yaxt = 'n', xlab = "change in position", ylab='probability', main = "adult dispersal")
+lines(y(x, 3, 1, 0.2)~x, col = wesanderson::wes_palette("IsleofDogs1", 3)[2])
+lines(y(x, 1, 5, 0.05)~x, col = wesanderson::wes_palette("IsleofDogs1", 3)[3])
+axis(2, at = c(0,.5,1), labels = c('0','.5','1'), las = 2)
+axis(1, at = c(-50, 0, 50), labels = c(-50, 0, 50))
+legend("topright", col = wesanderson::wes_palette("IsleofDogs1", 3), legend = c("x = 5", "x = 10","x = 50"), lty = 1)
+
+# dispersal
+x <- seq(-50, 50, by=1)
+y <- function(x, mu, sigma, p){
+  ifelse(x>=0, (p/2)*dnorm(x, mean = 0, sd = 0.10) + ((1-p)/2)*dlnorm(x, meanlog = mu, sdlog = sigma), (p/2)*dnorm(x, mean = 0, sd = 0.50) + ((1-p)/2)*dlnorm(-x, meanlog = mu, sdlog = sigma))}
+plot(y(x, 1, 6, 0.5)~x, col=wesanderson::wes_palette("IsleofDogs1", 3)[1], xlim = c(-55, 55), ylim = c(0,1), type='l', xaxt = 'n', yaxt = 'n', xlab = "change in position", ylab='probability', main = "natal dispersal")
+lines(y(x, 3, 1, 0.2)~x, col = wesanderson::wes_palette("IsleofDogs1", 3)[2])
+lines(y(x, 6, 1, 0.05)~x, col = wesanderson::wes_palette("IsleofDogs1", 3)[3])
+axis(2, at = c(0,.5,1), labels = c('0','.5','1'), las = 2)
+axis(1, at = c(-50, 0, 50), labels = c(-50, 0, 50))
+legend("topright", col = wesanderson::wes_palette("IsleofDogs1", 3), legend = c("x = 5", "x = 10","x = 50"), lty = 1)
+```
