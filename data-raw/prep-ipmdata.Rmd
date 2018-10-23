@@ -407,7 +407,7 @@ scalingAttr <- list(loc_density = list(scale = attr(loc$s_loc_density, "scaled:s
 
 land <- data %>% select(sampling, land_density, time) %>%
     unique()
-land$s_land_density <- scale(land$land_density)
+land$s_land_density <- scale(land$land_density, center = FALSE)
 
 # time will be scaled but not centered, to keep the intercept at 0 in the models
 land$s_time <- scale(land$time, center = F)
@@ -417,8 +417,7 @@ data <- data %>% left_join(land, by = "sampling")
 stopifnot(NROW_CHECK == nrow(data))
 
 # storing attributes
-scalingAttr$land_density <- list(scale = attr(land$s_land_density, "scaled:scale"),
-                                 center = attr(land$s_land_density, "scaled:center"))
+scalingAttr$land_density <- list(scale = attr(land$s_land_density, "scaled:scale"))
 scalingAttr$time <- list(scale = attr(land$s_time, "scaled:scale"))
     
 # scaling also time.birth
