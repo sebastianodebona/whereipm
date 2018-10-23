@@ -64,7 +64,7 @@ for(i in 1:dim(vitalRateModels)[1]){
 
   temp.vp <- list(# Survival
                  s.int = Models$survival[[i]]%>%
-                   filter(group == "fixed",
+                   filter(effect == "fixed",
                           term == "(Intercept)") %>%
                    pull(estimate),
                  s.slo = (Models$survival[[i]]%>%
