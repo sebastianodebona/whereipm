@@ -122,16 +122,6 @@ clean-results:
 	rm -f results/*.rds
 	rm -f results/*.rda
 
-### ** pkgdown
-
-## pkgdown : build the package website using pkgdown (also renders the vignettes)
-.PHONY: pkgdown
-pkgdown: install
-	@printf "\n"
-	@printf "$(GREEN)*** Building package website with pkgdown ***$(NC)\n"
-	@printf "\n"
-	@Rscript -e 'pkgdown::build_site()'
-
 ### ** uninstall
 	
 ## uninstall : uninstall the package
