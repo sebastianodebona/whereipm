@@ -28,9 +28,13 @@ mock.vital.params <- function(s.int = 0,
                               sigma.mob.ad = 1,
                               p.stat.int.nat = 1,
                               p.stat.slo.nat = 0,
+                              p.stat.sloLand.nat = 0,
+                              p.stat.sloInt.nat = 0,
                               sigma.stat.nat = 0.25,
                               mu.mob.int.nat = 0.2,
                               mu.mob.slo.nat = 0.01,
+                              mu.mob.sloLand.nat = 0,
+                              mu.mob.sloInt.nat = 0,
                               sigma.mob.nat = 1,
                               noise = FALSE){
   
@@ -52,9 +56,13 @@ mock.vital.params <- function(s.int = 0,
        sigma.mob.ad = sigma.mob.ad,
        p.stat.int.nat = p.stat.int.nat,
        p.stat.slo.nat = p.stat.slo.nat,
+       p.stat.sloLand.nat = p.stat.sloLand.nat,
+       p.stat.sloInt.nat = p.stat.sloInt.nat,
        sigma.stat.nat = sigma.stat.nat,
        mu.mob.int.nat = mu.mob.int.nat,
        mu.mob.slo.nat = mu.mob.slo.nat,
+       mu.mob.sloLand.nat = mu.mob.sloLand.nat,
+       mu.mob.sloInt.nat = mu.mob.sloInt.nat,
        sigma.mob.nat = sigma.mob.nat)
     
     
@@ -75,9 +83,13 @@ mock.vital.params <- function(s.int = 0,
          sigma.mob.ad = sigma.mob.ad,
          p.stat.int.nat = p.stat.int.nat + rnorm(1, 0, 0.05),
          p.stat.slo.nat = p.stat.slo.nat,
+         p.stat.sloLand.nat = p.stat.sloLand.nat,
+         p.stat.sloInt.nat = p.stat.sloInt.nat,
          sigma.stat.nat = sigma.stat.nat,
          mu.mob.int.nat = mu.mob.int.nat,
          mu.mob.slo.nat = mu.mob.slo.nat,
+         mu.mob.sloLand.nat = mu.mob.sloLand.nat,
+         mu.mob.sloInt.nat = mu.mob.sloInt.nat,
          sigma.mob.nat = sigma.mob.nat)
   }
   
