@@ -61,7 +61,8 @@ Models <- vitalRateModels %>%
 
 for(i in 1:dim(vitalRateModels)[1]){
  
-  temp.vp <- list(s.int = Models$survival[[i]]%>%
+  temp.vp <- list(# Survival
+                 s.int = Models$survival[[i]]%>%
                    filter(group == "fixed",
                           term == "(Intercept)") %>%
                    pull(estimate),
@@ -71,6 +72,7 @@ for(i in 1:dim(vitalRateModels)[1]){
                    pull(estimate))/scalingAttr$loc_density$scale,
                  s.multiplier = 1,
                  
+                # Recruitment
                  r.int = Models$recruit[[i]]%>%
                    filter(effect == "fixed",
                           component == "zi",
@@ -94,6 +96,7 @@ for(i in 1:dim(vitalRateModels)[1]){
                    pull(estimate))/scalingAttr$loc_density$scale,
                  distribution = 'ztpoisson',
                  
+                # Adult dispersal
                  p.stat.int.ad = Models$adDispersal[[i]]%>%
                    filter(effect == "fixed",
                           term == "(Intercept)") %>%
@@ -117,6 +120,7 @@ for(i in 1:dim(vitalRateModels)[1]){
                    sum %>%
                    sqrt,
                  
+                # Natal dispersal
                  p.stat.int.nat = Models$natDispersal[[i]]%>%
                    filter(effect == "fixed",
                           term == "(Intercept)") %>%
@@ -125,6 +129,14 @@ for(i in 1:dim(vitalRateModels)[1]){
                    filter(effect == "fixed",
                           term == "s_loc_density.mid") %>%
                    pull(estimate))/scalingAttr$loc_density$scale,
+                 p.stat.sloLand.nat = (Models$natDispersal[[i]]%>%
+                   filter(effect == "fixed",
+                          term == "s_land_density.mid") %>%
+                   pull(estimate))/scalingAttr$land_density$scale,
+                 p.stat.sloInt.nat = (Models$natDispersal[[i]]%>%
+                   filter(effect == "fixed",
+                          term == "s_loc_density.mid:s_land_density.mid") %>%
+                   pull(estimate))/(scalingAttr$loc_density$scale*scalingAttr$land_density$scale),
                  sigma.stat.nat = 0.25, 
                  mu.mob.int.nat = Models$natDistance[[i]]%>%
                    filter(effect == "fixed",
@@ -132,8 +144,16 @@ for(i in 1:dim(vitalRateModels)[1]){
                    pull(estimate),
                  mu.mob.slo.nat = (Models$natDistance[[i]]%>%
                    filter(effect == "fixed",
-                          term == "s_loc_density") %>%
+                          term == "s_loc_density.mid") %>%
                    pull(estimate))/scalingAttr$loc_density$scale,
+                 mu.mob.sloLand.nat = (Models$natDistance[[i]]%>%
+                   filter(effect == "fixed",
+                          term == "s_land_density.mid") %>%
+                   pull(estimate))/scalingAttr$land_density$scale,
+                 mu.mob.sloInt.nat = (Models$natDistance[[i]]%>%
+                   filter(effect == "fixed",
+                          term == "s_loc_density.mid:s_land_density.mid") %>%
+                   pull(estimate))/(scalingAttr$loc_density$scale*scalingAttr$land_density$scale),
                  sigma.mob.nat = Models$natDistance[[i]]%>%
                    filter(effect == "ran_pars") %>%
                    pull(estimate) %>%
@@ -141,9 +161,63 @@ for(i in 1:dim(vitalRateModels)[1]){
                    sqrt)
  
   # replacing empty elements with zeros
-  temp.vp <- rapply(temp.vp, function(x) ifelse(length(x)==0,0,x))
+  temp.vp <- lapply(temp.vp, function(x) ifelse(length(x)==0,0,x))
   
   # renaming list
   assign(paste("vp", vitalRateModels$phase[i], sep = "."), temp.vp)
 }
+```
+
+## Running the IPM model
+
+Now that all parameters are ready, I can run the Integral Projection models. First, some diagnostic checks using the tools in the package.
+
+### Visual checks
+
+```{r, eval = F}
+test.init.kernel(kp, vp.early, pop0)
+```
+```{r, echo = F, fig.height=4, fig.width=8}
+# K <- build.kernel(kp, vp.early, pop.size = pop0, test=T)
+#   par(mfrow=c(2,4))
+#   image(t(K$S), main='survival')
+#   image(t(K$G),main='adult \ndispersal')
+#   image(t(K$R), main='reproduction')
+#   image(t(K$N),main='natal \ndispersal')
+#   image(t(K$Pmatrix),main='P kernel')
+#   image(t(K$Fmatrix), main='F kernel')
+#   image(t(K$K), main='full kernel') 
+```
+
+### Running the IPM
+
+Below, I run the 3 IPM simulations for the early, mid and late phase. The simulations are rather time consuming, so I will store them once run, in the results folder, as part of the tibble containing vital rate models.
+
+```{r}
+# Early phase ipm
+start <- Sys.time()
+IPM.early <- runIPM(kp, vp.early, init.pop = pop0, niter=12)
+early.t <- Sys.time() - start
+# This loop, with niter = 12, takes 1.15 minutes to run.
+
+# Mid phase ipm
+start <- Sys.time()
+IPM.mid <- runIPM(kp, vp.mid, init.pop = pop0, niter=12)
+mid.t <- Sys.time() - start
+
+# Late phase ipm
+start <- Sys.time()
+IPM.late <- runIPM(kp, vp.late, init.pop = pop0, niter=12)
+late.t <- Sys.time() - start
+
+par(mfrow=c(1,3))
+plotly::plot_ly(x=1:ncol(IPM.early$pop.size), y=rev(kp$y), z=IPM.early$pop.size, type="contour")
+plotly::plot_ly(x=1:ncol(IPM.mid$pop.size), y=rev(kp$y), z=IPM.mid$pop.size, type="contour")
+plotly::plot_ly(x=1:ncol(IPM.late$pop.size), y=rev(kp$y), z=IPM.late$pop.size, type="contour")
+
+# another way to do it
+quick.plot(IPM.early, 'Early')
+quick.plot(IPM.mid, "Mid")
+quick.plot(IPM.late, 'Late')
+
 ```
