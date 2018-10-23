@@ -10,6 +10,7 @@
 #+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # loading data
 load('data/data.Rda')
+data <- ipmdata
 head(data, 3)
 str(data)
 
@@ -40,7 +41,7 @@ vp.early <- list(s.int = summary(e.survival)$coefficients['(Intercept)','Estimat
                  r.slo = 0,
                  r.multiplier = 1,
                  f.int = summary(e.recruit)$coefficients$cond['(Intercept)','Estimate'],
-                 f.slo = summary(e.recruit)$coefficients$cond['s_loc_density','Estimate']/attr(data$s_loc_density, 'scaled:scale'),
+                 f.slo = summary(e.recruit)$coefficients$cond['s_loc_density','Estimate']/scalingAttr$loc_density$scale,
                  distribution = 'ztpoisson',
                  
                  p.stat.int.ad = summary(e.dispersal.p)$coefficients['(Intercept)','Estimate'],
@@ -51,7 +52,7 @@ vp.early <- list(s.int = summary(e.survival)$coefficients['(Intercept)','Estimat
                  sigma.mob.ad = sqrt(sum(as.data.frame(lme4::VarCorr(e.dispersal.dist))[,'sdcor'])),
                  
                  p.stat.int.nat = summary(e.natal.p)$coefficients['(Intercept)','Estimate'],
-                 p.stat.slo.nat = 0,
+                 p.stat.slo.nat = summary(e.natal.p)$coefficients['s_loc_density.mid','Estimate']/scalingAttr$loc_density$scale,
                  sigma.stat.nat = 0.25, 
                  mu.mob.int.nat = summary(e.natal.dist)$coefficients['(Intercept)','Estimate'],
                  mu.mob.slo.nat = 0,
@@ -69,28 +70,28 @@ quick.plot(IPM.early, 'Early')
 
 #### MID IPM ####
 vp.mid <- list(s.int = summary(m.survival)$coefficients['(Intercept)','Estimate'],
-                s.slo = summary(m.survival)$coefficients['s_loc_density','Estimate']/attr(data$s_loc_density, 'scaled:scale'),
+                s.slo = summary(m.survival)$coefficients['s_loc_density','Estimate']/scalingAttr$loc_density$scale,
                 s.multiplier = 1,
                 
                 r.int = summary(m.recruit)$coefficients$zi['(Intercept)','Estimate'],
-                r.slo = summary(m.recruit)$coefficients$zi['s_loc_density','Estimate']/attr(data$s_loc_density, 'scaled:scale'),
+                r.slo = summary(m.recruit)$coefficients$zi['s_loc_density','Estimate']/scalingAttr$loc_density$scale,
                 r.multiplier = 1,
                 f.int = summary(m.recruit)$coefficients$cond['(Intercept)','Estimate'],
-                f.slo = summary(m.recruit)$coefficients$cond['s_loc_density','Estimate']/attr(data$s_loc_density, 'scaled:scale'),
+                f.slo = summary(m.recruit)$coefficients$cond['s_loc_density','Estimate']/scalingAttr$loc_density$scale,
                 f.distribution = 'ztpoisson',
                 
                 p.stat.int.ad = summary(m.dispersal.p)$coefficients['(Intercept)','Estimate'],
-                p.stat.slo.ad = summary(m.dispersal.p)$coefficients['s_loc_density','Estimate']/attr(data$s_loc_density, 'scaled:scale'),
+                p.stat.slo.ad = summary(m.dispersal.p)$coefficients['s_loc_density','Estimate']/scalingAttr$loc_density$scale,
                 sigma.stat.ad = 0.25, 
                 mu.mob.int.ad = summary(m.dispersal.dist)$coefficients['(Intercept)','Estimate'],
-                mu.mob.slo.ad = summary(m.dispersal.dist)$coefficients['s_loc_density','Estimate']/attr(data$s_loc_density, 'scaled:scale'),
+                mu.mob.slo.ad = summary(m.dispersal.dist)$coefficients['s_loc_density','Estimate']/scalingAttr$loc_density$scale,
                 sigma.mob.ad = sqrt(sum(as.data.frame(lme4::VarCorr(m.dispersal.dist))[,'sdcor'])),
                 
                 p.stat.int.nat = summary(m.natal.p)$coefficients['(Intercept)','Estimate'],
-                p.stat.slo.nat = summary(m.natal.p)$coefficients['s_loc_density.mid','Estimate']/attr(data$s_loc_density, 'scaled:scale'),
+                p.stat.slo.nat = summary(m.natal.p)$coefficients['s_loc_density.mid','Estimate']/scalingAttr$loc_density$scale,
                 sigma.stat.nat = 0.25, 
                 mu.mob.int.nat = summary(m.natal.dist)$coefficients['(Intercept)','Estimate'],
-                mu.mob.slo.nat = summary(m.natal.dist)$coefficients['s_loc_density.mid','Estimate']/attr(data$s_loc_density, 'scaled:scale'),
+                mu.mob.slo.nat = summary(m.natal.dist)$coefficients['s_loc_density.mid','Estimate']/scalingAttr$loc_density$scale,
                 sigma.mob.nat = sqrt(sum(as.data.frame(lme4::VarCorr(m.natal.dist))[,'sdcor']))
 )
 
@@ -106,7 +107,7 @@ quick.plot(IPM.mid, 'Mid')
 
 #### LATE IPM ####
 vp.late <- list(s.int = summary(l.survival)$coefficients['(Intercept)','Estimate'],
-                 s.slo = summary(l.survival)$coefficients['s_loc_density','Estimate']/attr(data$s_loc_density, 'scaled:scale'),
+                 s.slo = summary(l.survival)$coefficients['s_loc_density','Estimate']/scalingAttr$loc_density$scale,
                  s.multiplier = 1,
                  
                  r.int = summary(l.recruit)$coefficients$zi['(Intercept)','Estimate'],
@@ -117,14 +118,14 @@ vp.late <- list(s.int = summary(l.survival)$coefficients['(Intercept)','Estimate
                  f.distribution = 'ztpoisson',
                  
                  p.stat.int.ad = summary(l.dispersal.p)$coefficients['(Intercept)','Estimate'],
-                 p.stat.slo.ad = summary(l.dispersal.p)$coefficients['s_loc_density','Estimate']/attr(data$s_loc_density, 'scaled:scale'),
+                 p.stat.slo.ad = summary(l.dispersal.p)$coefficients['s_loc_density','Estimate']/scalingAttr$loc_density$scale,
                  sigma.stat.ad = 0.25, 
                  mu.mob.int.ad = summary(l.dispersal.dist)$coefficients['(Intercept)','Estimate'],
                  mu.mob.slo.ad = 0,
                  sigma.mob.ad = sqrt(sum(as.data.frame(lme4::VarCorr(l.dispersal.dist))[,'sdcor'])),
                  
                  p.stat.int.nat = summary(l.natal.p)$coefficients['(Intercept)','Estimate'],
-                 p.stat.slo.nat = summary(l.natal.p)$coefficients['(Intercept)','Estimate']/attr(data$s_loc_density, 'scaled:scale'),
+                 p.stat.slo.nat = summary(l.natal.p)$coefficients['(Intercept)','Estimate']/scalingAttr$loc_density$scale,
                  sigma.stat.nat = 0.25, 
                  mu.mob.int.nat = summary(l.natal.dist)$coefficients['(Intercept)','Estimate'],
                  mu.mob.slo.nat = 0,

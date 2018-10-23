@@ -1,18 +1,18 @@
 # running models to extract vital rate parameters for Early and Late phase
 #### Survival ####+++++++++++++++++++++++++++++++++++++++++++++++++++++++
-e.survival <- lme4::glmer(survived ~ 1 +
+e.survival <- lme4::glmer(survival ~ 1 +
                             + (1|FishID) + (1|reach) + (1|sampling),
                           data=data.early,
                           family=binomial,
                           lme4::glmerControl(optimizer=c('bobyqa')))
 # in early phase survival is not affectd by density
-m.survival <- lme4::glmer(survived ~ s_loc_density +
+m.survival <- lme4::glmer(survival ~ s_loc_density +
                             + (1|FishID) + (1|reach) + (s_loc_density|sampling),
                           data=data.mid,
                           family=binomial,
                           lme4::glmerControl(optimizer=c('bobyqa')))
 # in mid survival is positively affected by density
-l.survival <- lme4::glmer(survived ~ s_loc_density +
+l.survival <- lme4::glmer(survival ~ s_loc_density +
                             + (1|FishID) + (1|reach) + (s_loc_density|sampling),
                           data=data.late,
                           family=binomial,
@@ -22,24 +22,27 @@ l.survival <- lme4::glmer(survived ~ s_loc_density +
 #### Recruitment ####+++++++++++++++++++++++++++++++++++++++++++++++++++++++
 e.recruit <- glmmTMB::glmmTMB(recruited ~ s_loc_density +
                                 + (1|FishID) + (1|reach) + (s_loc_density|sampling),
-                              zi = ~ 1 +
+                              ziformula = ~ 1 +
                                 + (1|FishID) + (1|reach)  + (1|sampling),
-                              family=list(family="truncated_poisson", link="log"),
-                              data=rm.NAs(data.early, 'recruited', fixEff=c('s_loc_density')))
+                              family="truncated_poisson"(link = "log"),
+                              data=data.early,
+                              na.action = na.omit)
 # in the early phase, density affects the number of offspring but not the probability to produce any.
 m.recruit <- glmmTMB::glmmTMB(recruited ~ s_loc_density +
                                 + (1|FishID) + (1|reach) + (s_loc_density|sampling),
-                              zi = ~ s_loc_density +
+                              ziformula = ~ s_loc_density +
                                 + (1|FishID) + (1|reach)  + (s_loc_density|sampling),
-                              family=list(family="truncated_poisson", link="log"),
-                              data=rm.NAs(data.mid, 'recruited', fixEff=c('s_loc_density')))
+                              family="truncated_poisson"(link = "log"),
+                              data=data.mid,
+                              na.action = na.omit)
 # in the mid phase both reproduction probability and number of offspring are negatively affected by density
 l.recruit <- glmmTMB::glmmTMB(recruited ~ 1 +
                                 + (1|FishID) + (1|reach) + (1|sampling),
-                              zi = ~ 1 +
+                              ziformula = ~ 1 +
                                 + (1|FishID) + (1|reach)  + (1|sampling),
-                              family=list(family="truncated_poisson", link="log"),
-                              data=rm.NAs(data.late, 'recruited', fixEff=c('s_loc_density')))
+                              family="truncated_poisson"(link = "log"),
+                              data=data.late,
+                              na.action = na.omit)
 # the late phase is not affected by density
 
 #### Adult dispersal probability ####++++++++++++++++++++++++++++++++++++++++++++++++
@@ -83,7 +86,7 @@ e.natal.p <- lme4::glmer(p_natal ~ 1 +
                          family = 'binomial',
                          data = data.early,
                          lme4::glmerControl(optimizer=c('bobyqa')))
-# strong negative density dependence early on
+# no density dependence early on
 m.natal.p <- lme4::glmer(p_natal ~ s_loc_density.mid +
                            + (1|Maternity) + (1|reach.birth) + (s_loc_density.mid|sampling.birth),
                          family = 'binomial',
@@ -95,7 +98,7 @@ l.natal.p <- lme4::glmer(p_natal ~ s_loc_density.mid +
                          family = 'binomial',
                          data = data.late,
                          lme4::glmerControl(optimizer=c('bobyqa')))
-# no effect late 
+# negative effect late 
 
 
 #### Natal dispersal distance ####++++++++++++++++++++++++++++++++++++++++++++++++
