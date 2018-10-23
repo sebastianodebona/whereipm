@@ -62,11 +62,11 @@ Models <- vitalRateModels %>%
 for(i in 1:dim(vitalRateModels)[1]){
  
   temp.vp <- list(s.int = Models$survival[[i]]%>%
-                   filter(group == "fixed",
+                   filter(effect == "fixed",
                           term == "(Intercept)") %>%
                    pull(estimate),
                  s.slo = (Models$survival[[i]]%>%
-                   filter(group == "fixed",
+                   filter(effect == "fixed",
                           term == "s_loc_density") %>%
                    pull(estimate))/scalingAttr$loc_density$scale,
                  s.multiplier = 1,
@@ -132,7 +132,7 @@ for(i in 1:dim(vitalRateModels)[1]){
                    pull(estimate),
                  mu.mob.slo.nat = (Models$natDistance[[i]]%>%
                    filter(effect == "fixed",
-                          term == "s_loc_density") %>%
+                          term == "s_loc_density.mid") %>%
                    pull(estimate))/scalingAttr$loc_density$scale,
                  sigma.mob.nat = Models$natDistance[[i]]%>%
                    filter(effect == "ran_pars") %>%
