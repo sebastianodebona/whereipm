@@ -70,15 +70,15 @@ I will run 6 model trios, for different life-history and dispersal traits:
 # For survival, Local density is the only covariate.
 # Random effects include individual identity, reach and sampling.
 
-e.survival <- lme4::glmer(survival ~ 1 +
-                            + (1|FishID) + (1|reach) + (1|sampling),
+e.survival <- lme4::glmer(survival ~ s_loc_density +
+                            + (1|FishID)  + (s_loc_density|sampling),
                           data=data.early,
                           family=binomial,
                           lme4::glmerControl(optimizer=c('bobyqa')))
 # in early phase survival is not affectd by density
 
-m.survival <- lme4::glmer(survival ~ 1 +
-                            + (1|FishID) + (1|reach) + (1|sampling),
+m.survival <- lme4::glmer(survival ~ s_loc_density +
+                            + (1|FishID)  + (s_loc_density|sampling),
                           data=data.mid,
                           family=binomial,
                           lme4::glmerControl(optimizer=c('bobyqa')))
@@ -149,8 +149,8 @@ m.recruit <- glmmTMB::glmmTMB(recruited ~ s_loc_density +
                               data=data.mid,
                               na.action = na.omit)
 # in the mid phase number of offspring is negatively affected by density (not probability)
-l.recruit <- glmmTMB::glmmTMB(recruited ~ 1 +
-                                + (1|FishID)+ (1|reach) + (1|sampling),
+l.recruit <- glmmTMB::glmmTMB(recruited ~ s_loc_density +
+                                + (1|FishID)+ (1|reach) + (s_loc_density|sampling),
                               ziformula = ~ 1 +
                                 + (1|FishID)+ (1|reach) +  (1|sampling),
                               family="truncated_poisson"(link="log"),
@@ -225,8 +225,8 @@ e.dispersal.p <- lme4::glmer(p_moving ~ s_loc_density +
                              data = data.early,
                              lme4::glmerControl(optimizer=c('bobyqa')))
 # negative effect of density in early phase
-m.dispersal.p <- lme4::glmer(p_moving ~ 1 +
-                               + (1|FishID) + (1|reach) + (1|sampling),
+m.dispersal.p <- lme4::glmer(p_moving ~ s_loc_density +
+                               + (1|FishID) + (1|reach) + (s_loc_density|sampling),
                              family = 'binomial',
                              data = data.mid,
                              lme4::glmerControl(optimizer=c('bobyqa')))
@@ -333,14 +333,14 @@ e.natal.p <- lme4::glmer(p_natal ~ s_loc_density.mid*s_land_density.mid +
                          data = data.early,
                          lme4::glmerControl(optimizer=c('bobyqa')))
 # strong positive density dependence early on, modulated by landscape density
-m.natal.p <- lme4::glmer(p_natal ~ s_loc_density.mid +
+m.natal.p <- lme4::glmer(p_natal ~ s_loc_density.mid*s_land_density.mid +
                            + (1|Maternity) + (1|reach.birth) + (s_loc_density.mid|sampling.birth),
                          family = 'binomial',
                          data = data.mid,
                          lme4::glmerControl(optimizer=c('bobyqa')))
 # negative density dependence in the middle
-l.natal.p <- lme4::glmer(p_natal ~ 1 +
-                           + (1|Maternity) + (1|reach.birth) + (1|sampling.birth),
+l.natal.p <- lme4::glmer(p_natal ~ s_loc_density.mid*s_land_density.mid +
+                           + (1|Maternity) + (1|reach.birth) + (s_loc_density|sampling.birth),
                          family = 'binomial',
                          data = data.late,
                          lme4::glmerControl(optimizer=c('bobyqa')))
