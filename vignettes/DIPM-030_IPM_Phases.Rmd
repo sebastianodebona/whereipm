@@ -220,5 +220,15 @@ plotly::plot_ly(x=1:ncol(IPM.late$pop.size), y=rev(kp$y), z=IPM.late$pop.size, t
 quick.plot(IPM.early, 'Early')
 quick.plot(IPM.mid, "Mid")
 quick.plot(IPM.late, 'Late')
+```
 
+### Storing results
+
+```{r}
+# adding column with results of IPM runs
+vitalRateModels <- vitalRateModels %>%
+  add_column(list(IPM.early, IPM.mid, IPM.late))
+
+# storing the updated tibble
+saveRDS(vitalRateModels, file = file.path(here::here(), "results", "vitalRateModels.rds"))
 ```
