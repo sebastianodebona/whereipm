@@ -209,3 +209,25 @@ for(i in 2:3){
 }
 #dev.off()
 
+
+
+
+
+##########################
+# Using package distr to create custom functions
+
+y <- seq(-500, 500, by = 0.001)
+x = 4
+
+N <- distr::Norm(mean = 0, sd = 0.25)
+L <- distr::Lnorm(meanlog = 1.83, sd = 1.33)
+D <- (- L*0.3) + L*0.3 + N*0.4
+
+sum(distr::d(D)(y-4)*0.001) # important to multiply by h!!! (here 0.001)
+
+
+distr::plot(D, panel.first = grid())
+
+z <- seq(-500, 500, by = 0.0005)
+
+
