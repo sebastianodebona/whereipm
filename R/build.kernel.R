@@ -76,7 +76,7 @@ build.kernel <- function(kernel.params, vital.params, pop.size, test=F){
   Fmatrix <- kernel.params$h*as.matrix(N%*%R)
   
   # Whole kernel
-  K<- Pmatrix + Fmatrix
+  K <- Pmatrix + Fmatrix
   
   if(!test){
     return(K)
