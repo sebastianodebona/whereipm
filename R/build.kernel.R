@@ -38,8 +38,7 @@ build.kernel <- function(kernel.params, vital.params, pop.size, test=F){
                             mu.mob.slo = vital.params$mu.mob.slo.ad,
                             sigma.mob = vital.params$sigma.mob.ad
                           ))
-  G <- G*h # this step is crucial! in order for the integral of the estimated pdf to be = 1
-  
+
   # reproduction
   R <- diag(rx(density = density, 
                r.int = vital.params$r.int, 
@@ -70,8 +69,7 @@ build.kernel <- function(kernel.params, vital.params, pop.size, test=F){
                                           mu.mob.sloInt = vital.params$mu.mob.sloInt.nat,
                                           sigma.mob = vital.params$sigma.mob.nat
                           ))
-  N <- N*h # same as for G
-  
+
   # P kernel
   Pmatrix <- kernel.params$h*as.matrix(G%*%S)
   # F kernel

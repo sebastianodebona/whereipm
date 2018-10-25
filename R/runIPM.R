@@ -38,7 +38,7 @@ runIPM <- function(kernel.params, vital.params, init.pop, niter=10, store.k=FALS
     }
     
     # determining next population size by multiplying current kernel and current population size
-    next.pop.size <- K%*%pop.size[,i]
+    next.pop.size <- kernel.params$h*(K%*%pop.size[,i])
     pop.size[,i+1] <- next.pop.size
     pop.spread[i+1] <- kernel.params$y[max(which(pop.size[,i] > 1))]
   }
