@@ -199,17 +199,19 @@ Below, I run the 3 IPM simulations for the early, mid and late phase. The simula
 start <- Sys.time()
 IPM.early <- runIPM(kp, vp.early, init.pop = pop0, niter=12)
 early.t <- Sys.time() - start
-# This loop, with niter = 12, takes 1.15 minutes to run.
+print(early.t)
 
 # Mid phase ipm
 start <- Sys.time()
 IPM.mid <- runIPM(kp, vp.mid, init.pop = pop0, niter=12)
 mid.t <- Sys.time() - start
+print(mid.t)
 
 # Late phase ipm
 start <- Sys.time()
 IPM.late <- runIPM(kp, vp.late, init.pop = pop0, niter=12)
 late.t <- Sys.time() - start
+print(late.t)
 
 par(mfrow=c(1,3))
 plotly::plot_ly(x=1:ncol(IPM.early$pop.size), y=rev(kp$y), z=IPM.early$pop.size, type="contour")
@@ -221,6 +223,10 @@ quick.plot(IPM.early, 'Early')
 quick.plot(IPM.mid, "Mid")
 quick.plot(IPM.late, 'Late')
 ```
+
+The results are crazy, and not very believable. I need to run here some diagnostics to check nothing erroneaous or absurd is happening while the IPM is run.
+
+
 
 ### Storing results
 
