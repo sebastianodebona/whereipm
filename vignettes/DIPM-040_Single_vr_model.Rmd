@@ -1,0 +1,95 @@
+---
+title: "Single VR Model"
+author: "Seba De Bona"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+    theme: lumen
+---
+
+## Setup
+
+Load the package and get the data.
+
+```{r}
+library(whereipm)
+library(tidyverse)
+library(glmmTMB)
+
+# loading the data
+data <- ipmdata
+
+# Defining 3 colours I will later use for plotting
+col.early <- wesanderson::wes_palette("Darjeeling1", 3)[1]
+col.mid <- wesanderson::wes_palette("Darjeeling1", 3)[2]
+col.late <- wesanderson::wes_palette("Darjeeling1", 3)[3]
+```
+
+Instead of running three separate models using three distinct phases, another option is to run a single model specifying time as a covariate.
+
+This can be done in two ways:
+
+1. Considering time a continuous variable (either as year or month), and then picking three representative time points to depict the phases;
+2. Treating time as a factorial variable, with the time instances assigned to three distinct phases (again "early", "mid" or "late").
+
+```{r}
+# defining alternative variables
+# Year
+data <- data %>%
+  mutate(
+    year = cut(sampling, 
+               breaks = c(0, 13, 25, 37, 49, 62),
+               labels = 1:5) %>% as.factor
+  )
+
+# Phase
+data <- data %>%
+  mutate(
+    phase = cut(sampling,
+                breaks = c(0, 18, 26, 36, 46, 62),
+                labels = c("early", NA, "mid", NA, "late")) %>%
+      factor(levels = c("early", "mid", "late"), ordered = T)
+  )
+
+```
+
+## Models
+
+I can now run separate models using different time specifications, and check the model fit.
+
+```{r}
+# Survival model using year
+# y1 <- function(){
+#   survival.year <- lme4::glmer(survival ~ 0 + year + year:s_loc_density
+#                             + (1|FishID) + (1|reach) + (s_loc_density|sampling),
+#                           data=data,
+#                           family=binomial,
+#                           lme4::glmerControl(optimizer=c('bobyqa')),
+#                           na.action = na.omit)
+# }
+# 
+# 
+# #... and using phase
+# y2 <- function(){
+#   survival.phase <- lme4::glmer(survival ~ 0 + phase:s_loc_density
+#                             + (1|FishID) + (1|reach) + (s_loc_density|sampling),
+#                           data=data,
+#                           family=binomial,
+#                           lme4::glmerControl(optimizer=c('bobyqa')),
+#                           na.action = na.omit)
+# }
+# 
+# x <- microbenchmark::microbenchmark(y2())
+# 
+# survival.time <- lme4::glmer(survival ~ s_time*(s_loc_density + I(s_loc_density^2))
+#                             + (1|FishID) + (1|reach) + (s_loc_density|sampling),
+#                           data=data,
+#                           family=binomial,
+#                           lme4::glmerControl(optimizer=c('bobyqa')),
+#                           na.action = na.omit)
+# 
+# summary(survival.time)
+```
