@@ -20,5 +20,7 @@ Imports: lme4,
          plotly,
          plyr,
          sticky,
-         tidyverse
+         tidyverse,
+         wesanderson,
+         distr
 RoxygenNote: 6.1.0
