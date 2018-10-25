@@ -368,7 +368,7 @@ m.natal.dist <- lme4::lmer(log(dist_natal) ~ s_land_density.mid +
                              + (1|Maternity) + (1|reach.birth) + (1|sampling.birth),
                            data = data.mid)
 # postive effect of landscape density on dispersal distance
-l.natal.dist <- lme4::lmer(log(dist_natal) ~ 1  + 
+l.natal.dist <- lme4::lmer(log(dist_natal) ~ s_land_density.mid  + 
                              + (1|Maternity) + (1|reach.birth) + (1|sampling.birth),
                            data = data.late)
 # no effect in late
