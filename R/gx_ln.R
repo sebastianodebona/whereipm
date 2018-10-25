@@ -42,7 +42,7 @@ gx_ln <- function(y, x, density.x, Land.density,
   cGaus <- distr::Norm(mean = 0, sd = sigma.stat)
   logNorm <- distr::Lnorm(meanlog = mean.lognorm, sd = sigma.mob)
   # combined
-  redKernel <- (-logNorm*(p.leave/2)) + (1 - p.leave)*cGaus + logNorm*(p.leave/2)
+  redKernel <- suppressWarnings((-logNorm*(p.leave/2)) + (1 - p.leave)*cGaus + logNorm*(p.leave/2))
   
   # Now using the redistribution kernel (centered in 0) to estimate the pdf for each movement y-x
   d <- distr::d(redKernel)(y-x)
