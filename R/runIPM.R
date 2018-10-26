@@ -44,7 +44,7 @@ runIPM <- function(kernel.params, vital.params, init.pop, niter=10, store.k=FALS
   }
   
   # claculating speed, accelaration and population size at the introduction site at the end of the simulation
-  speed <- pop.spread[niter] - pop.spread[niter-1]
+  speed <- pop.spread[niter+1] - pop.spread[niter]
   
   # running a linear model to estimate acceleration
   t <- 1:niter
