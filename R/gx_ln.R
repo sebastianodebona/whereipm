@@ -71,8 +71,12 @@ gx_ln <- function(y, x, density.x, Land.density,
     return(y)
   }
   
+  
+  
   # Making sure D Integrates to 1 (with some tolerance error)
-  stopifnot(abs(integrate(D, -Inf, Inf)$value-1) < 1e-3)
+  toPrintifError <- integrate(D, -Inf, Inf)
+  if(abs(integrate(D, -Inf, Inf)$value-1) > 0.1)
+    stop("Error: for x = ", x, "integral of redistr. kernel != 1; \n", print(toPrintifError))
   
   # calculating redistribution from x to each value of y
   d <- D(y-x)
