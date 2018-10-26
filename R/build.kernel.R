@@ -26,7 +26,7 @@ build.kernel <- function(kernel.params, vital.params, pop.size, test=F){
                s.slo=vital.params$s.slo, 
                s.multiplier=vital.params$s.multiplier))
   # movement kernel
-  G <- parallel::mcmapply(gx_ln, mc.cores = 2, 
+  G <- mapply(gx_ln, 
                           x = kernel.params$y, density.x = density,
                           MoreArgs = list(
                             y = kernel.params$y,
@@ -54,7 +54,7 @@ build.kernel <- function(kernel.params, vital.params, pop.size, test=F){
                               NA,
                               vital.params$f.slo)))
   # recruited position (natal dispersal)
-  N <- parallel::mcmapply(gx_ln, mc.cores = 2, 
+  N <- mapply(gx_ln, 
                           x = kernel.params$y, density.x = density,
                           MoreArgs = list(y = kernel.params$y,
                                           Land.density = Land.density,
