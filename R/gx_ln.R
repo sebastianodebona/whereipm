@@ -72,7 +72,7 @@ gx_ln <- function(y, x, density.x, Land.density,
   }
   
   # Making sure D Integrates to 1 (with some tolerance error)
-  stopifnot(abs(integrate(D, -Inf, Inf)$value-1) < 1e-6)
+  stopifnot(abs(integrate(D, -Inf, Inf)$value-1) < 1e-4)
   
   # calculating redistribution from x to each value of y
   d <- D(y-x)
