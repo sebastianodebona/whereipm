@@ -4,8 +4,8 @@
 #' 
 #' @export
 #' 
-#' @param x Current position.
-#' @param y Position at the next time step towards which the function predicts the probability to disperse to.
+#' @param x Current position (single value).
+#' @param y Vector of possible positions at the next time step, towards which the function predicts the probability to disperse to.
 #' @param density.x Density for the position x.
 #' @param Land.density Density at the landscape level (i.e. average local landscape among occupied bins)
 #' @param p.stat.int Intercept for the logistic regression defining the proportion of static individuals (not dispersing, but just performing short distance movements) in the population based on local density (i.e. proportion of dispersers at density 0). If \code{p.stat.slo} = 1, no individuals disperse for long distances when density is close to 0.
@@ -26,26 +26,56 @@ gx_ln <- function(y, x, density.x, Land.density,
                   p.stat.sloLand = 0, p.stat.sloInt = 0, sigma.stat = 0.25, 
                   mu.mob.int, mu.mob.slo,
                   mu.mob.sloLand = 0, mu.mob.sloInt = 0, sigma.mob) {
+  
+  stopifnot(length(x) == 1)
+  stopifnot(length(density.x)==1)
   # this produces a density dependent movement probability.
   # NOTE: the redistribution kernel of individuals originating form position x is only dependent on density at that position and on Landscape density. Also, the redistribution kernel is symmetrical, so what is affected is the distance dispersed (regardless of the direction).
-  
-  p.leave <- plogis(p.stat.int + p.stat.slo*density.x +
-                      p.stat.sloLand*Land.density + p.stat.sloInt*density.x*Land.density) # defining what is the p to leave
-  mean.lognorm <- mu.mob.int + mu.mob.slo*density.x +
-    mu.mob.sloLand*Land.density + mu.mob.sloInt*density.x*Land.density# and the mean of the lognormal describing movement
   
   # The redistribution kernel of individuals through time is a composed distribution of three other: 
   #1) a central gaussian distribution with mean 0 (so that it's centered on the starting point) and a small variance.
   #2-3) two lognormal distributions, one to the right and one to the left of the central gaussian distribution.
   
-  # I will use the package distr to realised this combined distribution.
-  cGaus <- distr::Norm(mean = 0, sd = sigma.stat)
-  logNorm <- distr::Lnorm(meanlog = mean.lognorm, sd = sigma.mob)
-  # combined
-  redKernel <- suppressWarnings((-logNorm*(p.leave/2)) + (1 - p.leave)*cGaus + logNorm*(p.leave/2))
+  # Here I define all needed parameters for the redistribution kernel
+  # probability to leave 
+  #   (defining the proportion of Gaussian over Lognormal distributed values)
+  p.leave = plogis(p.stat.int + p.stat.slo*density.x +
+                      p.stat.sloLand*Land.density + 
+                      p.stat.sloInt*density.x*Land.density)
+  # mean of the LogNormal distribution
+  meanlog = mu.mob.int + mu.mob.slo*density.x +
+    mu.mob.sloLand*Land.density + mu.mob.sloInt*density.x*Land.density
+  # sd of the LogNormal distribution
+  sdlog = sigma.mob
+  # mean of the Normal distribution
+  meann = 0
+  # sd of the Normal distribution
+  sdn = sigma.stat
   
-  # Now using the redistribution kernel (centered in 0) to estimate the pdf for each movement y-x
-  d <- distr::d(redKernel)(y-x)
 
+  # defining function for normal distribution
+  Normal <- function(i){
+    (1/(sqrt(2*pi*(sdn^2))))*exp(-((i-mean)^2/(2*(sdn)^2)))
+  }
+  
+  # defininf function for lognormal distribution
+  logNormal <- function(i){
+    (1/(i*sdlog*(sqrt(2*pi))))*exp(-((log(i)-meanlog)^2/(2*(sdlog^2))))
+  }
+  
+  D <- function(i){
+    y <- ifelse(i==0,
+                (1-p.leave)*Normal(i),
+                (1-p.leave)*Normal(i) + p.leave*0.5*logNormal(abs(i)))
+    # p.leave is multiply by 0.5 since the logNormal are two and mirrored respective to 0
+    return(y)
+  }
+  
+  # Making sure D Integrates to 1 (with some tolerance error)
+  stopifnot(abs(integrate(D, -Inf, Inf)$value-1) < 1e-6)
+  
+  # calculating redistribution from x to each value of y
+  d <- D(y-x)
+  
   return(d)
 }

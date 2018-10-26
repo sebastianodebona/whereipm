@@ -26,18 +26,17 @@ build.kernel <- function(kernel.params, vital.params, pop.size, test=F){
                s.slo=vital.params$s.slo, 
                s.multiplier=vital.params$s.multiplier))
   # movement kernel
-  G <- mapply(gx_ln, 
-                          x = kernel.params$y, density.x = density,
-                          MoreArgs = list(
-                            y = kernel.params$y,
-                            Land.density = Land.density,
-                            p.stat.int = vital.params$p.stat.int.ad,
-                            p.stat.slo = vital.params$p.stat.slo.ad,
-                            sigma.stat = vital.params$sigma.stat.ad, 
-                            mu.mob.int = vital.params$mu.mob.int.ad,
-                            mu.mob.slo = vital.params$mu.mob.slo.ad,
-                            sigma.mob = vital.params$sigma.mob.ad
-                          ))
+  G <- mapply(gx_ln, x = kernel.params$y, density.x = density,
+              MoreArgs = list(
+                y = kernel.params$y,
+                Land.density = Land.density,
+                p.stat.int = vital.params$p.stat.int.ad,
+                p.stat.slo = vital.params$p.stat.slo.ad,
+                sigma.stat = vital.params$sigma.stat.ad, 
+                mu.mob.int = vital.params$mu.mob.int.ad,
+                mu.mob.slo = vital.params$mu.mob.slo.ad,
+                sigma.mob = vital.params$sigma.mob.ad
+              ))
 
   # reproduction
   R <- diag(rx(density = density, 
@@ -54,21 +53,20 @@ build.kernel <- function(kernel.params, vital.params, pop.size, test=F){
                               NA,
                               vital.params$f.slo)))
   # recruited position (natal dispersal)
-  N <- mapply(gx_ln, 
-                          x = kernel.params$y, density.x = density,
-                          MoreArgs = list(y = kernel.params$y,
-                                          Land.density = Land.density,
-                                          p.stat.int = vital.params$p.stat.int.nat,
-                                          p.stat.slo = vital.params$p.stat.slo.nat,
-                                          p.stat.sloLand = vital.params$p.stat.sloLand.nat,
-                                          p.stat.sloInt = vital.params$p.stat.sloInt.nat,
-                                          sigma.stat = vital.params$sigma.stat.nat, 
-                                          mu.mob.int = vital.params$mu.mob.int.nat,
-                                          mu.mob.slo = vital.params$mu.mob.slo.nat,
-                                          mu.mob.sloLand = vital.params$mu.mob.sloLand.nat,
-                                          mu.mob.sloInt = vital.params$mu.mob.sloInt.nat,
-                                          sigma.mob = vital.params$sigma.mob.nat
-                          ))
+  N <- mapply(gx_ln, x = kernel.params$y, density.x = density,
+              MoreArgs = list(y = kernel.params$y,
+                              Land.density = Land.density,
+                              p.stat.int = vital.params$p.stat.int.nat,
+                              p.stat.slo = vital.params$p.stat.slo.nat,
+                              p.stat.sloLand = vital.params$p.stat.sloLand.nat,
+                              p.stat.sloInt = vital.params$p.stat.sloInt.nat,
+                              sigma.stat = vital.params$sigma.stat.nat, 
+                              mu.mob.int = vital.params$mu.mob.int.nat,
+                              mu.mob.slo = vital.params$mu.mob.slo.nat,
+                              mu.mob.sloLand = vital.params$mu.mob.sloLand.nat,
+                              mu.mob.sloInt = vital.params$mu.mob.sloInt.nat,
+                              sigma.mob = vital.params$sigma.mob.nat
+              ))
 
   # P kernel
   Pmatrix <- kernel.params$h*as.matrix(G%*%S)
