@@ -360,15 +360,15 @@ stargazer::stargazer(e.natal.p, m.natal.p, l.natal.p,
 ### Natal dispersal distance
 
 ```{r, results = "asis", fig.height=4, fig.width=8}
-e.natal.dist <- lme4::lmer(log(dist_natal) ~ s_land_density.mid + 
+e.natal.dist <- lme4::lmer(log(dist_natal) ~ 1 + 
                              + (1|Maternity) + (1|reach.birth) + (1|sampling.birth),
                            data = data.early)
 # positive effect of landscape density on dispersal distance
-m.natal.dist <- lme4::lmer(log(dist_natal) ~ s_land_density.mid + 
+m.natal.dist <- lme4::lmer(log(dist_natal) ~ 1 + 
                              + (1|Maternity) + (1|reach.birth) + (1|sampling.birth),
                            data = data.mid)
 # postive effect of landscape density on dispersal distance
-l.natal.dist <- lme4::lmer(log(dist_natal) ~ s_land_density.mid  + 
+l.natal.dist <- lme4::lmer(log(dist_natal) ~ 1  + 
                              + (1|Maternity) + (1|reach.birth) + (1|sampling.birth),
                            data = data.late)
 # no effect in late
