@@ -38,7 +38,7 @@ Here we define kernel parameters and initial population size.
 # kernel parameters
 kp <- create.kernel.params(L=-500, U=500, n.bins = 1000)
 # initial population size
-pop0 <- c(rep(0, kp$n.bins/2-1), 10, rep(0, kp$n.bins/2))
+pop0 <- c(rep(0, kp$n.bins/2-1), 4, rep(0, kp$n.bins/2))
 ```
 
 And we extract the vital rates parameters from the models fitted in the [previous vignette](sebadebona.gitlab.io/dispersal-ipm/articles/DIPM-020_Vital_rate_models.html).
@@ -176,18 +176,18 @@ Now that all parameters are ready, I can run the Integral Projection models. Fir
 ### Visual checks
 
 ```{r, eval = F}
-test.init.kernel(kp, vp.early, pop0)
+# test.init.kernel(kp, vp.early, pop0)
 ```
 ```{r, echo = F, fig.height=4, fig.width=8}
-# K <- build.kernel(kp, vp.early, pop.size = pop0, test=T)
-#   par(mfrow=c(2,4))
-#   image(t(K$S), main='survival')
-#   image(t(K$G),main='adult \ndispersal')
-#   image(t(K$R), main='reproduction')
-#   image(t(K$N),main='natal \ndispersal')
-#   image(t(K$Pmatrix),main='P kernel')
-#   image(t(K$Fmatrix), main='F kernel')
-#   image(t(K$K), main='full kernel') 
+K <- build.kernel(kp, vp.mid, pop.size = pop0, test=T)
+  par(mfrow=c(2,4))
+  image(t(K$S), main='survival')
+  image(t(K$G),main='adult \ndispersal')
+  image(t(K$R), main='reproduction')
+  image(t(K$N),main='natal \ndispersal')
+  image(t(K$Pmatrix),main='P kernel')
+  image(t(K$Fmatrix), main='F kernel')
+  image(t(K$K), main='full kernel')
 ```
 
 ### Running the IPM
@@ -197,19 +197,19 @@ Below, I run the 3 IPM simulations for the early, mid and late phase. The simula
 ```{r}
 # Early phase ipm
 start <- Sys.time()
-IPM.early <- runIPM(kp, vp.early, init.pop = pop0, niter=12)
+IPM.early <- runIPM(kp, vp.early, init.pop = pop0, niter=5)
 early.t <- Sys.time() - start
 print(early.t)
 
 # Mid phase ipm
 start <- Sys.time()
-IPM.mid <- runIPM(kp, vp.mid, init.pop = pop0, niter=12)
+IPM.mid <- runIPM(kp, vp.mid, init.pop = pop0, niter=5)
 mid.t <- Sys.time() - start
 print(mid.t)
 
 # Late phase ipm
 start <- Sys.time()
-IPM.late <- runIPM(kp, vp.late, init.pop = pop0, niter=12)
+IPM.late <- runIPM(kp, vp.late, init.pop = pop0, niter=5)
 late.t <- Sys.time() - start
 print(late.t)
 
