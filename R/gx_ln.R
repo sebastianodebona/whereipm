@@ -55,7 +55,7 @@ gx_ln <- function(y, x, density.x, Land.density,
 
   # defining function for normal distribution
   Normal <- function(i){
-    (1/(sqrt(2*pi*(sdn^2))))*exp(-((i-mean)^2/(2*(sdn)^2)))
+    (1/(sqrt(2*pi*(sdn^2))))*exp(-((i-meann)^2/(2*(sdn)^2)))
   }
   
   # defininf function for lognormal distribution
