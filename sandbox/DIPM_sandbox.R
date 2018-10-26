@@ -231,3 +231,33 @@ distr::plot(D, panel.first = grid())
 z <- seq(-500, 500, by = 0.0005)
 
 
+
+### Drawing a function by hand (from scratch)
+mean = 0
+sd = 1
+Normal <- function(x){
+  (1/(sqrt(2*pi*(sd^2))))*exp(-((x-mean)^2/(2*(sd)^2)))
+}
+
+meanlog = 1.8
+sdlog = 1
+logNormal <- function(x){
+  (1/(x*sdlog*(sqrt(2*pi))))*exp(-((log(x)-meanlog)^2/(2*(sdlog^2))))
+}
+
+integrate(Normal, -Inf, Inf)
+
+x <- seq(-100, 100, by =0.001)
+
+plot(D(x)~x, type = "l", col = 'red')
+
+D <- function(x){
+  y <- ifelse(x==0,
+         0.6*Normal(x),
+         0.6*Normal(x) + 0.2*logNormal(abs(x)))
+  return(y)
+}
+
+abs(integrate(D, -Inf, Inf)$value-1) < 1e-4
+
+D(0)
