@@ -46,9 +46,9 @@ I will also subset the dataset to include only pools, and only females.
 # Here I am considering only females since for males the number of offspring sired
 # is complicated by sperm storage in females.
 data.early <- data %>%
-  filter(sex == "F" & Habitat=='P' & time>=3 & time<=14)
+  filter(sex == "F" & Habitat=='P' & time>=7 & time<=18)
 data.mid <- data %>% 
-  filter(sex == "F" & Habitat=='P' & time>=27 & time<=38)
+  filter(sex == "F" & Habitat=='P' & time>=29 & time<=40)
 data.late <- data %>%
   filter(sex == "F" & Habitat=='P' & time>=51 & time<=62)
 ```
