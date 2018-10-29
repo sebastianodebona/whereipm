@@ -4,11 +4,15 @@
 #' 
 #' @export
 #' @param lambda Estimated lambda (e.g. estimate from a \code{\link[glmmTMB:glmmTMB]{glmmTMB}} model)
-#' @details See \url{https://en.wikipedia.org/wiki/Zero-truncated_Poisson_distribution} for more info
+#' @details See \url{https://en.wikipedia.org/wiki/Zero-truncated_Poisson_distribution} for more info. Here \lambda needs to be transformed into e^\lambda to solve the log link from the glmmTMB model. The truncated poisson starts behaving funnily if \lambda is < -20, so a threshold sets the result to 1 if \lambda < -20.
 #'  
 
 untruncZTP <- function(lambda){
   
+  if(lambda>=-20){
   exp(lambda)/(1-exp(-exp(lambda)))
+  } else {
+    1
+  }
   
   }
