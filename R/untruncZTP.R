@@ -9,10 +9,8 @@
 
 untruncZTP <- function(lambda){
   
-  if(lambda>=-20){
-  exp(lambda)/(1-exp(-exp(lambda)))
-  } else {
-    1
-  }
+  unTr <- exp(lambda)/(1-exp(-exp(lambda)))
+  unTr[lambda < -20] = 1
+  return(unTr)
   
   }
