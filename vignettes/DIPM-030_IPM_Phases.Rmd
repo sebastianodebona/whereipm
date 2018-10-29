@@ -64,12 +64,10 @@ for(i in 1:dim(vitalRateModels)[1]){
 
   temp.vp <- list(# Survival
                  s.int = Models$survival[[i]]%>%
-                   filter(effect == "fixed",
-                          term == "(Intercept)") %>%
+                   filter(term == "(Intercept)") %>%
                    pull(estimate),
                  s.slo = (Models$survival[[i]]%>%
-                   filter(effect == "fixed",
-                          term == "s_loc_density") %>%
+                   filter(term == "s_loc_density") %>%
                    pull(estimate))/scalingAttr$loc_density$scale,
                  s.multiplier = 1,
                  
