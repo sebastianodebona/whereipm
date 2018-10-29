@@ -38,7 +38,7 @@ Here we define kernel parameters and initial population size.
 # kernel parameters
 kp <- create.kernel.params(L=-500, U=500, n.bins = 1000)
 # initial population size
-pop0 <- c(rep(0, kp$n.bins/2-2), rep(5,2), rep(0, kp$n.bins/2-1))
+pop0 <- c(rep(0, kp$n.bins/2-2), rep(5,3), rep(0, kp$n.bins/2-1))
 ```
 
 And we extract the vital rates parameters from the models fitted in the [previous vignette](sebadebona.gitlab.io/dispersal-ipm/articles/DIPM-020_Vital_rate_models.html).
