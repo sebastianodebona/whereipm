@@ -38,7 +38,7 @@ Here we define kernel parameters and initial population size.
 # kernel parameters
 kp <- create.kernel.params(L=-500, U=500, n.bins = 1000)
 # initial population size
-pop0 <- c(rep(0, kp$n.bins/2-1), 4, rep(0, kp$n.bins/2))
+pop0 <- c(rep(0, kp$n.bins/2-2), rep(5,2), rep(0, kp$n.bins/2-1))
 ```
 
 And we extract the vital rates parameters from the models fitted in the [previous vignette](sebadebona.gitlab.io/dispersal-ipm/articles/DIPM-020_Vital_rate_models.html).
@@ -167,10 +167,11 @@ for(i in 1:dim(vitalRateModels)[1]){
 }
 
 # visualizing the three lists side by side
-tab <- data.frame("early phase" = unlist(vp.early),
-                  "mid phase" = unlist(vp.mid),
-                  "late phase" = unlist(vp.late))
-knitr::kable(digits = 2, rownames = T, col.names = T, caption = "Comparison of vital rates among phases")
+tab <- tibble("parameters" = names(vp.early),
+                  "early phase" = as.numeric(unlist(vp.early)),
+                  "mid phase" = as.numeric(unlist(vp.mid)),
+                  "late phase" = as.numeric(unlist(vp.late)))
+knitr::kable(tab, digits = 2, col.names = c("Parameters", "Early", "Mid", "Late"), caption = "Comparison of vital rates among phases")
 ```
 
 ## Running the IPM model
@@ -180,7 +181,7 @@ Now that all parameters are ready, I can run the Integral Projection models. Fir
 ### Visual checks
 
 ```{r, eval = F}
-# test.init.kernel(kp, vp.early, pop0)
+test.init.kernel(kp, vp.early, pop0)
 ```
 ```{r, echo = F, fig.height=4, fig.width=8}
 K <- build.kernel(kp, vp.mid, pop.size = pop0, test=T)
