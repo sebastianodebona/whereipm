@@ -60,36 +60,36 @@ data <- data %>%
 
 I can now run separate models using different time specifications, and check the model fit.
 
-```{r}
+```{r, eval = F}
 # Survival model using year
-# y1 <- function(){
-#   survival.year <- lme4::glmer(survival ~ 0 + year + year:s_loc_density
-#                             + (1|FishID) + (1|reach) + (s_loc_density|sampling),
-#                           data=data,
-#                           family=binomial,
-#                           lme4::glmerControl(optimizer=c('bobyqa')),
-#                           na.action = na.omit)
-# }
-# 
-# 
-# #... and using phase
-# y2 <- function(){
-#   survival.phase <- lme4::glmer(survival ~ 0 + phase:s_loc_density
-#                             + (1|FishID) + (1|reach) + (s_loc_density|sampling),
-#                           data=data,
-#                           family=binomial,
-#                           lme4::glmerControl(optimizer=c('bobyqa')),
-#                           na.action = na.omit)
-# }
-# 
-# x <- microbenchmark::microbenchmark(y2())
-# 
-# survival.time <- lme4::glmer(survival ~ s_time*(s_loc_density + I(s_loc_density^2))
-#                             + (1|FishID) + (1|reach) + (s_loc_density|sampling),
-#                           data=data,
-#                           family=binomial,
-#                           lme4::glmerControl(optimizer=c('bobyqa')),
-#                           na.action = na.omit)
-# 
-# summary(survival.time)
+y1 <- function(){
+  survival.year <- lme4::glmer(survival ~ 0 + year + year:s_loc_density
+                            + (1|FishID) + (1|reach) + (s_loc_density|sampling),
+                          data=data,
+                          family=binomial,
+                          lme4::glmerControl(optimizer=c('bobyqa')),
+                          na.action = na.omit)
+}
+
+
+#... and using phase
+y2 <- function(){
+  survival.phase <- lme4::glmer(survival ~ 0 + phase:s_loc_density
+                            + (1|FishID) + (1|reach) + (s_loc_density|sampling),
+                          data=data,
+                          family=binomial,
+                          lme4::glmerControl(optimizer=c('bobyqa')),
+                          na.action = na.omit)
+}
+
+x <- microbenchmark::microbenchmark(y2())
+system.time(
+survival.time <- lme4::glmer(survival ~ s_time*(s_loc_density) + I(s_loc_density^2)
+                            + (1|FishID) + (1|reach) + (s_loc_density|sampling),
+                          data=data,
+                          family=binomial,
+                          lme4::glmerControl(optimizer=c('bobyqa')),
+                          na.action = na.omit)
+)
+summary(survival.time)
 ```
