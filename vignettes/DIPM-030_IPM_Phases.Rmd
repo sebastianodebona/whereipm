@@ -43,7 +43,7 @@ pop0 <- c(rep(0, kp$n.bins/2-1), 4, rep(0, kp$n.bins/2))
 
 And we extract the vital rates parameters from the models fitted in the [previous vignette](sebadebona.gitlab.io/dispersal-ipm/articles/DIPM-020_Vital_rate_models.html).
 
-```{r}
+```{r, results = "asis"}
 # First I need to extract the info in the model to make it easier to handle
 Models <- vitalRateModels %>%
   transmute(
@@ -165,6 +165,12 @@ for(i in 1:dim(vitalRateModels)[1]){
   # renaming list
   assign(paste("vp", vitalRateModels$phase[i], sep = "."), temp.vp)
 }
+
+# visualizing the three lists side by side
+tab <- data.frame("early phase" = unlist(vp.early),
+                  "mid phase" = unlist(vp.mid),
+                  "late phase" = unlist(vp.late))
+knitr::kable(digits = 2, rownames = T, col.names = T, caption = "Comparison of vital rates among phases")
 ```
 
 ## Running the IPM model
@@ -195,19 +201,19 @@ Below, I run the 3 IPM simulations for the early, mid and late phase. The simula
 ```{r}
 # Early phase ipm
 start <- Sys.time()
-IPM.early <- runIPM(kp, vp.early, init.pop = pop0, niter=5)
+IPM.early <- runIPM(kp, vp.early, init.pop = pop0, niter=36)
 early.t <- Sys.time() - start
 print(early.t)
 
 # Mid phase ipm
 start <- Sys.time()
-IPM.mid <- runIPM(kp, vp.mid, init.pop = pop0, niter=5)
+IPM.mid <- runIPM(kp, vp.mid, init.pop = pop0, niter=36)
 mid.t <- Sys.time() - start
 print(mid.t)
 
 # Late phase ipm
 start <- Sys.time()
-IPM.late <- runIPM(kp, vp.late, init.pop = pop0, niter=5)
+IPM.late <- runIPM(kp, vp.late, init.pop = pop0, niter=36)
 late.t <- Sys.time() - start
 print(late.t)
 
