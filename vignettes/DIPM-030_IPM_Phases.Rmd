@@ -64,11 +64,11 @@ for(i in 1:dim(vitalRateModels)[1]){
 
   temp.vp <- list(# Survival
                  s.int = Models$survival[[i]]%>%
-                   filter(group == "fixed",
+                   filter(effect == "fixed",
                           term == "(Intercept)") %>%
                    pull(estimate),
                  s.slo = (Models$survival[[i]]%>%
-                   filter(group == "fixed",
+                   filter(effect == "fixed",
                           term == "s_loc_density") %>%
                    pull(estimate))/scalingAttr$loc_density$scale,
                  s.multiplier = 1,
@@ -95,7 +95,7 @@ for(i in 1:dim(vitalRateModels)[1]){
                           component == "cond",
                           term == "s_loc_density") %>%
                    pull(estimate))/scalingAttr$loc_density$scale,
-                 distribution = 'ztpoisson',
+                 f.distribution = 'ztpoisson',
                  
                 # Adult dispersal
                  p.stat.int.ad = Models$adDispersal[[i]]%>%

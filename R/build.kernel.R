@@ -43,15 +43,9 @@ build.kernel <- function(kernel.params, vital.params, pop.size, test=F){
                r.int = vital.params$r.int, 
                r.slo = vital.params$r.slo, 
                r.multiplier = vital.params$r.multiplier,
-               f.distribution = ifelse(is.null(vital.params$f.distribution),
-                                             'poisson',
-                                             vital.params$f.distribution),
-               f.int = ifelse(is.null(vital.params$f.int), 
-                              NA,
-                              vital.params$f.int),
-               f.slo = ifelse(is.null(vital.params$f.slo), 
-                              NA,
-                              vital.params$f.slo)))
+               f.distribution = vital.params$f.distribution,
+               f.int = vital.params$f.int,
+               f.slo = vital.params$f.slo))
   # recruited position (natal dispersal)
   N <- mapply(gx_ln, x = kernel.params$y, density.x = density,
               MoreArgs = list(y = kernel.params$y,

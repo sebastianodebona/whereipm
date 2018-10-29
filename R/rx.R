@@ -13,7 +13,7 @@
 #' @return Returns a vector of average (density-dependent) number of offspring at the midpoints of the bins of the IPM kernel
 
 # fertility function
-rx <- function(density, r.int, r.slo, r.multiplier = 1, f.distribution = 'poisson', f.int = NA, f.slo = NA) {
+rx <- function(density, r.int, r.slo, r.multiplier = 1, f.distribution = 'ztpoisson', f.int = NA, f.slo = NA) {
 
   if(f.distribution=='poisson'){
     
