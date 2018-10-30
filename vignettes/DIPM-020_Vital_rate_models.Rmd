@@ -324,19 +324,19 @@ legend('bottomright', lty = 1, legend = c("early", "mid", "late"),
 e.natal.p <- lme4::glmer(p_natal ~ s_loc_density.mid*s_land_density.mid +
                            + (1|Maternity) + (1|reach.birth) + (s_loc_density.mid|sampling.birth),
                          family = 'binomial',
-                         data = data.early,
+                         data = subset(data.early, mummoved == 0),
                          lme4::glmerControl(optimizer=c('bobyqa')))
 
 m.natal.p <- lme4::glmer(p_natal ~ s_loc_density.mid*s_land_density.mid +
                            + (1|Maternity) + (1|reach.birth) + (s_loc_density.mid|sampling.birth),
                          family = 'binomial',
-                         data = data.mid,
+                         data = subset(data.mid, mummoved == 0),
                          lme4::glmerControl(optimizer=c('bobyqa')))
 
 l.natal.p <- lme4::glmer(p_natal ~ s_loc_density.mid*s_land_density.mid +
                            + (1|Maternity) + (1|reach.birth) + (s_loc_density|sampling.birth),
                          family = 'binomial',
-                         data = data.late,
+                         data = subset(data.late, mummoved == 0), 
                          lme4::glmerControl(optimizer=c('bobyqa')))
 
 stargazer::stargazer(e.natal.p, m.natal.p, l.natal.p,
@@ -355,15 +355,15 @@ stargazer::stargazer(e.natal.p, m.natal.p, l.natal.p,
 ```{r, results = "asis", fig.height=4, fig.width=8}
 e.natal.dist <- lme4::lmer(log(dist_natal) ~ 1 + 
                              + (1|Maternity) + (1|reach.birth) + (1|sampling.birth),
-                           data = data.early)
+                           data = subset(data.early, mummoved == 0))
 
 m.natal.dist <- lme4::lmer(log(dist_natal) ~ 1 + 
                              + (1|Maternity) + (1|reach.birth) + (1|sampling.birth),
-                           data = data.mid)
+                           data = subset(data.mid, mummoved == 0))
 
 l.natal.dist <- lme4::lmer(log(dist_natal) ~ 1  + 
                              + (1|Maternity) + (1|reach.birth) + (1|sampling.birth),
-                           data = data.late)
+                           data = subset(data.late, mummoved == 0))
 
 stargazer::stargazer(e.natal.dist, m.natal.dist, l.natal.dist,
                      type = "html",
