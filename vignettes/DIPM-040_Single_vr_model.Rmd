@@ -94,6 +94,7 @@ survTimeQ <- lme4::glmer(survival ~ s_time*(s_loc_density) + I(s_loc_density^2)
 
 anova(survTimeL, survTimeQ, survTimeQI)
 # both quadratic models have much better fit than the linear model, so I will keep the most simple of them, for parsimony
+surv <- survTimeQ
 
 stargazer::stargazer(survTimeL, survTimeQI, survTimeQ,
                      type = "html",
@@ -167,6 +168,7 @@ AIC(recrTimeL, recrTimeQ, recrTimeQI)
 anova(recrTimeQI, recrTimeQ, recrTimeL)
 # The linear models as a marginally better fit than the quadratic model with interaction.
 # I will keep the linear for parsimony
+recr <- recrTimeL
 
 sjPlot::tab_model(recrTimeL, recrTimeQI, recrTimeQ,
                   show.icc = F, show.aic = T, show.se = T, show.est = T,
@@ -293,8 +295,6 @@ for(i in unique(toplot$time)){
 
 legend("topright", lty = 1, legend = seq(0,10, by = 2), col = Cols, title = "landscape \ndensity")
 
-
-
 # dispersal distance plot
 toplot <- expand.grid(density = d, time = t)
 fixef_d <- as.numeric(summary(natDispD)$coefficients[,"Estimate"])
@@ -309,4 +309,24 @@ for(i in unique(toplot$time)){
         col = Cols[round(i*3)+1])
 }
 legend("topright", lty = 1, legend = 12*0:5, col = Cols, title = "month")
+```
+
+## Saving models
+
+Here I am storing away the models for future use (building the IPMs)
+
+```{r}
+# only the selected models are stored away
+saveRDS(object = surv, 
+        file = file.path(here::here, "results", "singleModels_survival.rds"))
+saveRDS(object = recr, 
+        file = file.path(here::here, "results", "singleModels_recruitment.rds"))
+saveRDS(object = adDispP, 
+        file = file.path(here::here, "results", "singleModels_adProbability.rds"))
+saveRDS(object = adDispD, 
+        file = file.path(here::here, "results", "singleModels_adDistance.rds"))
+saveRDS(object = natDispP, 
+        file = file.path(here::here, "results", "singleModels_natProbability.rds"))
+saveRDS(object = natDispD, 
+        file = file.path(here::here, "results", "singleModels_natDistance.rds"))
 ```
