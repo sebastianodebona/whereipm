@@ -317,16 +317,14 @@ Here I am storing away the models for future use (building the IPMs)
 
 ```{r}
 # only the selected models are stored away
-saveRDS(object = surv, 
-        file = file.path(here::here, "results", "singleModels_survival.rds"))
-saveRDS(object = recr, 
-        file = file.path(here::here, "results", "singleModels_recruitment.rds"))
-saveRDS(object = adDispP, 
-        file = file.path(here::here, "results", "singleModels_adProbability.rds"))
-saveRDS(object = adDispD, 
-        file = file.path(here::here, "results", "singleModels_adDistance.rds"))
-saveRDS(object = natDispP, 
-        file = file.path(here::here, "results", "singleModels_natProbability.rds"))
-saveRDS(object = natDispD, 
-        file = file.path(here::here, "results", "singleModels_natDistance.rds"))
+mapply(FUN = function(x,y){
+         saveRDS(object = x, 
+                 file = file.path(here::here(), "results", 
+                                  paste0("singleModels_", y,".rds"))
+                 )
+       },
+       list(surv, recr, adDispP, adDispD, natDispP, natDispP),
+       c("survival", "recruitment", 
+         "adProbability", "adDistance", 
+         "natProbability", "natDistance"))
 ```
