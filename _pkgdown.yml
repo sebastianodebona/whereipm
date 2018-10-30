@@ -40,6 +40,8 @@ navbar:
           href: articles/DIPM-030_IPM_Phases.html
         - text: "Vital rate model: single model"
           href: articles/DIPM-040_Single_vr_model.html
+        - text: "IPM: single model"
+          href: articles/DIPM-050_IPM_single_model.html
           
         
   right:
