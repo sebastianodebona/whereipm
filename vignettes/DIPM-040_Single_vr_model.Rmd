@@ -10,7 +10,7 @@ output:
     theme: lumen
 ---
 
-## Setup
+## Setup and rationale
 
 Load the package and get the data.
 
@@ -21,19 +21,15 @@ library(glmmTMB)
 
 # loading the data
 data <- ipmdata
-
-# Defining 3 colours I will later use for plotting
-col.early <- wesanderson::wes_palette("Darjeeling1", 3)[1]
-col.mid <- wesanderson::wes_palette("Darjeeling1", 3)[2]
-col.late <- wesanderson::wes_palette("Darjeeling1", 3)[3]
 ```
 
-Instead of running three separate models using three distinct phases, another option is to run a single model specifying time as a covariate.
+Instead of running three separate models using three distinct phases, we can run a single model specifying time as a covariate.
 
-This can be done in two ways:
+This can by considering time a continuous variable (either as year or month), and then picking three representative time points to depict the phases.
 
-1. Considering time a continuous variable (either as year or month), and then picking three representative time points to depict the phases;
-2. Treating time as a factorial variable, with the time instances assigned to three distinct phases (again "early", "mid" or "late").
+What this approach allows to do is to capture a larger sample of, i.e. local densities, which can illuminate on behaviours of vital rates only observable at extreme (e.g. very high) density values. This can be especially true for survival or reproduction, which can show a quadratic relationship with local density (initial Allee affect, followed by density regulation).
+
+Here, I will define a variable (`year`) that I might use later to subset the results.
 
 ```{r}
 # defining alternative variables
@@ -44,52 +40,163 @@ data <- data %>%
                breaks = c(0, 13, 25, 37, 49, 62),
                labels = 1:5) %>% as.factor
   )
-
-# Phase
-data <- data %>%
-  mutate(
-    phase = cut(sampling,
-                breaks = c(0, 18, 26, 36, 46, 62),
-                labels = c("early", NA, "mid", NA, "late")) %>%
-      factor(levels = c("early", "mid", "late"), ordered = T)
-  )
-
 ```
 
 ## Models
 
 I can now run separate models using different time specifications, and check the model fit.
+As I did for the phase models in [a previous vignette](vignette(DIPM-020_Vital_rate_models)), I will run separate models for:
 
-```{r, eval = F}
-# Survival model using year
-y1 <- function(){
-  survival.year <- lme4::glmer(survival ~ 0 + year + year:s_loc_density
+1. Survival;
+2. Recruitment;
+3. Adult dispersal probability;
+4. Adult dispersal distance;
+5. Natal dispersal probability;
+6. Natal dispersal distance.
+
+### 1. Survival
+
+Survival could show a quadratic relationwhip with local density. This could be due to Allee effects causing survival to increase with density up to a given threshold, followed by survival depression by competition over resources, at higher local densities.
+
+Here, I will run models, (a linear model and two quardatic models) and compare the fit through AIC.
+
+```{r, results = "asis"}
+# Here I will test which of the models containing or not a quadratic term for density fits best
+# linear model
+survTimeL <- lme4::glmer(survival ~ s_time*s_loc_density
                             + (1|FishID) + (1|reach) + (s_loc_density|sampling),
                           data=data,
                           family=binomial,
                           lme4::glmerControl(optimizer=c('bobyqa')),
                           na.action = na.omit)
-}
-
-
-#... and using phase
-y2 <- function(){
-  survival.phase <- lme4::glmer(survival ~ 0 + phase:s_loc_density
+# quadratic model
+survTimeQI <- lme4::glmer(survival ~ s_time*(s_loc_density + I(s_loc_density^2))
                             + (1|FishID) + (1|reach) + (s_loc_density|sampling),
                           data=data,
                           family=binomial,
                           lme4::glmerControl(optimizer=c('bobyqa')),
                           na.action = na.omit)
-}
 
-x <- microbenchmark::microbenchmark(y2())
-system.time(
-survival.time <- lme4::glmer(survival ~ s_time*(s_loc_density) + I(s_loc_density^2)
+# quadratic model without quadratic interaction
+survTimeQ <- lme4::glmer(survival ~ s_time*(s_loc_density) + I(s_loc_density^2)
                             + (1|FishID) + (1|reach) + (s_loc_density|sampling),
                           data=data,
                           family=binomial,
                           lme4::glmerControl(optimizer=c('bobyqa')),
                           na.action = na.omit)
-)
-summary(survival.time)
+
+anova(survTimeL, survTimeQ, survTimeQI)
+# both quadratic models have much better fit than the linear model, so I will keep the most simple of them, for parsimony
+
+stargazer::stargazer(survTimeL, survTimeQI, survTimeQ,
+                     type = "html",
+                     column.labels = c("linear", "quadratic + i","quadratic"),
+                     dep.var.labels = c("Survival"),
+                     report = "vcp*",
+                     column.sep.width = "10pt")
 ```
+
+
+Drawing some plots to understand how survival changes with time.
+
+```{r}
+# making up some values for time and density
+t <- 12*(0:5)/scalingAttr$time$scale
+d <- seq(0, 100, by =1)/scalingAttr$loc_density$scale
+
+# extracting fixed effects
+fixef <- as.numeric(summary(survTimeQ)$coefficients[,"Estimate"])
+
+# creating data matrix
+toplot <- expand.grid(density = d, time = t)
+# creating model matrix
+mm <- model.matrix(object = ~ time*(density) + I(density^2), data = toplot)
+
+toplot$predicted <- plogis(mm%*%fixef)
+
+plot(0, col = "white", xlim = c(0,100), ylim = c(0,1), las = 1, 
+     ylab = "survival probability", xlab = "density (n/m)", main = "quadratic model (w/out interaction)")
+for(i in unique(toplot$time)){
+  lines(predicted~I(density*scalingAttr$loc_density$scale),
+        data = toplot[toplot$time==i,],
+        col = wesanderson::wes_palette("Zissou1", 6, type = "continuous")[round(i*3)+1])
+}
+legend("bottomleft", lty = 1, legend = 12*0:5, col = wesanderson::wes_palette("Zissou1", 6, type = "continuous"), title = "months")
+```
+
+### 2. Recruitment
+
+As with Survival, reproduction could have a quadratic relationship with density. It is likely very low local density will cause low chances of reproducing, whereas high local density can decrease the number of offspring that survives to recruitment.
+
+```{r}
+# linear model
+recrTimeL <- glmmTMB::glmmTMB(recruited ~ s_time*s_loc_density +
+                                + (1|FishID) + (1|reach) + (1|sampling),
+                              ziformula = ~ s_time*s_loc_density +
+                                + (1|FishID) +  (1|reach) + (1|sampling),
+                              family="truncated_poisson"(link="log"),
+                              data = data,
+                              na.action = na.omit)
+
+# quadratic model
+recrTimeQI <- glmmTMB::glmmTMB(recruited ~ s_time*(s_loc_density + I(s_loc_density^2)) +
+                                + (1|FishID) + (1|reach) + (1|sampling),
+                              ziformula = ~ s_time*(s_loc_density + I(s_loc_density^2)) +
+                                + (1|FishID) +  (1|reach) + (1|sampling),
+                              family="truncated_poisson"(link="log"),
+                              data = data,
+                              na.action = na.omit)
+
+# quadratic model without quadratic interaction
+recrTimeQ <- glmmTMB::glmmTMB(recruited ~ s_time*s_loc_density + I(s_loc_density^2) +
+                                + (1|FishID) + (1|reach) + (1|sampling),
+                              ziformula = ~ s_time*s_loc_density + I(s_loc_density^2) +
+                                + (1|FishID) +  (1|reach) + (1|sampling),
+                              family="truncated_poisson"(link="log"),
+                              data = data,
+                              na.action = na.omit)
+
+AIC(recrTimeL, recrTimeQ, recrTimeQI)
+anova(recrTimeQI, recrTimeQ, recrTimeL)
+# The linear models as a marginally better fit than the quadratic model with interaction.
+# I will keep the linear for parsimony
+
+sjPlot::tab_model(recrTimeL, recrTimeQI, recrTimeQ,
+                  show.icc = F, show.aic = T, show.se = T, show.est = T,
+                  dv.labels = c("linear", "quadratic + i", "quadratic"),
+                  show.ci = F)
+```
+
+```{r}
+# plotting recruitment
+toplot <- expand.grid(density = d, time = t)
+fixef_zi <- as.numeric(summary(recrTimeL)$coefficients$zi[,"Estimate"])
+fixef_cond <- as.numeric(summary(recrTimeL)$coefficients$cond[,"Estimate"])
+mm <- model.matrix(object = ~ time*density, data = toplot)
+toplot$predicted_zi <- 1 - plogis(mm%*%fixef_zi)
+toplot$predicted_cond <- untruncZTP(mm%*%fixef_cond)
+
+# reproduction probability plot
+par(mfrow = c(1,2))
+plot(0, col = "white", xlim = c(0,100), ylim = c(0,1), las = 1, 
+     ylab = "reproduction probability", xlab = "density (n/m)")
+for(i in unique(toplot$time)){
+  lines(predicted_zi~I(density*scalingAttr$loc_density$scale),
+        data = toplot[toplot$time==i,],
+        col = wesanderson::wes_palette("Zissou1", 6, type = "continuous")[round(i*3)+1])
+}
+legend("topright", lty = 1, legend = 12*0:5, col = wesanderson::wes_palette("Zissou1", 6, type = "continuous"), title = "time")
+# offspring number plot
+plot(0, col = "white", xlim = c(0,100), ylim = c(1,2.5), las = 1, 
+     ylab = "n of recruits", xlab = "density (n/m)")
+for(i in unique(toplot$time)){
+  lines(predicted_cond~I(density*scalingAttr$loc_density$scale),
+        data = toplot[toplot$time==i,],
+        col = wesanderson::wes_palette("Zissou1", 6, type = "continuous")[round(i*3)+1])
+}
+legend("topright", lty = 1, legend = 12*0:5, col = wesanderson::wes_palette("Zissou1", 6, type = "continuous"), title = "month")
+mtext("linear model", side = 3, outer = T)
+```
+
+### 3. Adult dispersal probability
+
