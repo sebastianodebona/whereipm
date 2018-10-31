@@ -255,7 +255,8 @@ For details on the edits on plot_ly see [link](https://plot.ly/r/contour-plots/)
 plotly::plot_ly(x=1:ncol(IPM.init$pop.size), 
                 y=rev(kp$y), 
                 z=IPM.init$pop.size, 
-                type="contour", colorscale = 'Jet',
+                type="contour", 
+                colorscale = 'Jet', # or use colors = with RColorBrewer values
                 autocontour = F,
                 contours = list(start = 0, 
                                 end = 28,
@@ -284,3 +285,14 @@ quick.plot(IPM.end, "End")
 
 ## Storing models
 
+Here I store the models in a single tibble.
+
+```{r}
+# storing models in tibble
+singleModelIPMs <- tibble(IPM.init = list(IPM.init),
+                          IPM.middle = list(IPM.middle),
+                          IPM.end = list(IPM.end))
+
+# saving as RDS
+saveRDS(singleModelIPMs, file = file.path(here::here(), "results", "singleModelIPMs.rds"))
+```
