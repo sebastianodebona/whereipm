@@ -249,13 +249,38 @@ print(end.t)
 ```
 
 And plot the results.
+For details on the edits on plot_ly see [link](https://plot.ly/r/contour-plots/).
 
 ```{r}
-plotly::plot_ly(x=1:ncol(IPM.init$pop.size), y=rev(kp$y), z=IPM.init$pop.size, type="contour")
-plotly::plot_ly(x=1:ncol(IPM.middle$pop.size), y=rev(kp$y), z=IPM.middle$pop.size, type="contour")
-plotly::plot_ly(x=1:ncol(IPM.end$pop.size), y=rev(kp$y), z=IPM.end$pop.size, type="contour")
+plotly::plot_ly(x=1:ncol(IPM.init$pop.size), 
+                y=rev(kp$y), 
+                z=IPM.init$pop.size, 
+                type="contour", colorscale = 'Jet',
+                autocontour = F,
+                contours = list(start = 0, 
+                                end = 28,
+                                size = 2))
+plotly::plot_ly(x=1:ncol(IPM.middle$pop.size),
+                y=rev(kp$y),
+                z=IPM.middle$pop.size,
+                type="contour", colorscale = 'Jet',
+                autocontour = F,
+                contours = list(start = 0, 
+                                end = 28,
+                                size = 2))
+plotly::plot_ly(x=1:ncol(IPM.end$pop.size),
+                y=rev(kp$y),
+                z=IPM.end$pop.size,
+                type="contour", colorscale = 'Jet',
+                autocontour = F,
+                contours = list(start = 0, 
+                                end = 28,
+                                size = 2))
 
-quick.plot(IPM.t0, "Early")
-quick.plot(IPM.t30, "Mid")
-quick.plot(IPM.t60, "Late")
+quick.plot(IPM.init, "Init")
+quick.plot(IPM.middle, "Middle")
+quick.plot(IPM.end, "End")
 ```
+
+## Storing models
+
