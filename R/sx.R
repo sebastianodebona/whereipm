@@ -9,16 +9,17 @@
 #' @param density  A vector of length equal to the number of bins in the IPM kernel, containing local density at the midpoints
 #' @param s.int  The intercept of the logistic regression determining density dependent survival (i.e. survival probability at density 0)
 #' @param s.slo  The slope of the logistic regression determining density dependent survival (i.e. increment in survival probability per unit of density)
+#' @param s.slo2 Effect size of a quadratic term, if present
 #' @param s.multiplier  Optional argument to inflate survival probability 
 #' @return Returns a vector of average density-dependent survival probability at the midpoints of the bins of the IPM kernel
 
 
-sx <- function(density, s.int, s.slo, s.multiplier=1) {
+sx <- function(density, s.int, s.slo, s.slo2, s.multiplier=1) {
   
 
       
-    ifelse(plogis(s.int+s.slo*density)*s.multiplier <=1, 
-           plogis(s.int+s.slo*density)*s.multiplier, 
+    ifelse(plogis(s.int+s.slo*density+s.slo2*(density^2))*s.multiplier <=1, 
+           plogis(s.int+s.slo*density+s.slo2*(density^2))*s.multiplier, 
            1)
   
 

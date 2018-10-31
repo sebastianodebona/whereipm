@@ -21,10 +21,11 @@ build.kernel <- function(kernel.params, vital.params, pop.size, test=F){
   Land.density <- mean(density[density>=1])
   
   # survival kernel
-  S <- diag(sx(density=density,
-               s.int=vital.params$s.int, 
-               s.slo=vital.params$s.slo, 
-               s.multiplier=vital.params$s.multiplier))
+  S <- diag(sx(density = density,
+               s.int = vital.params$s.int, 
+               s.slo = vital.params$s.slo,
+               s.slo2 = vital.params$s.slo2,
+               s.multiplier = vital.params$s.multiplier))
   # movement kernel
   G <- mapply(gx_ln, x = kernel.params$y, density.x = density,
               MoreArgs = list(
