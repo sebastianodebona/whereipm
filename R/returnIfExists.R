@@ -5,6 +5,7 @@
 #' @param object An object, typically a call to extract a parameter from a model.
 #' @param subs What should be returned if x is \code{object} is empty. Default is 0.
 #' 
+#' @export
 
 returnIfExists <- function(object, subs = 0){
   
