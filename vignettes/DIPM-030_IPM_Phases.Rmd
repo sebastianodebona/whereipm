@@ -69,6 +69,9 @@ for(i in 1:dim(vitalRateModels)[1]){
                  s.slo = (Models$survival[[i]]%>%
                    filter(term == "s_loc_density") %>%
                    pull(estimate))/scalingAttr$loc_density$scale,
+                 s.slo2 = returnIfExists(Models$survival[[i]]%>%
+                   filter(term == "I(s_loc_density^2)") %>%
+                   pull(estimate)),
                  s.multiplier = 1,
                  
                 # Recruitment
