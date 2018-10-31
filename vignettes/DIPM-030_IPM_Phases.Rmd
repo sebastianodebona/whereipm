@@ -41,7 +41,7 @@ kp <- create.kernel.params(L=-500, U=500, n.bins = 1000)
 pop0 <- c(rep(0, kp$n.bins/2-2), rep(5,3), rep(0, kp$n.bins/2-1))
 ```
 
-And we extract the vital rates parameters from the models fitted in the [previous vignette](sebadebona.gitlab.io/dispersal-ipm/articles/DIPM-020_Vital_rate_models.html).
+And we extract the vital rates parameters from the models fitted in the [Vital Rate Models: phases](DIPM-020_Vital_rate_models.html) vignette.
 
 ```{r, results = "asis"}
 # First I need to extract the info in the model to make it easier to handle
