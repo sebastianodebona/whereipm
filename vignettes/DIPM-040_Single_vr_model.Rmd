@@ -317,14 +317,11 @@ Here I am storing away the models for future use (building the IPMs)
 
 ```{r}
 # only the selected models are stored away
-mapply(FUN = function(x,y){
-         saveRDS(object = x, 
-                 file = file.path(here::here(), "results", 
-                                  paste0("singleModels_", y,".rds"))
-                 )
-       },
-       list(surv, recr, adDispP, adDispD, natDispP, natDispP),
-       c("survival", "recruitment", 
-         "adProbability", "adDistance", 
-         "natProbability", "natDistance"))
+singleVRModels <- tibble(survival = list(surv),
+                         recruitment = list(recr),
+                         adDispersal = list(adDispP),
+                         adDistance = list(adDispD),
+                         natDispersal = list(natDispP),
+                         natDistance = list(natDispD))
+saveRDS(singleVRModels, file = file.path(here::here(), "results", "singleVRModels.rds"))
 ```
