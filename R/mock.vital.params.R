@@ -4,7 +4,7 @@
 #' 
 #' @export
 #' 
-#' @param s.int,s.slo Intercept and slope of the linear regression between survival (logit transformed) and density. The intercepts determines the average survival probability at density = 0; the slope defines how strongly density affects survival probability. Defaults are 0 (50% chances of survival) and 0 (no effect of density) respectively.
+#' @param s.int,s.slo,s.slo2 Intercept and slope of the linear regression between survival (logit transformed) and density. The intercepts determines the average survival probability at density = 0; the slope defines how strongly density affects survival probability. Defaults are 0 (50% chances of survival) and 0 (no effect of density) respectively.
 #' @param r.int,r.slo Intercept and slope of linear regression between number of offpsring produced (log transformed) and density. The intercept defines how many offspring on average an individual produces at density = 0; the slope defines how strongly density affects the number of offspring. Defaults are 2 offspring per individual and no effect of density.
 #' @param s.multiplier,r.multiplier Optional arguments to inflate survival and reproduction probability.
 #' @param p.stat,p.stat.nat Proportion of adults (and juveniles) representing the static component of the population. 1-p.stat represents the proportion of mobile (i.e. dispersing) individuals. Deafault is 0.90
@@ -15,6 +15,7 @@
 
 mock.vital.params <- function(s.int = 0,
                               s.slo = -0.01,
+                              s.slo2 = 0,
                               s.multiplier = 1,
                               r.int = log(2),
                               r.slo = -.01,
@@ -42,6 +43,7 @@ mock.vital.params <- function(s.int = 0,
   if(!noise){
   list(s.int = s.int,
        s.slo = s.slo,
+       s.slo2 = 0,
        s.multiplier = s.multiplier,
        r.int = r.int,
        r.slo = r.slo,
@@ -69,6 +71,7 @@ mock.vital.params <- function(s.int = 0,
   } else {
     list(s.int = s.int + rnorm(1, 0, 0.1),
          s.slo = s.slo + rnorm(1, 0, abs(s.slo)*0.1),
+         s.slo2 = 0,
          s.multiplier = s.multiplier,
          r.int = r.int + rnorm(1, 0, 0.1),
          r.slo = r.slo + rnorm(1, 0, abs(r.slo)*0.1),
