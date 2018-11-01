@@ -10,3 +10,166 @@ output:
     theme: lumen
 ---
 
+## Rationale and Setup
+
+Here I am performing perturbation analyses to estimate the relative effect of different parameters (and therefore biological processes, such as survival, reproduction, dispersal and their density-dependence) on the spread of the population.
+
+To perform a perturbation analyses on a non deterministic model (which is the case of our IPMs, given density-dependence is included) the parameters are adjusted by a small value, \code{\epsilon}, one at the time. The model is then run again, with all other paramters unperturbed, to obtain some output variables (e.g. long term population growth rate or speed of spread, in our case). A comparison between these output variables and those originated by the unperturbed model give a measure of the effect of the perturbed variable on the overall population dynamics. For more detail, see chapter XX of Ellner, Reese, Childs 2016. Data-driven modelling of structured populations.
+
+Below, I load packages, model outputs and stored vital parameters.
+
+```{r}
+library(whereipm)
+library(tidyverse)
+
+# loading model outputs (also containing vital params)
+singleModelIPMs <- readRDS(file.path(here::here(), "results", "singleModelIPMs.rds"))
+```
+
+And here I allocate space to store the results of the perturbation analyses, by creating an array.
+
+```{r}
+# here I create a list of IPM for different phases
+phases <- singleModelIPMs$IPMs
+names(phases) <- unlist(singleModelIPMs$phase)
+
+# here I create a vector of paramters to be perturbed
+params <- c('s.int', 's.slo', 's.slo2',
+            'r.int',  'r.slo', 'f.int',  'f.slo',
+            'p.stat.int.ad','p.stat.slo.ad', 'mu.mob.int.ad', 'mu.mob.slo.ad',
+            'p.stat.int.nat','p.stat.slo.nat', 'mu.mob.int.nat', 'mu.mob.slo.nat')
+
+# and a list of output variables
+output <- c('speed', 'acceleration', 'lambda', 'pop')
+# these variables should be in the same order the `perturb` function will provide as output.
+
+# the perturbation array will have output variables as rows,
+# perturbed parameters as columns and will store results from different 
+# IPM as a third dimension of the array.
+
+perturbationResults <- array(NA, dim = c(length(output),
+                                         length(params),
+                                         length(phases)),
+                             dimnames = list(output,
+                                             params,
+                                             names(phases)))
+str(perturbationResults)
+
+#this is how the array looks like per each phase
+perturbationResults[,,1]
+```
+
+I am also picking some colours for later plotting.
+
+```{r}
+Cols <- wesanderson::wes_palette("Zissou1", 3, type = "continuous")[3:1]
+```
+
+
+## Perturbations
+
+I am now ready to run the perturbation analyses. For this, I will use the custom made function `perturb`. The following analyses can be time-consuming. Here I also estimate how long it would take to run them.
+
+```{r}
+# to have an idea of how long it will take, we can add up the time it takes
+# to run each IPM for a number of time equal to the number of parameters.
+
+singleModelIPMs %>%
+  select(timetorun) %>%
+  unlist() %>%
+  sum() %>%
+  prod(length(params)) %>%
+  round() %>%
+  paste(attr(singleModelIPMs$timetorun[[1]], "units"),
+        "estimated run time for Perturbation analyses", sep = " ")
+
+# It is worth adding some runtime for the loops themselves, 
+# so this estimate is on the low range.
+```
+Being warned of the possibly long runtime, I can move on to the simulations:
+
+```{r}
+start <- Sys.time()
+for(I in 1:length(phases)){
+  for(j in 1:length(params)){
+    temp <- perturb(orig.IPM = phases[[I]], epsilon = 0.01, par = params[j])
+    perturbationResults[, params[[j]], I] <- unlist(temp)
+  }
+}
+
+# how long it actually took
+Sys.time() - start
+```
+
+Now, in the `perturbationResults` array we have stored absolute changes in the output parameters. A better indication on the effect of the perturbation would be to have a proportional change in the output parameters. We calculate this below.
+
+```{r}
+# turning absolute values for perturbation analyses into proportional ones
+# first, I obtain the original values for speed, acceleration, lambda and final core population size:
+singleModelIPMs <- singleModelIPMs %>%
+  mutate(
+    orig.output =   map(IPMs, function(x){
+                                speed = x[["speed"]]
+                                acceleration = x[["acceleration"]]
+                                lambda = sum(x[["pop.size"]][,x[["n.iterations"]]+1])/
+                                  sum(x[["pop.size"]][,x[["n.iterations"]]])
+                                popCore = x[["pop.size"]][x[["kernel.params"]][["n.bins"]]/2,
+                                      x[["n.iterations"]]+1]
+                                return = c(speed, acceleration, lambda, popCore)
+                                }
+                        )
+    )
+
+for(i in 1:length(phases)){
+  perturbationResults[,,i] <- perturbationResults[,,i]/singleModelIPMs$orig.output[[i]]
+}
+```
+
+## Plotting
+
+First, to have a different visual representation of the results from the three phase models, I will plot a comparison of the output variables.
+
+```{r}
+# extracting original parameters and reading them for plotting
+outputs <- singleModelIPMs %>%
+  select(orig.output) %>%
+  pull() %>%
+  unlist() %>%
+  matrix(ncol = length(phases), nrow = length(output)) %>%
+  t() %>%
+  as.data.frame()
+colnames(outputs) <- c('speed', 'acc', 'lambda', 'pop')
+
+# plotting
+par(mfrow = c(2,2))
+# Lambda
+plot(outputs$lambda, type='l', main='Lambda', ylim = c(1, 1.5), xlim = c(0.7, 3.3), 
+     xaxt = 'n', ylab = '', xlab = '', las = 1)
+axis(1, at = 1:3, labels = c('Initial', 'Middle', 'End'), las=1)
+points(outputs$lambda, col = Cols, pch=19, cex = 1.5)
+text(1:3, outputs$lambda - 0.1, labels = round(as.numeric(outputs$lambda), 2), cex = 1)
+mtext(expression(lambda), 2, line = 2.5, las = 1)
+
+# Core population
+plot(outputs$pop, type='l', main='Core population size', xaxt = 'n', ylab = '', xlim = c(0.7, 3.3), xlab = '', ylim = c(0, 35), las = 1)
+points(outputs$pop, col = Cols, pch=19, cex = 1.5)
+text(1:3, outputs$pop + 4, labels = round(as.numeric(outputs$pop), 0), cex = 1)
+axis(1, at = c(1,2,3), labels = c("Initial","Middle", "Late"), las=1)
+mtext('N', 2, line = 2.5, las = 1)
+
+# Speed
+plot(outputs$speed, type='l', main='Speed at the front', ylim = c(-1,20), xaxt = 'n', xlim = c(.7, 3.3), xlab = '', ylab = '')
+points(outputs$speed, col = Cols, pch=19, cex = 1.5)
+axis(1, at = c(1,2,3), labels = c("Init", 'Middle', 'End'), las=1)
+text(1:3, outputs$speed - 2, labels = round(as.numeric(outputs$speed), 2), cex = 1)
+mtext('m/month', 2, line = 2.5)
+
+# Acceleration
+plot(outputs$acc, type='l', ylim = c(0,1), main='Acceleration', xaxt = 'n', xlim = c(.7, 3.3), xlab = '', ylab = '')
+axis(1, at = c(1,2,3), labels = c('Initial', 'Middle', 'End'), las=1)
+points(outputs$acc, col = Cols, pch=19, cex = 1.5)
+text(1:3, outputs$acc + 0.1, labels = round(as.numeric(outputs$acc), 2), cex = 1)
+mtext(expression(m/month^2), 2, line = 2.5)
+
+
+```
