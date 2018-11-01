@@ -42,6 +42,8 @@ navbar:
           href: articles/DIPM-040_Single_vr_model.html
         - text: "IPM: single model"
           href: articles/DIPM-050_IPM_single_model.html
+        - text: "Perturbation analyses"
+          href: articles/DIPM-060_Perturbation_analyses.html
           
         
   right:
