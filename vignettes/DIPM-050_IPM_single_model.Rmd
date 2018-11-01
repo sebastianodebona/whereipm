@@ -33,7 +33,7 @@ Here we define kernel parameters and initial population size.
 
 ```{r}
 # kernel parameters
-kp <- create.kernel.params(L=-500, U=500, n.bins = 1000)
+kp <- create.kernel.params(L=-200, U=200, n.bins = 400)
 # initial population size
 pop0 <- c(rep(0, kp$n.bins/2-2), rep(5,3), rep(0, kp$n.bins/2-1))
 ```
@@ -233,17 +233,17 @@ Here I use the paramteres just extracted to run the models at beginning, mid and
 ```{r}
 # running IPM
 start <- Sys.time()
-IPM.init <- runIPM(kp, vp.t0, init.pop = pop0, niter=36)
+IPM.init <- runIPM(kp, vp.t0, init.pop = pop0, niter=12)
 init.t <- Sys.time() - start
 print(init.t)
 
 start <- Sys.time()
-IPM.middle <- runIPM(kp, vp.t30, init.pop = pop0, niter=36)
+IPM.middle <- runIPM(kp, vp.t30, init.pop = pop0, niter=12)
 middle.t <- Sys.time() - start
 print(middle.t)
 
 start <- Sys.time()
-IPM.end <- runIPM(kp, vp.t60, init.pop = pop0, niter=36)
+IPM.end <- runIPM(kp, vp.t60, init.pop = pop0, niter=12)
 end.t <- Sys.time() - start
 print(end.t)
 ```
