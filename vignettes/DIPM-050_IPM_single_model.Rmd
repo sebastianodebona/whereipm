@@ -289,9 +289,9 @@ Here I store the models in a single tibble.
 
 ```{r}
 # storing models in tibble
-singleModelIPMs <- tibble(IPM.init = list(IPM.init),
-                          IPM.middle = list(IPM.middle),
-                          IPM.end = list(IPM.end))
+singleModelIPMs <- tibble(phase = list("init", "middle", "end"),
+                          vital.params = list(vp.t0, vp.t30, vp.t60),
+                          IPMs = list(IPM.init, IPM.middle, IPM.end))
 
 # saving as RDS
 saveRDS(singleModelIPMs, file = file.path(here::here(), "results", "singleModelIPMs.rds"))
