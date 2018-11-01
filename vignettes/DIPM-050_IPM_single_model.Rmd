@@ -292,9 +292,7 @@ Here I store the models in a single tibble.
 singleModelIPMs <- tibble(phase = list("init", "middle", "end"),
                           vital.params = list(vp.t0, vp.t30, vp.t60),
                           IPMs = list(IPM.init, IPM.middle, IPM.end),
-                          secstorun = list(as.numeric(init.t)*60, 
-                                           as.numeric(middle.t)*60, 
-                                           as.numeric(end.t)*60))
+                          timetorun = list(init.t, middle.t, end.t))
 
 # saving as RDS
 saveRDS(singleModelIPMs, file = file.path(here::here(), "results", "singleModelIPMs.rds"))
