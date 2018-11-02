@@ -209,3 +209,9 @@ p + theme(axis.text.x = element_text(angle = -45)) +
 
 plotPerturbation()
 ```
+
+## Saving perturbation results
+
+```{r}
+saveRDS(perturbationResults, file = file.path(here::here(), "results", "perturbation_result_single_model.rds"))
+```
