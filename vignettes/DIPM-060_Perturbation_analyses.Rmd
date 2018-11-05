@@ -196,18 +196,15 @@ paramnames <- c('survival (int)', 'survival (slo)', 'survival (quad)',
             'nat distance (mean)', 'nat distance (sd)')
 
 ## plotting all outputs
-plotPerturbation <- function(){
-  for(i in output)
+for(i in output){
   p <- ggplot(data = pResults, aes_string(x = "params", y = i, fill = "phase")) +
   geom_bar(stat = "identity", width = 0.8, position = position_dodge()) + 
   scale_fill_manual(values = Cols) +
   theme_minimal()
-p + theme(axis.text.x = element_text(angle = -45)) +
+print(p + theme(axis.text.x = element_text(angle = -45)) +
   scale_x_discrete(labels = paramnames) +
-  ggtitle(as.character(i))
+  ggtitle(as.character(i)))
 }
-
-plotPerturbation()
 ```
 
 ## Saving perturbation results
