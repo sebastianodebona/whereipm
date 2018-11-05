@@ -1,7 +1,6 @@
 ---
 title: 'Perturbation analyses: long run'
 author: "Seba De Bona"
-date: "11/5/2018"
 date: "`r Sys.Date()`"
 output:
   html_document:
@@ -357,5 +356,50 @@ axis(1, at = c(1,2,3), labels = c('Initial', 'Middle', 'End'), las=1)
 points(outputs$acc, col = Cols, pch=19, cex = 1.5)
 text(1:3, outputs$acc + 0.1, labels = round(as.numeric(outputs$acc), 2), cex = 1)
 mtext(expression(m/month^2), 2, line = 2.5)
+```
+
+### Plotting perturbation results
+
+Here, I am not running the perturbation analyses (too time consuming), but rather loading a stored perturbation result.
+
+First, loading the perturbation results and rearranging the format to make it easier to plot.
+
+```{r}
+perturbationResults_long <- readRDS(file.path(here::here(),
+                                              "results_tokeep",
+                               "perturbation_result_single_model_K1000x36.rds"))
+
+# For ease of plotting, handling the array t make it a single data.frame with outputs for columns and parameters for rows
+pResults_long <- aperm(perturbationResults_long, perm = c(2,1,3))
+pResults_long <- data.frame(apply(pResults_long, 2, c),
+                       expand.grid(dimnames(perturbationResults_long)[c(2,3)]))
+colnames(pResults_long)[(ncol(pResults_long)-1):ncol(pResults_long)] <- c("params", "phase")
+```
+
+Now, ready for plotting.
+
+```{r}
+# creating a vector of better names for parameteres
+paramnames <- c('survival (int)', 'survival (slo)', 'survival (quad)',
+            'repr p (int)',  'repr p (slo)', 
+            'offspr n (int)',  'offspr n (slo)',
+            'ad dispersal (int)','ad dispersal (slo)', 
+            'ad distance (mean)', 'ad distance (sd)',
+            'nat dispersal (int)','nat dispersal (slo)',
+            'nat dispersal (landsc)', 'nat dispersal (loc x land)',
+            'nat distance (mean)', 'nat distance (sd)')
+
+## plotting all outputs
+for(i in output){
+  p <- ggplot(data = pResults_long, aes_string(x = "params", y = i, fill = "phase")) +
+  geom_bar(stat = "identity", width = 0.8, position = position_dodge()) + 
+  scale_fill_manual(values = Cols) +
+  theme_minimal()
+print(p + theme(axis.text.x = element_text(angle = -45)) +
+  scale_x_discrete(labels = paramnames) +
+  ggtitle(as.character(i)))
+}
+
+
 ```
 
