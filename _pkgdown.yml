@@ -44,6 +44,8 @@ navbar:
           href: articles/DIPM-050_IPM_single_model.html
         - text: "Perturbation analyses"
           href: articles/DIPM-060_Perturbation_analyses.html
+        - text: "Perturnation analyses: long run"
+          href: articles/DIPM-061_Perturbation_analyses_long_run.html
           
         
   right:
