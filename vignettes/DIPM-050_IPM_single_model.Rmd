@@ -33,7 +33,7 @@ Here we define kernel parameters and initial population size.
 
 ```{r}
 # kernel parameters
-kp <- create.kernel.params(L=-200, U=200, n.bins = 400)
+kp <- create.kernel.params(L=-100, U=100, n.bins = 1000)
 # initial population size
 pop0 <- c(rep(0, kp$n.bins/2-2), rep(5,3), rep(0, kp$n.bins/2-1))
 ```
@@ -231,19 +231,22 @@ knitr::kable(tab, digits = 2, col.names = c("Parameters", "Early", "Mid", "Late"
 Here I use the paramteres just extracted to run the models at beginning, mid and end.
 
 ```{r}
+# defining uniform total time for simulations
+total_time = 18
+
 # running IPM
 start <- Sys.time()
-IPM.init <- runIPM(kp, vp.t0, init.pop = pop0, niter=12)
+IPM.init <- runIPM(kp, vp.t0, init.pop = pop0, niter=total_time)
 init.t <- Sys.time() - start
 print(init.t)
 
 start <- Sys.time()
-IPM.middle <- runIPM(kp, vp.t30, init.pop = pop0, niter=12)
+IPM.middle <- runIPM(kp, vp.t30, init.pop = pop0, niter=total_time)
 middle.t <- Sys.time() - start
 print(middle.t)
 
 start <- Sys.time()
-IPM.end <- runIPM(kp, vp.t60, init.pop = pop0, niter=12)
+IPM.end <- runIPM(kp, vp.t60, init.pop = pop0, niter=total_time)
 end.t <- Sys.time() - start
 print(end.t)
 ```
