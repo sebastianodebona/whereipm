@@ -1,25 +1,36 @@
 # Creating animation for population spread
 # first, creating series of frames
-pdf(file = "Images/toanimate.pdf", width = 4.5, height = 5)
-for (i in 1:37){
-  plot(0, xlim=range(IPM.early$y), ylim=c(0, 60), col='white', xlab = '', ylab = '', yaxt = 'n')
-  axis(2, at = c(0, 20, 40, 60), labels = c(0, 20, 40, 60), las = 2)
+pdf(file = "Images4talk/toanimate.pdf", width = 4.5, height = 5)
+for (i in 1:25){
+  plot(0, xlim=range(IPM.end$y), ylim=c(0, 30), col='white', xlab = '', ylab = '', yaxt = 'n')
+  axis(2, at = c(0, 10, 20, 30), labels = c(0, 10, 20, 30), las = 2)
   mtext('n', side = 2, las = 2, line = 3)
   mtext('x', side = 1, line = 2)
-  I <- ifelse(i>13, 13, i)
+  I = i
   for (j in 1:I){
-    draw.pop.distr(x=IPM.early$y, pop=IPM.early$pop.size[,j], col='#AE1A12', new.plot = F)
+    draw.pop.distr(x=IPM.end$y, pop=IPM.end$pop.size[,j], col=collors[3], new.plot = F)
   }
 }
 dev.off()
 
 
 
-frames <- magick::image_read_pdf('Images/toanimate.pdf', density = 400)
+frames <- magick::image_read_pdf('Images4talk/toanimate.pdf', density = 400)
 animation <- magick::image_animate(frames, fps = 5)
-image_write(animation, "Images/Early.gif")
+magick::image_write(animation, "Images4talk/Late.gif")
 
-
+# Printing only end result
+pdf(file = "Images4talk/init_.pdf", width = 4.5, height = 5)
+i = 25
+  plot(0, xlim=range(IPM.init$y), ylim=c(0, 30), col='white', xlab = '', ylab = '', yaxt = 'n')
+  axis(2, at = c(0, 10, 20, 30), labels = c(0, 10, 20, 30), las = 2)
+  mtext('n', side = 2, las = 2, line = 3)
+  mtext('x', side = 1, line = 2)
+  I = i
+  for (j in 1:I){
+    draw.pop.distr(x=IPM.init$y, pop=IPM.init$pop.size[,j], col=collors[1], new.plot = F)
+  }
+dev.off()
 
 
 
