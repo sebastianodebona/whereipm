@@ -131,33 +131,7 @@ for(i in unique(toplot$time)){
 }
 legend("bottomleft", lty = 1, legend = 12*0:5, col = Cols, title = "months")
 ```
-```{r, echo = F}
-# making up some values for time and density
-alt_t <- c(0, 30, 60)/scalingAttr$time$scale
-d <- seq(0, 100, by =1)/scalingAttr$loc_density$scale
 
-# extracting fixed effects
-fixef <- as.numeric(summary(survTimeQ)$coefficients[,"Estimate"])
-
-# creating data matrix
-toplot <- expand.grid(density = d, time = alt_t)
-# creating model matrix
-mm <- model.matrix(object = ~ time*(density) + I(density^2), data = toplot)
-
-toplot$predicted <- plogis(mm%*%fixef)
-
-pdf(file.path(here::here(), "Images4talk", "Survival.pdf"), width = 3.5, height = 4)
-collors <- wesanderson::wes_palette("Zissou1", 3, type = "continuous")[3:1]
-plot(0, col = "white", xlim = c(0,100), ylim = c(0,1), las = 1, 
-     ylab = "survival probability", xlab = "density (n/m)", main = "")
-for(i in seq_along(unique(toplot$time))){
-  tt = unique(toplot$time)[i]
-  lines(predicted~I(density*scalingAttr$loc_density$scale),
-        data = toplot[toplot$time==tt,],
-        col = collors[i])
-}
-dev.off()
-```
 
 
 ### 2. Recruitment
@@ -235,26 +209,6 @@ legend("topright", lty = 1, legend = 12*0:5, col = Cols, title = "month")
 mtext("linear model", side = 3, outer = T)
 ```
 
-```{r, echo = FALSE}
-toplot <- expand.grid(density = d, time = alt_t)
-fixef_zi <- as.numeric(summary(recrTimeL)$coefficients$zi[,"Estimate"])
-fixef_cond <- as.numeric(summary(recrTimeL)$coefficients$cond[,"Estimate"])
-mm <- model.matrix(object = ~ time*density, data = toplot)
-toplot$predicted_zi <- 1 - plogis(mm%*%fixef_zi)
-toplot$predicted_cond <- untruncZTP(mm%*%fixef_cond)
-
-# offspring number plot
-pdf(file.path(here::here(), "Images4talk", "Recruitment.pdf"), width = 3.5, height = 4)
-plot(0, col = "white", xlim = c(0,100), ylim = c(1,2.5), las = 1, 
-     ylab = "n of recruits", xlab = "density (n/m)")
-for(i in seq_along(unique(toplot$time))){
-  tt = unique(toplot$time)[i]
-  lines(predicted_cond~I(density*scalingAttr$loc_density$scale),
-        data = toplot[toplot$time==tt,],
-        col = collors[i])
-}
-dev.off()
-```
 
 ### 3-4. Adult dispersal
 
@@ -306,40 +260,6 @@ for(i in unique(toplot$time)){
 legend("topright", lty = 1, legend = 12*0:5, col = Cols, title = "month")
 ```
 
-```{r, echo = F}
-# plotting the results
-toplot <- expand.grid(density = d, time = t)
-fixef_p <- as.numeric(summary(adDispP)$coefficients[,"Estimate"])
-mm_p <- model.matrix(object = ~ time*density, data = toplot)
-toplot$predicted_p <- plogis(mm_p%*%fixef_p)
-
-fixef_d <- as.numeric(summary(adDispD)$coefficients[,"Estimate"])
-mm_d <- model.matrix(object = ~ time, data = toplot)
-toplot$predicted_d <- exp(mm_d%*%fixef_d)
-
-pdf(file.path(here::here(), "Images4talk", "AdProb.pdf"), width = 3.5, height = 4)
-# dispersal probabilty plot
-plot(0, col = "white", xlim = c(0,100), ylim = c(0,1), las = 1, 
-     ylab = "dispersal probability", xlab = "density (n/m)", main = "")
-for(i in seq_along(unique(toplot$time))){
-  tt = unique(toplot$time)[i]
-  lines(predicted_p~I(density*scalingAttr$loc_density$scale),
-        data = toplot[toplot$time==tt,],
-        col = collors[i])
-}
-dev.off()
-# dispersal distance plot
-pdf(file.path(here::here(), "Images4talk", "AdDist.pdf"), width = 3.5, height = 4)
-plot(0, col = "white", xlim = c(0,100), ylim = c(4.5,6), las = 1, 
-     ylab = "distance (m)", xlab = "density (n/m)", main = "")
-for(i in seq_along(unique(toplot$time))){
-  tt = unique(toplot$time)[i]
-  lines(predicted_d~I(density*scalingAttr$loc_density$scale),
-        data = toplot[toplot$time==tt,],
-        col = collors[i])
-}
-dev.off()
-```
 
 ### 5-6. Natal dispersal
 
