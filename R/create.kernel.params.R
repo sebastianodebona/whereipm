@@ -4,12 +4,12 @@
 #' 
 #' @export
 #' 
-#' @param L lowest value the state variable can take. Default is 0.
-#' @param U highest value the state variable can take. Default is 100.
-#' @param n.bins number of bins defining the kernel. Determines how much the state variable is discretised. Default is 100
+#' @param L lowest value the state variable can take.
+#' @param U highest value the state variable can take.
+#' @param n.bins number of bins defining the kernel. Determines how much the state variable is discretised.
 #' 
 
-create.kernel.params <- function(L=0, U=100, n.bins=100){
+create.kernel.params <- function(L, U, n.bins){
   
   # deriving missing kernel parameters
   # defining meshpoints (separating bins) and midpoints (central point of each bin)
