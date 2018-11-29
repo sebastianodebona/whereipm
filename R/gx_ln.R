@@ -23,7 +23,7 @@
 
 gx_ln <- function(y, x, density.x, Land.density,
                   p.stat.int, p.stat.slo, 
-                  p.stat.sloLand = 0, p.stat.sloInt = 0, sigma.stat = 0.25, 
+                  p.stat.sloLand = 0, p.stat.sloInt = 0, sigma.stat = 0.05, 
                   mu.mob.int, mu.mob.slo,
                   mu.mob.sloLand = 0, mu.mob.sloInt = 0, sigma.mob) {
   
