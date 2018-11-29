@@ -61,7 +61,7 @@ runIPM <- function(kernel.params, vital.params, init.pop, niter=10, store.k=FALS
               vital.params = vital.params,
               speed = speed,
               acceleration = acceleration,
-              Kernels <- K.list))  
+              Kernels = K.list))  
     
   } else {
     
