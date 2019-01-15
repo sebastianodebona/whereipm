@@ -33,9 +33,9 @@ Here we define kernel parameters and initial population size.
 
 ```{r}
 # kernel parameters
-kp <- create.kernel.params(L=-400, U=400, n.bins = 800)
+kp <- create.kernel.params(L=-200, U=200, n.bins = 400)
 # initial population size
-pop0 <- c(rep(0, kp$n.bins/2-2), rep(5,3), rep(0, kp$n.bins/2-1))
+pop0 <- c(rep(0, kp$n.bins/2), rep(10,1), rep(0, kp$n.bins/2-1))
 ```
 
 I am now calculating time specific parameter from the single models ran in the [Single VR Model](DIPM-040_Single_vr_model.html) vignette.
@@ -232,7 +232,8 @@ Here I use the paramteres just extracted to run the models at beginning, mid and
 
 ```{r}
 # defining uniform total time for simulations
-total_time = 24
+total_time = 36
+
 
 # running IPM
 start <- Sys.time()
