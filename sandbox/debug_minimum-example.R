@@ -27,24 +27,46 @@ runIPM <- function(kernel.params, init.pop, niter) {
     return(pop.size)
 }
 
+### ** normalizeLeftStochasticMatrix
+
+#' Normalize a left stochastic matrix (i.e. each column sums up to 1)
+#'
+#' A transition matrix normalized this way will keep the number of individuals
+#' constant before and after matrix multiplication with the population column
+#' vector. If you want to allow for individuals to "fall over the edge", you
+#' should normalize in a different way.
+#'
+#' @param x Square matrix with non-negative real coefficients
+#'
+#' @return Normalized matrix (coefficients in each column sum up to one)
+
+normalizeLeftStochasticMatrix <- function(x) {
+    x.cols.sums <- apply(x, 2, sum)
+    x.norm <- t(t(x) / x.cols.sums)
+    stopifnot(all(apply(x.norm, 2, sum) == 1))
+    return(x.norm)
+}
+
 ### ** build.kernel
 
 build.kernel <- function(kernel.params, pop.size){
     n.bins <- kernel.params$n.bins
     # determining density
     density <- pop.size/kernel.params$h
-    # survival kernel
+    # survival
     S <- diag(n.bins)
-    # movement kernel
-    G <- diag(n.bins)
+    # adult dispersal
+    G <- diag(n.bins) %>%
+        normalizeLeftStochasticMatrix()
     # reproduction
     R <- 0 * diag(n.bins)
-    # recruited position (natal dispersal)
-    N <- diag(kernel.params$n.bins)
+    # natal dispersal
+    N <- diag(n.bins) %>%
+        normalizeLeftStochasticMatrix()
     # P kernel
-    Pmatrix <- kernel.params$h*as.matrix(G%*%S)
+    Pmatrix <- as.matrix(G%*%S)
     # F kernel
-    Fmatrix <- kernel.params$h*as.matrix(N%*%R)
+    Fmatrix <- as.matrix(N%*%R)
     # Whole kernel
     K <- Pmatrix + Fmatrix
  }
