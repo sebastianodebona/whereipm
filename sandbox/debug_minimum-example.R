@@ -126,7 +126,7 @@ build.kernel <- function(kernel.params, pop.size){
     G <- do.call(cbind, G.cols) %>%
         normalizeLeftStochasticMatrix()
     # reproduction
-    R <- 0*diag(n.bins)
+    R <- 0.1*diag(n.bins)
     # natal dispersal
     N <- diag(n.bins) %>%
         normalizeLeftStochasticMatrix()
@@ -157,14 +157,13 @@ IPMs <- lapply(kps, function(x) {
 })
 # Pop size versus time (txtplot and regular plot)
 par(mfrow = c(2, 2))
-ylim <- c(0, 12)
 for (i in seq_along(IPMs)) {
     IPM <- IPMs[[i]]
     time <- seq_len(ncol(IPM))
     totalPop <- apply(IPM, 2, sum)
-    txtplot(time, totalPop, ylim = ylim)
+    txtplot(time, totalPop)
     plot(time, totalPop, main = names(kps)[i], las = 1,
-         type = "o", pch = 19, ylim = ylim)
+         type = "o", pch = 19)
 }
 
 # Checking that the density profiles are the same, whatever the number of bins
