@@ -12,10 +12,12 @@
 create.kernel.params <- function(L, U, n.bins){
   
   # deriving missing kernel parameters
-  # defining meshpoints (separating bins) and midpoints (central point of each bin)
-  b <- L+c(0:n.bins)*(U-L)/n.bins # meshpoints
-  y <- 0.5*(b[1:n.bins]+b[2:(n.bins+1)]) # midponts (basically, mean between consecutive meshpoints)
+  # calculating bin size
   h <- (U-L)/n.bins
+  
+  # defining meshpoints (separating bins) and midpoints (central point of each bin)
+  b <- seq(L, U, length.out = n.bins+1) # meshpoints
+  y <- 0.5*(b[1:n.bins]+b[2:(n.bins+1)]) # midponts (basically, mean between consecutive meshpoints)
   
   list(L=L,
        U=U,
