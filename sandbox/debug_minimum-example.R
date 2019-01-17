@@ -59,7 +59,7 @@ build.kernel <- function(kernel.params, pop.size){
     G <- diag(n.bins) %>%
         normalizeLeftStochasticMatrix()
     # reproduction
-    R <- 0 * diag(n.bins)
+    R <- 1 * diag(n.bins)
     # natal dispersal
     N <- diag(n.bins) %>%
         normalizeLeftStochasticMatrix()
@@ -88,9 +88,13 @@ IPMs <- lapply(kps, function(x) {
            init.pop = c(rep(0, x$n.bins/2), rep(10,1), rep(0, x$n.bins/2-1)),
            niter = 12)
 })
-# Pop size versus time
-for (IPM in IPMs) {
+# Pop size versus time (txtplot and regular plot)
+par(mfrow = c(2, 2))
+for (i in seq_along(IPMs)) {
+    IPM <- IPMs[[i]]
     time <- seq_len(ncol(IPM))
     totalPop <- apply(IPM, 2, sum)
     txtplot(time, totalPop)
+    plot(time, totalPop, main = names(kps)[i], las = 1,
+         type = "o", pch = 19)
 }
