@@ -38,7 +38,8 @@ build.kernel <- function(kernel.params, vital.params, pop.size, test=F){
                 mu.mob.slo = vital.params$mu.mob.slo.ad,
                 sigma.mob = vital.params$sigma.mob.ad
               ))
-
+  G <- diag(kernel.params$n.bins)
+  
   # reproduction
   R <- diag(rx(density = density, 
                r.int = vital.params$r.int, 
@@ -47,6 +48,8 @@ build.kernel <- function(kernel.params, vital.params, pop.size, test=F){
                f.distribution = vital.params$f.distribution,
                f.int = vital.params$f.int,
                f.slo = vital.params$f.slo))
+  R <- 1.1*diag(kernel.params$n.bins)
+  
   # recruited position (natal dispersal)
   N <- mapply(gx_ln, x = kernel.params$y, density.x = density,
               MoreArgs = list(y = kernel.params$y,
@@ -62,6 +65,7 @@ build.kernel <- function(kernel.params, vital.params, pop.size, test=F){
                               mu.mob.sloInt = vital.params$mu.mob.sloInt.nat,
                               sigma.mob = vital.params$sigma.mob.nat
               ))
+  N <- diag(kernel.params$n.bins)
 
   # P kernel
   Pmatrix <- kernel.params$h*as.matrix(G%*%S)
