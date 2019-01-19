@@ -117,6 +117,75 @@ gx_intgr_rw <- function(meshpoints, x, sd1, sd2, p) {
     return(probs)
 }
 
+### * gx_intgr_ln
+
+#' Calculate the probabilities of dispersal over a unidimensional grid (log-normal distribution)
+#'
+#' Similar to \code{\link{gx_intr_normal}}, but uses a log-normal
+#' distribution *on each side of the starting coordinate*
+#' instead of a normal distribution.
+#'
+#' @param meshpoints Vector of meshpoints defining the coordinates of the
+#'     borders of the grid cells (should be ordered from smaller to larger)
+#' @param x A single numerical value defining the starting coordinate for
+#'     dispersal (same coordinate system as for "meshpoints")
+#' @param meanlog Mean (on the log scale) of the distribution describing the
+#'     dispersal on each side of the starting coordinate (same unit as for
+#'     meshpoints and x)
+#' @param sdlog Standard deviation (on the log scale) of the distribution
+#'     describing the dispersal on each side of the starting coordinate (same
+#'     unit as for meshpoints and x)
+#' 
+#' @return A vector of length (length(meshpoints)-1), giving the probability of
+#'     dispersing to each grid cell defined by the meshpoints
+#'
+#' @examples
+#' # How to calculate the CDF for a log-normal distribution mirrored on both
+#' # sides of x=0?
+#' x <- seq(-5, 5, length.out = 256)
+#' plot(x, dlnorm(x) + dlnorm(-x), type = "l")
+#' # wrong
+#' plot(x, 1/2 * (plnorm(x) + plnorm(-x)), type = "l")
+#' # right
+#' plot(x, 1/2 * (plnorm(x) + plnorm(-x, lower.tail = FALSE)), type = "l")
+#'
+#' # Test gx_intgr_ln()
+#' par(mfrow = c(2, 3))
+#' # Coarse grid
+#' kp <- create.kernel.params(L = -200, U = 200, n.bins = 20)
+#' meshpoints <- kp$b
+#' midpoints <- kp$y
+#' probs <- gx_intgr_ln(meshpoints, x = -200, meanlog = 3.5, sdlog = 0.6)
+#' stickplot(midpoints, probs, ylim = ylim, main = "20 bins, meanlog = 3.5, sdlog = 0.6")
+#' probs <- gx_intgr_ln(meshpoints, x = -50, meanlog = 3.5, sdlog = 0.6)
+#' stickplot(midpoints, probs, ylim = ylim, col = "blue", main = "20 bins")
+#' probs <- gx_intgr_ln(meshpoints, x = 20, meanlog = 3.5, sdlog = 0.6)
+#' stickplot(midpoints, probs, ylim = ylim, col = "magenta", main = "20 bins")
+#' # Finer grid
+#' kp <- create.kernel.params(L = -200, U = 200, n.bins = 50)
+#' meshpoints <- kp$b
+#' midpoints <- kp$y
+#' probs <- gx_intgr_ln(meshpoints, x = -200, meanlog = 3.5, sdlog = 0.6)
+#' stickplot(midpoints, probs, ylim = ylim, main = "50 bins, meanlog = 3.5, sdlog = 0.6")
+#' probs <- gx_intgr_ln(meshpoints, x = -50, meanlog = 3.5, sdlog = 0.6)
+#' stickplot(midpoints, probs, ylim = ylim, col = "blue", main = "50 bins")
+#' probs <- gx_intgr_ln(meshpoints, x = 20, meanlog = 3.5, sdlog = 0.6)
+#' stickplot(midpoints, probs, ylim = ylim, col = "magenta", main = "50 bins")
+#' 
+#' @export
+
+gx_intgr_ln <- function(meshpoints, x, meanlog, sdlog) {
+    # Calculate CDF at each meshpoint
+    cdfAtMesh <- 1/2* (plnorm(meshpoints - x, meanlog = meanlog, sdlog = sdlog) +
+                       plnorm((x - meshpoints), meanlog = meanlog, sdlog = sdlog,
+                              lower.tail = FALSE))
+    # Calculate the probability of dispersing between each pair of meshpoints
+    probs <- diff(cdfAtMesh)
+    stopifnot(sum(probs) <= 1)
+    # Return
+    return(probs)
+}
+
 ### * Helper function: stickplot()
 
 #' Produce a stick plot
