@@ -7,15 +7,29 @@
 #' @param kernel.params list of parameters to build the kernel (must include L, H and n.bins). See output of \code{create.kernel.params} for an example.
 #' @param vital.params list of parameters to determine vital rate functions. Follow format of the output of \code{create.vital.params}
 #' @param pop.size Vector of initial population size per position. The lenght of the vector must be equal to the number of bins specified in \code{kernel.params}. There is no default (as opposed to \code{\link{test.init.kernel}}), so population size \emph{must} be specified.
-#' @param sk String expression defining how the S matrix should be built. \code{"1"} for everyone surviving; \code{"coinflip"} for constant 50% chances of individuals surviving; \{"full"} for the full density-dependent model, using parameters in \code{"vital.params"} and \code{\link{sx}}.
-#' @param rk String expression defining how the R matrix should be built. \code{"0"} for no reproduction; \code{"small"} for constant but little reproduction, 1 individual recruited every 10; \code{"full"} for the full density-dependent model, using parameters in \code{"vital.params"} and the function \code{\link{rx}}.
-#' @param gk String expression defining how the G (adult dispersal) matrix should be built. \code{"still"} for no dispersal; \code{"gaussian"} for redistribution (a.k.a. dispersal) curve being a gaussian with mean 0 and small variance; \code{"lognormal"} for redistribution kernel following two back-to-back lognormal distributions; \code{"rw"} for a density-dependent redistribution curve following a Radinger-Wolter curve (sum of gaussians), defined in \code{\link{gl_rw}}; \code{"full"} for a density-dependent redistribution curve as a combination of a gaussian and two back-to-back lognormal, defined in \code{\link{gx_ln}}.
-#' @param nk String expression defining how the N (natal dispersal) matrix should be built. \code{"still"} for no dispersal; \code{"gaussian"} for redistribution (a.k.a. dispersal) curve being a gaussian with mean 0 and small variance; \code{"lognormal"} for redistribution kernel following two back-to-back lognormal distributions; \code{"rw"} for a density-dependent redistribution curve following a Radinger-Wolter curve (sum of gaussians), defined in \code{\link{gl_rw}}; \code{"full"} for a density-dependent redistribution curve as a combination of a gaussian and two back-to-back lognormal, defined in \code{\link{gx_ln}}.
+#' 
+#' @param sk String expression defining how the S matrix should be built. \itemize{
+#' \item \code{"1"} everyone survives;
+#' \item \code{"coinflip"} constant 50/50 chances of individuals surviving;
+#' \item \code{"full"} for the full density-dependent model, using parameters in \code{"vital.params"} and \code{\link{sx}} (default).}
+#' @param rk String expression defining how the R matrix should be built. \itemize{
+#' \item \code{"0"} for no reproduction;
+#' \item \code{"small"} for constant but little reproduction, 1 individual recruited every 10;
+#' \item \code{"full"} for the full density-dependent model, using parameters in \code{"vital.params"} and the function \code{\link{rx}} (default).}
+#' @param gk String expression defining how the G (adult dispersal) matrix should be built. \itemize{
+#' \item \code{"still"} for no dispersal; 
+#' \item \code{"gaussian"} for redistribution (a.k.a. dispersal) curve being a gaussian with mean 0 and small variance; 
+#' \item \code{"lognormal"} for redistribution kernel following two back-to-back lognormal distributions; 
+#' \item \code{"rw"} for a density-dependent redistribution curve following a Radinger-Wolter curve (sum of gaussians); 
+#' \item \code{"full"} for a density-dependent redistribution curve as a combination of a gaussian and two back-to-back lognormal, defined in \code{\link{gx_ln}} (default).}
+#' @param nk String expression defining how the N (natal dispersal) matrix should be built. Same specifications as \code{nk}.
 #' @param test Logic value defining whether all matrices (S, R, G, N, P and F) need to be saved for testing. Default if \code{FALSE}.
 #' @details As a preliminary step before, run a test with \code{\link{test.init.kernel}} with the same parameters, to check visually if the kernel builds without problems.
 #' 
 
-build.kernel <- function(kernel.params, vital.params, pop.size, test=F){
+build.kernel <- function(kernel.params, vital.params, pop.size,
+                         sk, rk, gk, nk,
+                         test = F){
   
 
   # determining density
