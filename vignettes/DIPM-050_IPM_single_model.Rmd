@@ -33,7 +33,7 @@ Here we define kernel parameters and initial population size.
 
 ```{r}
 # kernel parameters
-kp <- create.kernel.params(L=-200, U=200, n.bins = 200)
+kp <- create.kernel.params(L=-200, U=200, n.bins = 400)
 # initial population size
 pop0 <- c(rep(0, kp$n.bins/2), rep(10,1), rep(0, kp$n.bins/2-1))
 ```
@@ -80,7 +80,7 @@ for(i in pickedTimes){
                    returnIfExists(Models$survival[[1]]%>%
                    filter(term == "s_time:I(s_loc_density^2)") %>%
                    pull(estimate))*(i/(scalingAttr$loc_density$scale*scalingAttr$time$scale)),
-                 s.multiplier = 100,
+                 s.multiplier = 1,
                  
                 # Recruitment
                  r.int = Models$recruit[[1]]%>%
@@ -103,7 +103,7 @@ for(i in pickedTimes){
                           component == "zi",
                           term == "s_time:s_loc_density") %>%
                    pull(estimate))*(i/(scalingAttr$loc_density$scale*scalingAttr$time$scale)), # time interaction
-                 r.multiplier = 0,
+                 r.multiplier = 1,
                 
                  f.int = Models$recruit[[1]]%>%
                    filter(effect == "fixed",
