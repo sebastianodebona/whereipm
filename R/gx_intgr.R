@@ -105,6 +105,8 @@ gx_intgr_normal <- function(meshpoints, x, sd) {
 #' stickplot(midpoints, probs, ylim = ylim, col = "blue", main = "50 bins, p = 0.5")
 #' probs <- gx_intgr_rw(meshpoints, x = 20, sd1 = 10, sd2 = 50, p = 0.2)
 #' stickplot(midpoints, probs, ylim = ylim, col = "magenta", main = "50 bins, p = 0.2")
+#' 
+#' @export
 
 gx_intgr_rw <- function(meshpoints, x, sd1, sd2, p) {
     # Calculate CDF at each meshpoint
