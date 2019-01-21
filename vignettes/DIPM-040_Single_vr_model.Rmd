@@ -172,10 +172,11 @@ anova(recrTimeQI, recrTimeQ, recrTimeL)
 # I will keep the linear for parsimony
 recr <- recrTimeL
 
-sjPlot::tab_model(recrTimeL, recrTimeQI, recrTimeQ,
-                  show.icc = F, show.aic = T, show.se = T, show.est = T,
-                  dv.labels = c("linear", "quadratic + i", "quadratic"),
-                  show.ci = F)
+# commenting this out, for some reason it doesn't seem to run
+# sjPlot::tab_model(recrTimeL, recrTimeQI, recrTimeQ,
+#                   show.icc = F, show.aic = T, show.se = T, show.est = T,
+#                   dv.labels = c("linear", "quadratic + i", "quadratic"),
+#                   show.ci = F)
 ```
 
 ```{r}
