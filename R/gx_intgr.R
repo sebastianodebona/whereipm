@@ -49,7 +49,7 @@
 #'
 #' @export
 
-gx_intgr_normal <- function(meshpoints, x, sd) {
+gx_intgr_normal <- function(x, meshpoints, sd) {
     # Calculate CDF at each meshpoint
     cdfAtMesh <- pnorm(meshpoints - x, mean = 0, sd = sd)
     # Calculate the probability of dispersing between each pair of meshpoints
@@ -108,10 +108,10 @@ gx_intgr_normal <- function(meshpoints, x, sd) {
 #' 
 #' @export
 
-gx_intgr_rw <- function(meshpoints, x, sd1, sd2, p) {
+gx_intgr_rw <- function(meshpoints, x, sd.stat, sd.mob, p.leave) {
     # Calculate CDF at each meshpoint
-    cdfAtMesh <- (p * pnorm(meshpoints - x, mean = 0, sd = sd1) +
-                  (1-p) * pnorm(meshpoints - x, mean = 0, sd = sd2))
+    cdfAtMesh <- ((1-p.leave) * pnorm(meshpoints - x, mean = 0, sd = sd1) +
+                  (p.leave) * pnorm(meshpoints - x, mean = 0, sd = sd2))
     # Calculate the probability of dispersing between each pair of meshpoints
     probs <- diff(cdfAtMesh)
     stopifnot(sum(probs) <= 1)
@@ -237,10 +237,10 @@ gx_intgr_ln <- function(meshpoints, x, meanlog, sdlog) {
 #' 
 #' @export
 
-gx_intgr_nln <- function(meshpoints, x, sd, meanlog, sdlog, p) {
+gx_intgr_nln <- function(meshpoints, x, sd, meanlog, sdlog, p.leave) {
     # Calculate CDF at each meshpoint
-    cdfAtMesh <- (p * pnorm(meshpoints - x, mean = 0, sd = sd) +
-                  (1-p) * 1/2*(plnorm(meshpoints - x, meanlog = meanlog, sdlog = sdlog) +
+    cdfAtMesh <- ((1-p.leave) * pnorm(meshpoints - x, mean = 0, sd = sd) +
+                  p.leave * 1/2*(plnorm(meshpoints - x, meanlog = meanlog, sdlog = sdlog) +
                                plnorm((x - meshpoints), meanlog = meanlog, sdlog = sdlog,
                                       lower.tail = FALSE)))
     # Calculate the probability of dispersing between each pair of meshpoints
