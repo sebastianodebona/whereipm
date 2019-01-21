@@ -5,7 +5,7 @@
 #' @export
 #' 
 #' @param x Current position (single value).
-#' @param y Vector of possible positions at the next time step, towards which the function predicts the probability to disperse to.
+#' @param meshpoints Vector of meshpoints delimiting the possible bins an individual could junp to at the next time step. CDF are used to predict the probability to jump in each of this bins.
 #' @param density.x Density for the position x.
 #' @param Land.density Density at the landscape level (i.e. average local landscape among occupied bins)
 #' @param p.stat.int Intercept for the logistic regression defining the proportion of static individuals (not dispersing, but just performing short distance movements) in the population based on local density (i.e. proportion of dispersers at density 0). If \code{p.stat.slo} = 1, no individuals disperse for long distances when density is close to 0.
@@ -21,7 +21,7 @@
 #' @return The function returns a value for the probability of an individual being in y at t1 if it was in x at t0.
 
 
-gx_ln <- function(y, x, density.x, Land.density,
+gx_ln <- function(x, meshpoints,density.x, Land.density,
                   p.stat.int, p.stat.slo, 
                   p.stat.sloLand = 0, p.stat.sloInt = 0, sigma.stat = 0.25, 
                   mu.mob.int, mu.mob.slo,
@@ -47,39 +47,13 @@ gx_ln <- function(y, x, density.x, Land.density,
     mu.mob.sloLand*Land.density + mu.mob.sloInt*density.x*Land.density
   # sd of the LogNormal distribution
   sdlog = sigma.mob
-  # mean of the Normal distribution
-  meann = 0
-  # sd of the Normal distribution
+  # sd of the Normal distribution (the mean is 0, as by default)
   sdn = sigma.stat
   
-
-  # defining function for normal distribution
-  Normal <- function(i){
-    (1/(sqrt(2*pi*(sdn^2))))*exp(-((i-meann)^2/(2*(sdn)^2)))
-  }
   
-  # defininf function for lognormal distribution
-  logNormal <- function(i){
-    (1/(i*sdlog*(sqrt(2*pi))))*exp(-((log(i)-meanlog)^2/(2*(sdlog^2))))
-  }
+  # Here we call the function gx_intgr_nln to calculate the cumulative probabilities inside each bin
+  probs <- gx_intgr_nln(meshpoints = meshpoints, x = x,
+               sd = sdn, meanlog = meanlog, sdlog = sdlog, p = p.leave)
   
-  D <- function(i){
-    y <- ifelse(i==0,
-                (1-p.leave)*Normal(i),
-                (1-p.leave)*Normal(i) + p.leave*0.5*logNormal(abs(i)))
-    # p.leave is multiply by 0.5 since the logNormal are two and mirrored respective to 0
-    return(y)
-  }
-  
-  
-  
-  # Making sure D Integrates to 1 (with some tolerance error)
-  toPrintifError <- integrate(D, -Inf, Inf)
-  if(abs(integrate(D, -Inf, Inf)$value-1) > 0.001)
-    stop("Error: for x = ", x, "integral of redistr. kernel != 1; \n", print(toPrintifError))
-  
-  # calculating redistribution from x to each value of y
-  d <- D(y-x)
-  
-  return(d)
+  return(probs)
 }
