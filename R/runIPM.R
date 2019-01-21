@@ -6,11 +6,14 @@
 #' 
 #' @inheritParams build.kernel
 #' 
-#' @param niter Number of iterations, equivalent to time steps, the population should be projected for. Default is 10 (way too small!)
+#' @param init.pop Vector of lenght equal to the number of bins defininf the starting population size (\emph{not density!})
+#' @param niter Number of iterations, equivalent to time steps, the population should be projected for. Default is 12 (way too small!)
 #' @param store.k Logic value describing whether the kernels at each iteration need to be saved and store in a list
 #'
 
-runIPM <- function(kernel.params, vital.params, init.pop, niter=10, store.k=FALSE, ...){ 
+runIPM <- function(kernel.params, vital.params, init.pop, niter=10,
+                   sk = "full", rk = "full", gk = "full", nk = "full",
+                   store.k=FALSE, ...){ 
   
   # allocating space for population size over time and for spread over time
   pop.size <- matrix(NA, nrow=kernel.params$n.bins, ncol=niter + 1)
@@ -30,7 +33,8 @@ runIPM <- function(kernel.params, vital.params, init.pop, niter=10, store.k=FALS
     # re-building the kernel at each time step based on population density, which affects vital rates
     K<-build.kernel(kernel.params=kernel.params,
                     vital.params=vital.params,
-                    pop.size=pop.size[,i])
+                    pop.size=pop.size[,i],
+                    sk = sk, rk = rk, gk = gk, nk = nk)
     
     # storing the kernel if asked to 
     if(store.k){
