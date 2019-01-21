@@ -110,8 +110,8 @@ gx_intgr_normal <- function(x, meshpoints, sd) {
 
 gx_intgr_rw <- function(meshpoints, x, sd.stat, sd.mob, p.leave) {
     # Calculate CDF at each meshpoint
-    cdfAtMesh <- ((1-p.leave) * pnorm(meshpoints - x, mean = 0, sd = sd1) +
-                  (p.leave) * pnorm(meshpoints - x, mean = 0, sd = sd2))
+    cdfAtMesh <- ((1-p.leave) * pnorm(meshpoints - x, mean = 0, sd = sd.stat) +
+                  (p.leave) * pnorm(meshpoints - x, mean = 0, sd = sd.mob))
     # Calculate the probability of dispersing between each pair of meshpoints
     probs <- diff(cdfAtMesh)
     stopifnot(sum(probs) <= 1)
