@@ -40,7 +40,7 @@ build.kernel <- function(kernel.params, vital.params, pop.size,
   # what is the average density in the 100m stretch of stream (as LL is long) around 
   # a particular pool. Therefore, landscape density is a property of a specific pool,
   # and corresponds more to a neighbourhood density.
-  Land.density <- calculate_nb_density(density, kernel$params$y)
+  Land.density <- calculate_nb_density(density, kernel.params$y)
   
   
   # Survival kernel
