@@ -22,6 +22,12 @@ quick.plot <- function(IPM.model, legend){
   # plotting population through space and time
   draw.pop.dyn(IPM.model, breaks=IPM.model$n.iterations+1, Hue='Greys')
   legend('topright', legend = legend, bty = 'n', cex = 1.5)
+  legend('topleft', legend = paste(
+    paste("n = ", round(colSums(IPM.model$pop.size)[IPM.model$n.iterations+1]), sep = ""),
+    paste("iter = ", IPM.model$n.iterations, sep = ""),
+    sep = "\n"
+  ), bty = 'n')
+  
   # plotting spread through time
   plot(IPM.model$pop.spread + 0.5, col='black', type = 'o', xlab = 'Time', ylab = 'spread')
   # plotting population growth through time
