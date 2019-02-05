@@ -32,6 +32,11 @@ navbar:
         - text: "Theoretical IPM"
           href: articles/DIPM-010_Theoretical_IPM.html
         - text: -------------------------------------
+        - text: "Diagnostic Checks"
+        - text: -------------------------------------
+        - text: "Model diagnostics"
+          href: articles/DIPM-015_Model_diagnostics.html
+        - text: -------------------------------------
         - text: "Analyses"
         - text: -------------------------------------
         - text: "Vital rate models: phases"
