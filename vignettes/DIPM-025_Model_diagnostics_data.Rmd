@@ -1,0 +1,43 @@
+---
+title: "Model Diagnostics - part II"
+author: "Seba De Bona"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+    theme: lumen
+---
+
+Now that we have produced some parameters, it's possible to run some additional diagnostics, to check whether including real functions build on data breaks the model or not.
+
+## Setup
+
+Loading packages, data and the output of the models we just ran in the previous vignette. I will only pick one model, and not interpret any of the analyses. The scope is just to check if the model works and what we obtain makes sense.
+
+```{r}
+library(whereipm)
+library(tidyverse)
+
+# loading the data
+data <- ipmdata
+
+vitalRateModels <- readRDS(file.path(here::here(), "results", "vitalRateModels.rds"))
+```
+
+## Parameters and initial Population
+
+I'm using here the same sets of space definitions I adopted in in the vignette [Model Diagnostics: Part I](DIPM-015_Model_diagnostics.html).
+
+```{r}
+# kernel paramters
+kp <- create.kernel.params(L=-200, U=200, n.bins = 400)
+kp.fine <- create.kernel.params(L=-200, U=200, n.bins = 800)
+kp.coarse <- create.kernel.params(L=-200, U=200, n.bins = 100)
+
+# populations
+pop0 <- c(rep(0, kp$n.bins/2), rep(10,1), rep(0, kp$n.bins/2-1))
+pop0.fine <- c(rep(0, kp.fine$n.bins/2), rep(10,1), rep(0, kp.fine$n.bins/2-1))
+pop0.coarse <- c(rep(0, kp.coarse$n.bins/2), rep(10,1), rep(0, kp.coarse$n.bins/2-1))
+```
