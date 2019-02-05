@@ -10,4 +10,207 @@ output:
     theme: lumen
 ---
 
+Before using the model to analyse real data we can have a dry-run to see if everything works. The functions to build the IPM kernel have a few options in-built, that allow to increase how complicated the model becomes. It's possible, for example, to set fixed values for survival or reporoduction, or to create made up distribution kernels.
+
+This will also allow us to check whether the model is stable to changes in the resolution with which space is defined. Having a coarser or finer space resolution should produce the same results, more or less. Small differences might be present though.
+
+## Setup
+
+Loading packages.
+
+```{r}
+# packages
+library(whereipm)
+library(tidyverse)
+```
+
+## Parameters and initial Population
+
+I'll here create three sets of space definitions, of different coarseness. The upper and lower boundaries are the same (-200 to 200 m), but the size of the bins varies taking up values of 1, 0.5 and 2 meters.
+
+```{r}
+# kernel paramters
+kp <- create.kernel.params(L=-200, U=200, n.bins = 400)
+kp.fine <- create.kernel.params(L=-200, U=200, n.bins = 800)
+kp.coarse <- create.kernel.params(L=-200, U=200, n.bins = 100)
+
+# populations
+pop0 <- c(rep(0, kp$n.bins/2), rep(10,1), rep(0, kp$n.bins/2-1))
+pop0.fine <- c(rep(0, kp.fine$n.bins/2), rep(10,1), rep(0, kp.fine$n.bins/2-1))
+pop0.coarse <- c(rep(0, kp.coarse$n.bins/2), rep(10,1), rep(0, kp.coarse$n.bins/2-1))
+```
+
+## Model runs
+
+I'll run here different models, increasing the complication each time. This way I can check if 
+
+  a) the results conform to expectations
+  b) the spatial resolution affects the results
+
+#### S = 1, R = 0, no one moves
+
+In this model all individuals survive, no individual is born, and no one moves. The expected result is to have a constant population size of 10 individuals at the centre of our space, regardless of spatial scale.
+
+```{r}
+IPM <- runIPM(kernel.params = kp, vital.params = mock.vital.params(),
+              niter = 12, 
+              init.pop = pop0, 
+              sk = "1", rk = "0", gk = "still", nk = "still")
+
+IPM.fine <- runIPM(kernel.params = kp.fine, vital.params = mock.vital.params(),
+              niter = 12, 
+              init.pop = pop0.fine, 
+              sk = "1", rk = "0", gk = "still", nk = "still")
+
+IPM.coarse <- runIPM(kernel.params = kp.coarse, vital.params = mock.vital.params(),
+              niter = 12, 
+              init.pop = pop0.coarse, 
+              sk = "1", rk = "0", gk = "still", nk = "still")
+
+quick.plot(IPM, legend = "1m")
+quick.plot(IPM.fine, legend = "0.5m")
+quick.plot(IPM.coarse, legend = "2m")
+```
+
+The simplest model works.
+
+#### S = 1, some reproduce, no one moved
+
+Here we should have a growing peak (due to 50% of the individuals producing one offspring), stable at the centre of the space. Again, there should be identity between the different spatial resolutions.
+The final population size should be $10 * 1.5^{12}$, which is about `r round(10 * 1.5^12)`.
+
+```{r}
+IPM <- runIPM(kernel.params = kp, vital.params = mock.vital.params(),
+              niter = 12, 
+              init.pop = pop0, 
+              sk = "1", rk = "small", gk = "still", nk = "still")
+
+IPM.fine <- runIPM(kernel.params = kp.fine, vital.params = mock.vital.params(),
+              niter = 12, 
+              init.pop = pop0.fine, 
+              sk = "1", rk = "small", gk = "still", nk = "still")
+
+IPM.coarse <- runIPM(kernel.params = kp.coarse, vital.params = mock.vital.params(),
+              niter = 12, 
+              init.pop = pop0.coarse, 
+              sk = "1", rk = "small", gk = "still", nk = "still")
+
+quick.plot(IPM, legend = "1m")
+quick.plot(IPM.fine, legend = "0.5m")
+quick.plot(IPM.coarse, legend = "2m")
+```
+
+Reproduction seems to be accounted for correctly.
+
+#### Some survive, some reproduce, no one moves
+
+Same as above, but now the chances of survival are 50:50. So the population should be the same given the chances of producing an offspring are also 50:50.
+
+```{r}
+IPM <- runIPM(kernel.params = kp, vital.params = mock.vital.params(),
+              niter = 12, 
+              init.pop = pop0, 
+              sk = "coinflip", rk = "small", gk = "still", nk = "still")
+
+IPM.fine <- runIPM(kernel.params = kp.fine, vital.params = mock.vital.params(),
+              niter = 12, 
+              init.pop = pop0.fine, 
+              sk = "coinflip", rk = "small", gk = "still", nk = "still")
+
+IPM.coarse <- runIPM(kernel.params = kp.coarse, vital.params = mock.vital.params(),
+              niter = 12, 
+              init.pop = pop0.coarse, 
+              sk = "coinflip", rk = "small", gk = "still", nk = "still")
+
+quick.plot(IPM, legend = "1m")
+quick.plot(IPM.fine, legend = "0.5m")
+quick.plot(IPM.coarse, legend = "2m")
+```
+
+Working as intended.
+
+#### S = 1, some reproduce, adults move, juveniles don't.
+
+Now everyone survives and some are born, but individuals move around. Since no one is born we should see a thinning of the population so that the total pop size is 10, always, but the individuals are spread in space. Movement happens according to a gaussian curve.
+
+```{r}
+IPM <- runIPM(kernel.params = kp, vital.params = mock.vital.params(),
+              niter = 12, 
+              init.pop = pop0, 
+              sk = "1", rk = "small", gk = "gaussian", nk = "still")
+
+IPM.fine <- runIPM(kernel.params = kp.fine, vital.params = mock.vital.params(),
+              niter = 12, 
+              init.pop = pop0.fine, 
+              sk = "1", rk = "small", gk = "gaussian", nk = "still")
+
+IPM.coarse <- runIPM(kernel.params = kp.coarse, vital.params = mock.vital.params(),
+              niter = 12, 
+              init.pop = pop0.coarse, 
+              sk = "1", rk = "small", gk = "gaussian", nk = "still")
+
+quick.plot(IPM, legend = "1m")
+quick.plot(IPM.fine, legend = "0.5m")
+quick.plot(IPM.coarse, legend = "2m")
+```
+
+The distribution curves in space are different among the different space resolutions. But this is normal, given that the plots represent population size per bin (and the bins have different sizes). Looking at the bottom right panel is clear that the overall population size is the same for all simulations, so the redistribution of individuals is not creating or removing artificially individuals.
+
+#### S = 1, some reproduce, adults don't move, juveniles do.
+
+To see if we get the same behaviour from the redistribution kernel of natal dispersal, I will run the same model as before, but with natal and not adult dispersal.
+
+```{r}
+IPM <- runIPM(kernel.params = kp, vital.params = mock.vital.params(),
+              niter = 12, 
+              init.pop = pop0, 
+              sk = "1", rk = "small", gk = "still", nk = "gaussian")
+
+IPM.fine <- runIPM(kernel.params = kp.fine, vital.params = mock.vital.params(),
+              niter = 12, 
+              init.pop = pop0.fine, 
+              sk = "1", rk = "small", gk = "still", nk = "gaussian")
+
+IPM.coarse <- runIPM(kernel.params = kp.coarse, vital.params = mock.vital.params(),
+              niter = 12, 
+              init.pop = pop0.coarse, 
+              sk = "1", rk = "small", gk = "still", nk = "gaussian")
+
+quick.plot(IPM, legend = "1m")
+quick.plot(IPM.fine, legend = "0.5m")
+quick.plot(IPM.coarse, legend = "2m")
+```
+
+All good :)
+
+
+## Playing with redistributions
+
+Given that the model seems to behave as expected, I am not having a look at whether different redistribution kernels to see if they behave correctly.
+
+I will use the coarse model because it's faster than the other two.
+
+#### Radinger-Wolter curve
+
+The radinger-wolter curve is the combination of two overlapping gaussian distributions. This will reveal if adding two distributions works.
+
+```{r}
+IPM.coarse <- runIPM(kernel.params = kp.coarse, vital.params = mock.vital.params(),
+              niter = 6, 
+              init.pop = pop0.coarse, 
+              sk = "1", rk = "small", gk = "rw", nk = "still")
+quick.plot(IPM.coarse, legend = "R-W")
+```
+
+#### Lognormal curve
+
+This redistribution is made up by two lognormal curves back to back. It will show us if the combination of two distribution that halts at 0 works.
+
+```{r}
+IPM.coarse <- runIPM(kernel.params = kp.coarse, vital.params = mock.vital.params(),
+              niter = 6, 
+              init.pop = pop0.coarse, 
+              sk = "1", rk = "small", gk = "lognormal", nk = "still")
+quick.plot(IPM.coarse, legend = "Lognormal")
+```
 
