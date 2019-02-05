@@ -306,7 +306,7 @@ quick.plot(IPM.coarse, legend = "2m")
 
 The models behave as expected.
 
-### With Dispersal
+#### With Dispersal
 
 ```{r}
 IPM <- runIPM(kernel.params = kp, vital.params = vp,
@@ -328,3 +328,35 @@ quick.plot(IPM, legend = "1m")
 quick.plot(IPM.fine, legend = "0.5m")
 quick.plot(IPM.coarse, legend = "2m")
 ```
+
+### Recruitment
+
+Finally, I am checking if recruitment works. This might not, since we are missing individuals that don't have assigned parentage, and we haven't corrected for that yet.  Recruitment might be too low and the population could go extinct.
+
+I will try first having complete survival, which should allow the population to not go extinct and allow us to check if the density-dependent recruitment function works. Then I'll add dd survival, having therefore the complete realistic model based on the data.
+
+#### No one dies on my watch
+
+```{r}
+IPM <- runIPM(kernel.params = kp, vital.params = vp,
+              niter = 6, 
+              init.pop = pop0, 
+              sk = "1", rk = "full", gk = "full", nk = "full")
+
+IPM.fine <- runIPM(kernel.params = kp.fine, vital.params = vp,
+              niter = 6, 
+              init.pop = pop0.fine, 
+              sk = "1", rk = "full", gk = "full", nk = "full")
+
+IPM.coarse <- runIPM(kernel.params = kp.coarse, vital.params = vp,
+              niter = 6, 
+              init.pop = pop0.coarse, 
+              sk = "1", rk = "full", gk = "full", nk = "full")
+
+quick.plot(IPM, legend = "1m")
+quick.plot(IPM.fine, legend = "0.5m")
+quick.plot(IPM.coarse, legend = "2m")
+```
+
+Even with everyone surviving the population in the fine model is spread so thinly that there isn't a bin with at least one individual by month 4 (check the bottom left graph there).
+
