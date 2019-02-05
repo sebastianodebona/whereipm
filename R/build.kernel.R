@@ -35,8 +35,13 @@ build.kernel <- function(kernel.params, vital.params, pop.size,
   # determining density
   density <- pop.size/kernel.params$h
   
-  # determining landscape density
-  Land.density <- mean(density[density>=1])
+  # determining landscape density. To keep this consistent with the way
+  # landscape density was defined in the GLMM models that parameterise it, I am considering
+  # what is the average density in the 100m stretch of stream (as LL is long) around 
+  # a particular pool. Therefore, landscape density is a property of a specific pool,
+  # and corresponds more to a neighbourhood density.
+  Land.density <- calculate_nb_density(density, kernel$params$y)
+  
   
   # Survival kernel
   if(sk == "1"){
@@ -114,7 +119,7 @@ build.kernel <- function(kernel.params, vital.params, pop.size,
     
   } else if (rk == "small"){
     # 1 recruited every 1 individuals
-    R <- 0.1*diag(kernel.params$n.bins)
+    R <- 0.5*diag(kernel.params$n.bins)
     
   } else if (rk == "full"){
     # full density-dependent recruitment based on vital parameters
@@ -162,9 +167,8 @@ build.kernel <- function(kernel.params, vital.params, pop.size,
     
   } else if (nk == "full"){
     # density-dependent redistribution curves made of a compoud gaussian + mirrored lognormal, built from vital paramters
-    N <- mapply(gx_ln, x = kernel.params$y, density.x = density,
+    N <- mapply(gx_ln, x = kernel.params$y, density.x = density, Land.density.x = Land.density,
                 MoreArgs = list(meshpoints = kernel.params$b,
-                                Land.density = Land.density,
                                 p.stat.int = vital.params$p.stat.int.nat,
                                 p.stat.slo = vital.params$p.stat.slo.nat,
                                 p.stat.sloLand = vital.params$p.stat.sloLand.nat,

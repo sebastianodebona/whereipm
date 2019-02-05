@@ -7,7 +7,7 @@
 #' @param x Current position (single value).
 #' @param meshpoints Vector of meshpoints delimiting the possible bins an individual could junp to at the next time step. CDF are used to predict the probability to jump in each of this bins.
 #' @param density.x Density for the position x.
-#' @param Land.density Density at the landscape level (i.e. average local landscape among occupied bins)
+#' @param Land.density.x Density at the landscape level (i.e. average local landscape 100m around x)
 #' @param p.stat.int Intercept for the logistic regression defining the proportion of static individuals (not dispersing, but just performing short distance movements) in the population based on local density (i.e. proportion of dispersers at density 0). If \code{p.stat.slo} = 1, no individuals disperse for long distances when density is close to 0.
 #' @param p.stat.slo Slope for the logistic regression describing how the proportion of static individuals changes with density. If \code{p.stat.slo} is large in absolute value, the strength of density dependent dispersal probability is high.
 #' @param p.stat.sloLand Effect of landscape density over the proportion of static individuals. If \code{p.stat.sloLand} is large, landscape density has a strong effect on the probability to disperse.
@@ -21,7 +21,7 @@
 #' @return The function returns a value for the probability of an individual being in y at t1 if it was in x at t0.
 
 
-gx_ln <- function(x, meshpoints,density.x, Land.density,
+gx_ln <- function(x, meshpoints, density.x, Land.density.x,
                   p.stat.int, p.stat.slo, 
                   p.stat.sloLand = 0, p.stat.sloInt = 0, sigma.stat = 0.25, 
                   mu.mob.int, mu.mob.slo,
@@ -40,11 +40,11 @@ gx_ln <- function(x, meshpoints,density.x, Land.density,
   # probability to leave 
   #   (defining the proportion of Gaussian over Lognormal distributed values)
   p.leave = plogis(p.stat.int + p.stat.slo*density.x +
-                      p.stat.sloLand*Land.density + 
-                      p.stat.sloInt*density.x*Land.density)
+                      p.stat.sloLand*Land.density.x + 
+                      p.stat.sloInt*density.x*Land.density.x)
   # mean of the LogNormal distribution
   meanlog = mu.mob.int + mu.mob.slo*density.x +
-    mu.mob.sloLand*Land.density + mu.mob.sloInt*density.x*Land.density
+    mu.mob.sloLand*Land.density.x + mu.mob.sloInt*density.x*Land.density.x
   # sd of the LogNormal distribution
   sdlog = sigma.mob
   # sd of the Normal distribution (the mean is 0, as by default)
