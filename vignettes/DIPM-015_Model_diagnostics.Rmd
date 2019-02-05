@@ -1,5 +1,5 @@
 ---
-title: "Model Diagnostics"
+title: "Model Diagnostics: part I"
 author: "Seba De Bona"
 date: "`r Sys.Date()`"
 output:
