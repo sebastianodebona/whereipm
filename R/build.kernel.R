@@ -98,10 +98,9 @@ build.kernel <- function(kernel.params, vital.params, pop.size,
     
   } else if (gk == "full"){
     # density-dependent redistribution curves made of a compoud gaussian + mirrored lognormal, built from vital paramters
-    G <- mapply(gx_ln, x = kernel.params$y, density.x = density,
+    G <- mapply(gx_ln, x = kernel.params$y, density.x = density, Land.density.x = Land.density,
                 MoreArgs = list(
                   meshpoints = kernel.params$b,
-                  Land.density = Land.density,
                   p.stat.int = vital.params$p.stat.int.ad,
                   p.stat.slo = vital.params$p.stat.slo.ad,
                   sigma.stat = vital.params$sigma.stat.ad, 
