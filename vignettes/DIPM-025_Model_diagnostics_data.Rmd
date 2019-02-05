@@ -41,3 +41,234 @@ pop0 <- c(rep(0, kp$n.bins/2), rep(10,1), rep(0, kp$n.bins/2-1))
 pop0.fine <- c(rep(0, kp.fine$n.bins/2), rep(10,1), rep(0, kp.fine$n.bins/2-1))
 pop0.coarse <- c(rep(0, kp.coarse$n.bins/2), rep(10,1), rep(0, kp.coarse$n.bins/2-1))
 ```
+
+For the vital parameters, I am using those obtained from the data pertaining to the late phase.
+
+```{r, results = "asis"}
+# First I need to extract the info in the model to make it easier to handle
+Models <- vitalRateModels %>%
+  transmute(
+    survival = map(survival, broom::tidy),
+    recruit = map(recruit, broom.mixed::tidy),
+    adDispersal = map(adDispersal, broom::tidy),
+    adDistance = map(adDistance, broom::tidy),
+    natDispersal = map(natDispersal, broom::tidy),
+    natDistance = map(natDistance, broom::tidy))
+
+# Storing values into vital params list. By setting a value to i I can decide
+# which phase to use. I'll try with the late for now.
+
+i = 3
+
+vp <- list(# Survival
+                 s.int = Models$survival[[i]]%>%
+                   filter(term == "(Intercept)") %>%
+                   pull(estimate),
+                 s.slo = (Models$survival[[i]]%>%
+                   filter(term == "s_loc_density") %>%
+                   pull(estimate))/scalingAttr$loc_density$scale,
+                 s.slo2 = returnIfExists(Models$survival[[i]]%>%
+                   filter(term == "I(s_loc_density^2)") %>%
+                   pull(estimate)),
+                 s.multiplier = 1,
+                 
+                # Recruitment
+                 r.int = Models$recruit[[i]]%>%
+                   filter(effect == "fixed",
+                          component == "zi",
+                          term == "(Intercept)") %>%
+                   pull(estimate),
+                 r.slo = (Models$recruit[[i]]%>%
+                   filter(effect == "fixed",
+                          component == "zi",
+                          term == "s_loc_density") %>%
+                   pull(estimate))/scalingAttr$loc_density$scale,
+                 r.multiplier = 1,
+                 f.int = Models$recruit[[i]]%>%
+                   filter(effect == "fixed",
+                          component == "cond",
+                          term == "(Intercept)") %>%
+                   pull(estimate),
+                 f.slo = (Models$recruit[[i]]%>%
+                   filter(effect == "fixed",
+                          component == "cond",
+                          term == "s_loc_density") %>%
+                   pull(estimate))/scalingAttr$loc_density$scale,
+                 f.distribution = 'ztpoisson',
+                 
+                # Adult dispersal
+                 p.stat.int.ad = Models$adDispersal[[i]]%>%
+                   filter(effect == "fixed",
+                          term == "(Intercept)") %>%
+                   pull(estimate),
+                 p.stat.slo.ad = (Models$adDispersal[[i]]%>%
+                   filter(effect == "fixed",
+                          term == "s_loc_density") %>%
+                   pull(estimate))/scalingAttr$loc_density$scale,
+                 sigma.stat.ad = 0.25, 
+                 mu.mob.int.ad = Models$adDistance[[i]]%>%
+                   filter(effect == "fixed",
+                          term == "(Intercept)") %>%
+                   pull(estimate),
+                 mu.mob.slo.ad = (Models$adDistance[[i]]%>%
+                   filter(effect == "fixed",
+                          term == "s_loc_density") %>%
+                   pull(estimate))/scalingAttr$loc_density$scale,
+                 sigma.mob.ad = Models$adDistance[[i]]%>%
+                   filter(effect == "ran_pars") %>%
+                   pull(estimate) %>%
+                   sum %>%
+                   sqrt,
+                 
+                # Natal dispersal
+                 p.stat.int.nat = Models$natDispersal[[i]]%>%
+                   filter(effect == "fixed",
+                          term == "(Intercept)") %>%
+                   pull(estimate),
+                 p.stat.slo.nat = (Models$natDispersal[[i]]%>%
+                   filter(effect == "fixed",
+                          term == "s_loc_density.mid") %>%
+                   pull(estimate))/scalingAttr$loc_density$scale,
+                 p.stat.sloLand.nat = (Models$natDispersal[[i]]%>%
+                   filter(effect == "fixed",
+                          term == "s_land_density.mid") %>%
+                   pull(estimate))/scalingAttr$land_density$scale,
+                 p.stat.sloInt.nat = (Models$natDispersal[[i]]%>%
+                   filter(effect == "fixed",
+                          term == "s_loc_density.mid:s_land_density.mid") %>%
+                   pull(estimate))/(scalingAttr$loc_density$scale*scalingAttr$land_density$scale),
+                 sigma.stat.nat = 0.25, 
+                 mu.mob.int.nat = Models$natDistance[[i]]%>%
+                   filter(effect == "fixed",
+                          term == "(Intercept)") %>%
+                   pull(estimate),
+                 mu.mob.slo.nat = (Models$natDistance[[i]]%>%
+                   filter(effect == "fixed",
+                          term == "s_loc_density.mid") %>%
+                   pull(estimate))/scalingAttr$loc_density$scale,
+                 mu.mob.sloLand.nat = (Models$natDistance[[i]]%>%
+                   filter(effect == "fixed",
+                          term == "s_land_density.mid") %>%
+                   pull(estimate))/scalingAttr$land_density$scale,
+                 mu.mob.sloInt.nat = (Models$natDistance[[i]]%>%
+                   filter(effect == "fixed",
+                          term == "s_loc_density.mid:s_land_density.mid") %>%
+                   pull(estimate))/(scalingAttr$loc_density$scale*scalingAttr$land_density$scale),
+                 sigma.mob.nat = Models$natDistance[[i]]%>%
+                   filter(effect == "ran_pars") %>%
+                   pull(estimate) %>%
+                   sum %>%
+                   sqrt)
+ 
+# replacing empty elements with zeros
+vp <- lapply(vp, function(x) ifelse(length(x)==0,0,x))
+```
+
+## Running the model & Diagnostics
+
+I can now run the IPM and alternate which real parts are added each time. First, I am adding the real vital parameters (but without using them) and repeat the simplest diagnostics ran earlier. The results should be identical, since the vp are not used.
+
+```{r}
+IPM <- runIPM(kernel.params = kp, vital.params = vp,
+              niter = 12, 
+              init.pop = pop0, 
+              sk = "1", rk = "0", gk = "still", nk = "still")
+
+IPM.fine <- runIPM(kernel.params = kp.fine, vital.params = vp,
+              niter = 12, 
+              init.pop = pop0.fine, 
+              sk = "1", rk = "0", gk = "still", nk = "still")
+
+IPM.coarse <- runIPM(kernel.params = kp.coarse, vital.params = vp,
+              niter = 12, 
+              init.pop = pop0.coarse, 
+              sk = "1", rk = "0", gk = "still", nk = "still")
+
+quick.plot(IPM, legend = "1m")
+quick.plot(IPM.fine, legend = "0.5m")
+quick.plot(IPM.coarse, legend = "2m")
+```
+
+### Dispersal
+
+#### Everyone survives, a few are born...
+
+I will test first if the redistribution kernels (for adult and natal dispersal) work. Keeping survival and reproduction at fixed values should allow to establish easily if the redistribution is working as intended.
+
+I will also decrease the run time (from 12 to 6 months), to make things go faster. We now then expect the final population size (with perfect survival and one newborn every 2 adults) to grow to around `r round(10*1.5^6)`, given an initial population of 10 individuals.
+
+#####...only adult dispersal
+
+```{r}
+IPM <- runIPM(kernel.params = kp, vital.params = vp,
+              niter = 6, 
+              init.pop = pop0, 
+              sk = "1", rk = "small", gk = "full", nk = "still")
+
+IPM.fine <- runIPM(kernel.params = kp.fine, vital.params = vp,
+              niter = 6, 
+              init.pop = pop0.fine, 
+              sk = "1", rk = "small", gk = "full", nk = "still")
+
+IPM.coarse <- runIPM(kernel.params = kp.coarse, vital.params = vp,
+              niter = 6, 
+              init.pop = pop0.coarse, 
+              sk = "1", rk = "small", gk = "full", nk = "still")
+
+quick.plot(IPM, legend = "1m")
+quick.plot(IPM.fine, legend = "0.5m")
+quick.plot(IPM.coarse, legend = "2m")
+```
+
+Looks ok.
+
+#####...only natal dispersal
+
+```{r}
+IPM <- runIPM(kernel.params = kp, vital.params = vp,
+              niter = 6, 
+              init.pop = pop0, 
+              sk = "1", rk = "small", gk = "still", nk = "full")
+
+IPM.fine <- runIPM(kernel.params = kp.fine, vital.params = vp,
+              niter = 6, 
+              init.pop = pop0.fine, 
+              sk = "1", rk = "small", gk = "still", nk = "full")
+
+IPM.coarse <- runIPM(kernel.params = kp.coarse, vital.params = vp,
+              niter = 6, 
+              init.pop = pop0.coarse, 
+              sk = "1", rk = "small", gk = "still", nk = "full")
+
+quick.plot(IPM, legend = "1m")
+quick.plot(IPM.fine, legend = "0.5m")
+quick.plot(IPM.coarse, legend = "2m")
+```
+
+Also good.
+
+#####...both adult and natal dispersal
+
+```{r}
+IPM <- runIPM(kernel.params = kp, vital.params = vp,
+              niter = 6, 
+              init.pop = pop0, 
+              sk = "1", rk = "small", gk = "full", nk = "full")
+
+IPM.fine <- runIPM(kernel.params = kp.fine, vital.params = vp,
+              niter = 6, 
+              init.pop = pop0.fine, 
+              sk = "1", rk = "small", gk = "full", nk = "full")
+
+IPM.coarse <- runIPM(kernel.params = kp.coarse, vital.params = vp,
+              niter = 6, 
+              init.pop = pop0.coarse, 
+              sk = "1", rk = "small", gk = "full", nk = "full")
+
+quick.plot(IPM, legend = "1m")
+quick.plot(IPM.fine, legend = "0.5m")
+quick.plot(IPM.coarse, legend = "2m")
+```
+
+When including both adult and natal dispersal, the final population size decreases to 113. This is due to a few fraction of individuals seeping out of the population limits and disappearing. The damage shouldn't be too bad though, since the previous population size, non rounded, was 10*1.5^6. This means probably only between 0.5 and 1 individuals were lost.
+
