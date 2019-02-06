@@ -36,9 +36,9 @@ Here we define kernel parameters and initial population size.
 
 ```{r}
 # kernel parameters
-kp <- create.kernel.params(L=-500, U=500, n.bins = 1000)
+kp <- create.kernel.params(L=-300, U=300, n.bins = 800)
 # initial population size
-pop0 <- c(rep(0, kp$n.bins/2-2), rep(5,3), rep(0, kp$n.bins/2-1))
+pop0 <- c(rep(0, kp$n.bins/2), rep(10,1), rep(0, kp$n.bins/2-1))
 ```
 
 And we extract the vital rates parameters from the models fitted in the [Vital Rate Models: phases](DIPM-020_Vital_rate_models.html) vignette.
@@ -187,7 +187,8 @@ Now that all parameters are ready, I can run the Integral Projection models. Fir
 test.init.kernel(kp, vp.early, pop0)
 ```
 ```{r, echo = F, fig.height=4, fig.width=8}
-K <- build.kernel(kp, vp.mid, pop.size = pop0, test=T)
+K <- build.kernel(kp, vp.mid, pop.size = pop0, test=T,
+                  sk = "full", rk = "full", gk = "full", nk = "full")
   par(mfrow=c(2,4))
   image(t(K$S), main='survival')
   image(t(K$G),main='adult \ndispersal')
@@ -205,19 +206,19 @@ Below, I run the 3 IPM simulations for the early, mid and late phase. The simula
 ```{r}
 # Early phase ipm
 start <- Sys.time()
-IPM.early <- runIPM(kp, vp.early, init.pop = pop0, niter=36)
+IPM.early <- runIPM(kp, vp.early, init.pop = pop0, niter=12)
 early.t <- Sys.time() - start
 print(early.t)
 
 # Mid phase ipm
 start <- Sys.time()
-IPM.mid <- runIPM(kp, vp.mid, init.pop = pop0, niter=36)
+IPM.mid <- runIPM(kp, vp.mid, init.pop = pop0, niter=12)
 mid.t <- Sys.time() - start
 print(mid.t)
 
 # Late phase ipm
 start <- Sys.time()
-IPM.late <- runIPM(kp, vp.late, init.pop = pop0, niter=36)
+IPM.late <- runIPM(kp, vp.late, init.pop = pop0, niter=12)
 late.t <- Sys.time() - start
 print(late.t)
 
@@ -232,7 +233,7 @@ quick.plot(IPM.mid, "Mid")
 quick.plot(IPM.late, 'Late')
 ```
 
-The results are crazy, and not very believable. I need to run here some diagnostics to check nothing erroneaous or absurd is happening while the IPM is run.
+The results underline how the lack of enough reproduction leads the population to extinction, invariably. I need to address this by inflating artificially the number of offspring produced. This is due to the fact many individuals don't have assigned maternity and therefore won't be accounted for in the GLMM models (individuals are recruited only if assigned to a mother)
 
 
 
