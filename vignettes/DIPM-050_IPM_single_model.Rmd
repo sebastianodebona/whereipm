@@ -33,15 +33,10 @@ Here we define kernel parameters and initial population size.
 
 ```{r}
 # kernel parameters
-kp <- create.kernel.params(L=-200, U=200, n.bins = 400)
-kp.fine <- create.kernel.params(L=-200, U=200, n.bins = 800)
-kp.coarse <- create.kernel.params(L=-200, U=200, n.bins = 100)
+kp <- create.kernel.params(L=-200, U=200, n.bins = 800)
 
 # initial population size
 pop0 <- c(rep(0, kp$n.bins/2), rep(10,1), rep(0, kp$n.bins/2-1))
-pop0.fine <- c(rep(0, kp.fine$n.bins/2), rep(10,1), rep(0, kp.fine$n.bins/2-1))
-pop0.coarse <- c(rep(0, kp.coarse$n.bins/2), rep(10,1), rep(0, kp.coarse$n.bins/2-1))
-
 ```
 
 I am now calculating time specific parameter from the single models ran in the [Single VR Model](DIPM-040_Single_vr_model.html) vignette.
@@ -241,19 +236,22 @@ Here I use the paramteres just extracted to run the models at beginning, mid and
 total_time = 12
 
 
-# running IPM
+# running IPMs
 start <- Sys.time()
-IPM.init <- runIPM(kp, vp.t0, init.pop = pop0, niter=total_time)
+IPM.init <- runIPM(kp, vp.t0, init.pop = pop0, niter=total_time,
+                   sk = "full", rk = "full", gk = "full", nk = "full")
 init.t <- Sys.time() - start
 print(init.t)
 
 start <- Sys.time()
-IPM.middle <- runIPM(kp, vp.t30, init.pop = pop0, niter=total_time)
+IPM.middle <- runIPM(kp, vp.t30, init.pop = pop0, niter=total_time,
+                   sk = "full", rk = "full", gk = "full", nk = "full")
 middle.t <- Sys.time() - start
 print(middle.t)
 
 start <- Sys.time()
-IPM.end <- runIPM(kp, vp.t60, init.pop = pop0, niter=total_time)
+IPM.end <- runIPM(kp, vp.t60, init.pop = pop0, niter=total_time,
+                   sk = "full", rk = "full", gk = "full", nk = "full")
 end.t <- Sys.time() - start
 print(end.t)
 ```
