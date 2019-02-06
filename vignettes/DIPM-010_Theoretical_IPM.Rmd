@@ -56,7 +56,8 @@ Using the function `test.init.kernel` we can have a quick glance at our initial 
 test.init.kernel(kernel.params = kp, vital.params = vp)
 ```
 ```{r, echo = F}
-K <- build.kernel(kp, vp, pop.size = pop0, test=T)
+K <- build.kernel(kp, vp, pop.size = pop0, test=T,
+                  sk = "full", rk = "full", gk = "full", nk = "full")
 
 op <- par()
   par(mfrow=c(2,4))

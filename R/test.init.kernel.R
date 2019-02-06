@@ -20,7 +20,8 @@ test.init.kernel<-function(kernel.params, vital.params, init.pop, ...){
     }
   
     
-  K <- build.kernel(kernel.params, vital.params, pop.size = init.pop, test=T)
+  K <- build.kernel(kernel.params, vital.params, pop.size = init.pop, test=T,
+                    sk = "full", rk = "full", gk = "full", nk = "full")
   
   op <- par()
   par(mfrow=c(2,2))
