@@ -5,26 +5,24 @@
 #' @export
 #' 
 #' @param local_density vector of local densities in each bins of the space
-#' @param midpoints vector of midpoints, of the same length as density, from the kernel parameters
 #' @param bin.size size in m of a single bin, from the kernel.parameters
 #' 
 
-calculate_nb_density <- function(local_density, midpoints, bin.size){
+calculate_nb_density <- function(local_density, bin.size){
   
   # using the size of the bin to establish where exactly the 100 m range sits
   # in the vector of positions. I cannot just add exactly +/- 50 because the
-  # steps might not be integer. Multiplying an integer number of bins that fit
-  # into 50 by the size of the bin will give me the closest value to 50 that I
-  # can add or remove to the position x to calculate neighbouring density.
-  multiplier <- round(50/bin.size)
+  # steps might not be integer. I will check what is the integer number of bins 
+  # that fit into 50m, based on the the size of the bin. This will correspond to
+  # the number of steps needed to go back/forth 50m.
+  steps <- round(50/bin.size)
   
-  # creating vectors of lower and upper boundaries of the neighbourhood
-  los <- sapply(midpoints - multiplier*bin.size, function(x)max(x, min(midpoints), na.rm = T))
-  ups <- sapply(midpoints + multiplier*bin.size, function(x)min(x, max(midpoints), na.rm = T))
+  # creating vectors of indexes for the lower and upper boundaries of the neighbourhood
+  lo_index <- sapply(seq_along(local_density) - steps,
+                     function(x)max(x, 1, na.rm = T))
   
-  # transforming those into indexes
-  lo_index <- match(los, midpoints)
-  up_index <- match(ups, midpoints)
+  up_index <- sapply(seq_along(local_density) + steps, 
+                     function(x)min(x, length(local_density), na.rm = T))
   
   # calculating the vector of neighbourhood density
   nb_density <- mapply(function(lo, up, local_density){mean(local_density[lo:up])},
