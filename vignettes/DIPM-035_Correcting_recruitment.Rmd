@@ -1,0 +1,99 @@
+---
+title: "Correcting for Recruitment"
+author: "Seba De Bona"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 4
+    theme: lumen
+---
+
+In this vignette I want to compare the number of apparent recruits at each month (i.e. how many individuals have an assigned mother per month) with the actual number of recruits each month (i.e. how many new individuals are captured each month). Doing this will allow me to match the population level recruitment to the individual level one, by including a buff to the number of offpsring produced each month in the IPM model.
+
+Loading the data and packages necessary. I am here subsetting the data for females only, given the model is a model for females.
+
+```{r}
+library(whereipm)
+library(tidyverse)
+
+# data
+data <- ipmdata %>%
+  filter(sex == "F")
+str(data)
+```
+
+I can check now how many individuals are present at the stream level per month, how many of them are new recuits and how many have assigned maternity.
+
+```{r}
+# number of new recruits captured each month and number of recruits with assigned maternity each month
+pop_recruits <- data %>%
+  group_by(sampling) %>%
+  summarize(recruits = sum(isFirstCapture),
+            assigned = sum(Maternity != "" & isFirstCapture, na.rm = T))
+
+# population size (females only!)
+pop_size <- data %>%
+  group_by(sampling) %>%
+  count()
+
+# What is the mean proportional recruit at each month?
+# In order to do this I need to apply a lead to the number of recruits: 
+# the proportional number of recruits should be based on the population size
+# at the previous time step: n_recruits_t1/n_t0.
+pop_recruits <- pop_recruits %>%
+  mutate(next_recruits = lead(recruits),
+         next_assigned = lead(assigned))
+
+# merging to two to calculate proportions
+pop_recruits <- left_join(pop_recruits, pop_size) %>%
+  mutate(p_recruits = next_recruits/n,
+         p_assigned = next_assigned/n)
+```
+
+I am here plotting the numbers of captured, recruited and assigned individuals, to visualise the gap between actual recruits and apparent recruits. I will also plot proportional values (to the total population size).
+
+```{r}
+# picking colours
+colz <- wesanderson::wes_palette("Royal1", 3, type = "discrete")
+
+p <- ggplot(pop_recruits, aes(sampling)) + 
+  geom_ribbon(aes(ymin=0, ymax=n), fill = colz[1]) +
+  geom_ribbon(aes(ymin=0, ymax=recruits), fill = colz[2]) +
+  geom_ribbon(aes(ymin=0, ymax=assigned), fill = colz[3])
+
+q <- ggplot(pop_recruits, aes(sampling)) + 
+  geom_ribbon(aes(ymin=0, ymax=1), fill = colz[1]) +
+  geom_ribbon(aes(ymin=0, ymax=p_recruits), fill = colz[2]) +
+  geom_ribbon(aes(ymin=0, ymax=p_assigned), fill = colz[3])
+
+par(mfrow=c(2,1))
+p
+q
+```
+
+Calculating what is the average proportional recruit (how many new recruits at the next time step per individual at thi time step) and proportion of recruits that do not have assigned maternity.
+
+```{r}
+# excluding datapoints where recruits are zero (to avoid dividing by zero)
+pop_recruits <- pop_recruits %>%
+  filter(next_recruits > 0) %>%
+  mutate(unass_recruits = 1 - next_assigned/next_recruits)
+
+# average proportional recruit
+mean(pop_recruits$p_recruits, na.rm = T)
+
+# What is the mean proportion of new recruits that are unassigned?
+ggplot(pop_recruits, aes(y = unass_recruits, x = sampling)) + 
+  geom_line(col = colz[2])
+mean(pop_recruits$unass_recruits)
+```
+
+It appears 15% of the new recruites don't have assigned maternity. If we assume assigning an individual to a mother has nothing to do with density, time or how many offspring the mother already produced, we could easily fix the lack of recruits by buffing the estimated recruitment in the model by 15%.
+
+This can be done easily using the reproduction multiplier `r.multiplier` variable in the vital.parameters. This buff, as mentioned before, applies to all estimates of recruitment homogeneously.
+
+One additional check we need is whether the mean estimated recruitment at the population level in the IPM model is close to the estimated average proportional recruitment of `r round(mean(pop_recruits$p_recruits, na.rm = T)*100, 1)` %.
+
+Yet another option is to check whether setting the recruitment rate in the model at a flat value correponding to the average proportonal recruitment can avoid extinction of the population.
