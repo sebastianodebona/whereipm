@@ -48,13 +48,26 @@ runIPM <- function(kernel.params, vital.params, init.pop, niter=10,
       kernel.params$y[max(which(next.pop.size > 1))]}
   }
   
-  # # claculating speed, accelaration and population size at the introduction site at the end of the simulation
-  # speed <- pop.spread[niter+1] - pop.spread[niter]
-  # 
-  # # running a linear model to estimate acceleration
-  # t <- 1:niter
-  # acceleration <- summary(lm(pop.spread[-1] ~ t + I(t^2)))$coefficients['I(t^2)', 'Estimate']
-  # 
+  # claculating speed, accelaration and population size at the introduction site at the end of the simulation
+  speed <- pop.spread[niter+1] - pop.spread[niter]
+
+  
+  # running a linear model to estimate acceleration
+  # I will run the model at two conditions:
+  # 1) the final speed is not NA, meaning the final or semifinal spread is NA
+  # 2) the values for spread are not all equal (degenerate lm)
+  # to check for the latter I am using this approach, found here from hadley wickham
+  # https://stackoverflow.com/questions/4752275/test-for-equality-among-all-elements-of-a-single-vector
+  
+  if(is.na(speed)){
+    acceleration <- NA
+  } else if (zero_range(pop.spread)){
+    acceleration <- NA
+  } else {
+    t <- 1:niter
+    acceleration <- summary(lm(pop.spread[-1] ~ t + I(t^2)))$coefficients['I(t^2)', 'Estimate']
+  }
+
   
   if(store.k){
     
