@@ -90,7 +90,20 @@ ggplot(pop_recruits, aes(y = unass_recruits, x = sampling)) +
 mean(pop_recruits$unass_recruits)
 ```
 
-It appears 15% of the new recruites don't have assigned maternity. If we assume assigning an individual to a mother has nothing to do with density, time or how many offspring the mother already produced, we could easily fix the lack of recruits by buffing the estimated recruitment in the model by 15%.
+It appears 15% of the new recruites don't have assigned maternity. If we assume assigning an individual to a mother has nothing to do with density, time or how many offspring the mother already produced, we could easily fix the lack of recruits by buffing the estimated recruitment in the model.
+
+In order to know by how much that should be buff, I need to see what is the ratio between unassigned recruits and assigned recruits. That proportion is how much the estimate from the unassigned recruits needs to be buffed.
+
+```{r}
+# calculating the proportion for buffing
+pop_recruits <- pop_recruits %>%
+  mutate(buff_proportion = (next_recruits - next_assigned)/next_assigned)
+
+ggplot(pop_recruits, aes(y = buff_proportion, x = sampling)) + 
+  geom_line(col = colz[2])
+
+mean(pop_recruits$buff_proportion)
+```
 
 This can be done easily using the reproduction multiplier `r.multiplier` variable in the vital.parameters. This buff, as mentioned before, applies to all estimates of recruitment homogeneously.
 
