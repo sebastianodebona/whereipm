@@ -44,7 +44,8 @@ runIPM <- function(kernel.params, vital.params, init.pop, niter=10,
     # determining next population size by multiplying current kernel and current population size
     next.pop.size <- K%*%pop.size[,i]
     pop.size[,i+1] <- next.pop.size
-    pop.spread[i+1] <- kernel.params$y[max(which(next.pop.size > 1))]
+    pop.spread[i+1] <- if(length(which(next.pop.size > 1)) == 0){NA} else {
+      kernel.params$y[max(which(next.pop.size > 1))]}
   }
   
   # # claculating speed, accelaration and population size at the introduction site at the end of the simulation
