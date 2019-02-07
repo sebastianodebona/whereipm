@@ -14,7 +14,8 @@
 #' \item \code{"full"} for the full density-dependent model, using parameters in \code{"vital.params"} and \code{\link{sx}} (default).}
 #' @param rk String expression defining how the R matrix should be built. \itemize{
 #' \item \code{"0"} for no reproduction;
-#' \item \code{"small"} for constant but little reproduction, 1 individual recruited every 10;
+#' \item \code{"small"} for constant reproduction, 5 individuals recruited every 10;
+#' \item \code{"natural"} for constant reproduction, equal to the population level average proportional recruitment, estimated in the wild population;
 #' \item \code{"full"} for the full density-dependent model, using parameters in \code{"vital.params"} and the function \code{\link{rx}} (default).}
 #' @param gk String expression defining how the G (adult dispersal) matrix should be built. \itemize{
 #' \item \code{"still"} for no dispersal; 
@@ -118,8 +119,13 @@ build.kernel <- function(kernel.params, vital.params, pop.size,
     R <- 0*diag(kernel.params$n.bins)
     
   } else if (rk == "small"){
-    # 1 recruited every 1 individuals
+    # 1 recruited every 2 individuals
     R <- 0.5*diag(kernel.params$n.bins)
+    
+  } else if (rk == "natural"){
+    # flat recruitment rate, equal to the average proportional recrtuiment rate
+    # observed in the population
+    R <- 0.15*diag(kernel.params$n.bins)  
     
   } else if (rk == "full"){
     # full density-dependent recruitment based on vital parameters
