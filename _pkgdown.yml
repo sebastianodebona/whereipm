@@ -42,6 +42,8 @@ navbar:
           href: articles/DIPM-025_Model_diagnostics_data.html
         - text: "IPM: phases"
           href: articles/DIPM-030_IPM_Phases.html
+        - text: "Buffing recruitment"
+          href: articles/DIPM-035_Correcting_recruitment.html
         - text: "Vital rate model: single model"
           href: articles/DIPM-040_Single_vr_model.html
         - text: "IPM: single model"
