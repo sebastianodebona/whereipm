@@ -22,10 +22,11 @@ devtools::load_all() # To get the source code in profiling results
 #'
 #' @return The numerical integration for the last step; should be close to one.
 
-plotHistory <- function(xHistory, xMin = -50, xMax = 50, nGrid = 1024, bandwith = 0.1,
-                        yMin = 1, yMax = NULL, multFactor = 0.1, reverse = TRUE,
+plotHistory <- function(xHistory, xMin = -50, xMax = 50, nGrid = 1024, bandwidth = 0.1,
+                        yMin = 1, yMax = NULL, multFactor = 1, reverse = TRUE,
                         col = adjustcolor("lightgrey", alpha.f = 0.8),
-                        border = adjustcolor("darkgrey", alpha.f = 0.9)) {
+                        border = adjustcolor("darkgrey", alpha.f = 0.9),
+                        stepShift = 0) {
     if (is.null(yMax)) { yMax <- length(xHistory) }
     plot(0, type = "n", xlim = c(xMin, xMax), ylim = c(yMin, yMax),
          las = 1, xlab = "Space", ylab = "Time")
@@ -33,11 +34,12 @@ plotHistory <- function(xHistory, xMin = -50, xMax = 50, nGrid = 1024, bandwith 
     if (reverse) { sequence <- rev(sequence) }
     for (i in sequence) {
         nInds <- length(xHistory[[i]])
-        if (nInds == 1 && is.na(xHistory[[i]])) {
-            lines(c(xMin, xMax), c(i, i), col = border)
+        if (nInds == 0) {
+            lines(c(xMin, xMax) + stepShift * i, c(i, i), col = border)
         } else {
             d <- density(xHistory[[i]], bw = bandwidth, n = nGrid, from = xMin, to = xMax)
-            polygon(d$x, d$y * multFactor * nInds + i, col = col, border = border)
+            polygon(d$x + stepShift * i, d$y * 0.1 * multFactor * nInds + i,
+                    col = col, border = border)
         }
     }
     # Check
@@ -329,7 +331,7 @@ for (t in 2:nIters) {
         indMove <- sapply(currentX, function(pos) rnorm(n = 1, mean = 0, sd = 1))
         xHistory[[t]] <- currentX + indMove
     } else {
-        xHistory[[t]] <- NA
+        xHistory[[t]] <- as.numeric()
     }
 }
 
@@ -354,7 +356,7 @@ for (t in 2:nIters) {
         indMove <- sapply(currentX, function(pos) rnorm(n = 1, mean = 0, sd = 1))
         xHistory[[t]] <- currentX + indMove
     } else {
-        xHistory[[t]] <- NA
+        xHistory[[t]] <- as.numeric()
     }
 }
 
@@ -385,3 +387,130 @@ for (t in 2:nIters) {
 }
 
 plotHistory(xHistory)
+
+#' Basic wrapper to run a stochastic model
+#'
+#' This function accepts four optional functions:
+#'
+#' - survFun (default: everyone survives): function giving the survival status of an individual at a given turn. The function should be of the form f(localDensities) and return a vector of 0/1 of the same length as the input.
+#'
+#' - reprFun (default: no one reproduces): function giving the reproduction status of an individual at a given turn, independent of whether it survives or not until the end of the turn. The function should be of the form f(localDensities) and return a vector of 0/1 of the same length as the input.
+#'
+#' - offspringFun (default: one offspring per individual): function giving the number of offspring produced per individual. In the current implementation of runStochasticModel(), this function is called only on individuals with 1 in the output of reprFun. The function should be of the form f(localDensities) and return a vector of (non-strictly) positive integers of the same length as the input.
+#'
+#' @param x0 Numeric vector of individual starting positions
+#' @param presenceWidth Numeric value, width of the segment over which the presence of an individual will increase density for density-dependent effects. For example, if set to 5, an individual will increase density by 0.2 over a 5-unit wide segment centered on itself.
+#' @param nIters Integer, number of iterations to run. The starting condition x0 is returned as the first element of the simulation, so the total length of a simulation is nIters+1.
+#' @param maxInds Integer, maximum number of individuals allowed per time step. The function will raise an error if this number+1 is reached.
+#' @return A list of numeric vectors. Each element contains the positions of individuals alive at a given iteration.
+#'
+#' @examples
+#' # Boring: no death, no birth, no move
+#' x0 <- runif(n = 50, min = -20, max = 20)
+#' sim <- runStochasticModel(x0, 5, nIters = 48)
+#' plotHistory(sim)
+#'
+#' # Survival: constant pSurv
+#' survFun <- function(localDensities) {
+#'   pSurv <- 0.9
+#'   return(rbinom(length(localDensities), size = 1, prob = pSurv))
+#' }
+#' sim <- runStochasticModel(x0, 5, nIters = 48, survFun = survFun)
+#' plotHistory(sim)
+#'
+#' # Survival: density-dependent (higher mortality at high density)
+#' survFun <- function(localDensities) {
+#'   pSurv <- 1/(1 + exp(-8 + 3*localDensities))
+#'   return(rbinom(length(localDensities), size = 1, prob = pSurv))
+#' }
+#' x0 <- rnorm(n = 50, mean = 0, sd = 5)
+#' sim <- runStochasticModel(x0, 5, nIters = 48, survFun = survFun)
+#' plotHistory(sim)
+#'
+#' # Survival as above plus everybody has a constant chance of reproducing
+#' reprFun <- function(localDensities) {
+#'   pRepr <- 0.2
+#'   return(rbinom(length(localDensities), size = 1, prob = pRepr))
+#' }
+#' x0 <- rnorm(n = 50, mean = 0, sd = 5)
+#' sim <- runStochasticModel(x0, 5, nIters = 48, survFun = survFun, reprFun = reprFun)
+#' plotHistory(sim, multFactor = 0.5, stepShift = 1/2)
+#'
+#' # Survival and reproduction as above, but instead of default (1 offspring per parent) nOffspring depends on density (less offspring when density increases)
+#' offspringFun <- function(localDensities) {
+#'   lambdas <- exp(-0.5 - 0.5*localDensities)
+#'   return(rpois(length(localDensities), lambda = lambdas))
+#' }
+#' x0 <- rnorm(n = 50, mean = 0, sd = 5)
+#' sim <- runStochasticModel(x0, 5, nIters = 48, survFun = survFun, reprFun = reprFun,
+#'          offspringFun = offspringFun)
+#' plotHistory(sim, multFactor = 0.5, stepShift = 1/2)
+#'
+
+runStochasticModel <- function(x0, presenceWidth, nIters, maxInds = 1e3, 
+                               survFun = NULL, reprFun = NULL, offspringFun = NULL) {
+    N_GRID <- 1024 # Used for density estimation; using a power of 2 is nice for the FFT.
+    # Parse vital functions
+    if (is.null(survFun)) {
+        survFun <- function(localDensities) {
+            # Everybody survives
+            return(rep(1, length(localDensities)))
+        }
+    }
+    if (is.null(reprFun)) {
+        reprFun <- function(localDensities) {
+            # Nobody reproduces
+            return(rep(0, length(localDensities)))
+        }
+    }
+    if (is.null(offspringFun)) {
+        offspringFun <- function(localDensities) {
+            # One offspring per individual
+            return(rep(1, length(localDensities)))
+        }
+    }
+    # Run the model
+    xHistory <- list(x0)
+    for (i in seq_len(nIters)) {
+        prevX <- xHistory[[i]]
+        if (length(prevX) > maxInds) {
+            stop("Maximum number of individuals reached (", length(prevX),
+                 " reached, max. allowed is ", maxInds, ").")
+        }
+        if (length(prevX) > 0) {
+            # Calculate local densities at the beginning of the turn
+            # (a) Calculate density profile
+            z <- density(prevX, width = presenceWidth, kernel = "rectangular", n = 1024)
+            # (b) Interpolate the profile at each individual location
+            prevLocalDensities <- approx(z$x, z$y, xout = prevX)$y * length(prevX)
+            # Stochastic survival
+            survAtX <- survFun(prevLocalDensities)
+            curX <- prevX[survAtX == 1]
+            # Stochastic reproduction (everybody alive at the beginning of the turn gets a chance)
+            reprAtX <- reprFun(prevLocalDensities)
+            # Stochastic number of offspring for reproducing individuals
+            nJuveniles <- offspringFun(prevLocalDensities[reprAtX == 1])
+            if (any(is.na(nJuveniles))) {
+                stop("\"NA\" number of juveniles returned from offspringFun().\n",
+                     "Are you sure your offspringFun() can handle the density values reached?\n",
+                     "Here is a summary of the densities reached:\n",
+                     paste(capture.output(summary(prevLocalDensities)), collapse = "\n"))
+            }
+            if ((sum(nJuveniles)+length(curX)) > maxInds) {
+                stop("Maximum number of individuals reached (", (sum(nJuveniles)+length(curX)),
+                     " reached, max. allowed is ", maxInds, ").")
+
+            }
+            newRecruits <- rep(prevX[reprAtX == 1], times = nJuveniles)
+            # Assemble the population
+            curX <- c(curX, newRecruits)
+        } else {
+            # Nobody was alive at the previous iteration
+            curX <- as.numeric()
+        }
+        # Store history
+        xHistory[[i+1]] <- curX
+    }
+    # Return
+    return(xHistory)
+}
