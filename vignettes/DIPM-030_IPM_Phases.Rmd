@@ -36,9 +36,9 @@ Here we define kernel parameters and initial population size.
 
 ```{r}
 # kernel parameters
-kp <- create.kernel.params(L=-300, U=300, n.bins = 800)
+kp <- create.kernel.params(L=-300, U=300, n.bins = 300)
 # initial population size
-pop0 <- c(rep(0, kp$n.bins/2), rep(10,1), rep(0, kp$n.bins/2-1))
+pop0 <- makeInitPop(kp, 40, 4)
 ```
 
 And we extract the vital rates parameters from the models fitted in the [Vital Rate Models: phases](DIPM-020_Vital_rate_models.html) vignette.
@@ -85,7 +85,7 @@ for(i in 1:dim(vitalRateModels)[1]){
                           component == "zi",
                           term == "s_loc_density") %>%
                    pull(estimate))/scalingAttr$loc_density$scale,
-                 r.multiplier = 1,
+                 r.multiplier = 1.21,
                  f.int = Models$recruit[[i]]%>%
                    filter(effect == "fixed",
                           component == "cond",
