@@ -33,10 +33,10 @@ Here we define kernel parameters and initial population size.
 
 ```{r}
 # kernel parameters
-kp <- create.kernel.params(L=-200, U=200, n.bins = 400)
+kp <- create.kernel.params(L=-200, U=200, n.bins = 200)
 
 # initial population size
-pop0 <- c(rep(0, kp$n.bins/2-2), rep(10,4), rep(0, kp$n.bins/2-2))
+pop0 <- makeInitPop(kp, 40, 4)
 ```
 
 I am now calculating time specific parameter from the single models ran in the [Single VR Model](DIPM-040_Single_vr_model.html) vignette.
