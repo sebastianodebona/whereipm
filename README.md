@@ -1,4 +1,4 @@
-[![pipeline status](https://gitlab.com/sebadebona/dispersal-ipm/badges/pkgdev/pipeline.svg)](https://gitlab.com/sebadebona/dispersal-ipm/commits/pkgdev)
+[![pipeline status](https://gitlab.com/sebadebona/dispersal-ipm/badges/master/pipeline.svg)](https://gitlab.com/sebadebona/dispersal-ipm/commits/pkgdev)
 
 # Description
 
