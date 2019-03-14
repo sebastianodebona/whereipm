@@ -95,7 +95,7 @@ Being warned of the possibly long runtime, I can move on to the simulations:
 start <- Sys.time()
 for(I in 1:length(phases)){
   for(j in 1:length(params)){
-    temp <- perturb(orig.IPM = phases[[I]], epsilon = 0.01, par = params[j])
+    temp <- perturb(orig.IPM = phases[[I]], epsilon = 0.10, par = params[j])
     perturbationResults[, params[[j]], I] <- unlist(temp)
   }
 }
@@ -201,8 +201,9 @@ for(i in output){
   p <- ggplot(data = pResults, aes_string(x = "params", y = i, fill = "phase")) +
   geom_bar(stat = "identity", width = 0.8, position = position_dodge()) +
   scale_fill_manual(values = Cols) +
+    coord_flip()
   theme_minimal()
-print(p + theme(axis.text.x = element_text(angle = -45)) +
+print(p + theme(axis.text.x = element_text(angle = 0)) +
   scale_x_discrete(labels = paramnames) +
   ggtitle(as.character(i)))
 }
@@ -211,5 +212,5 @@ print(p + theme(axis.text.x = element_text(angle = -45)) +
 ## Saving perturbation results
 
 ```{r}
-# saveRDS(perturbationResults, file = file.path(here::here(), "results", "perturbation_result_single_model.rds"))
+saveRDS(perturbationResults, file = file.path(here::here(), "results", "perturbation_result_single_model.rds"))
 ```
