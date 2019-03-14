@@ -60,7 +60,14 @@ gmrdata <- read.csv(file.path(here::here(), 'data-raw', 'GuppyData_LL.csv'), hea
      as.tibble()
 
 # Since I am analysing reproduction, I need the pedigree data to extend past the mark-recapture data by two months (so I can capture individuals born two months after the last observed sampling in gmr)
-data <- gmrdata %>% filter(stream == 'LL' & sampling <= max(pedigree$sampling) - 2)
+
+#### Very early on, I am subsetting the entire dataset for FEMALES ONLY
+# This is because, if I calculate local and landscape density here, for which
+# I run GLMM later, I will generate male-and-female-density specific resposnes,
+# which I won't be able to carry through in the IPM, since only females are accounted!!!
+data <- gmrdata %>% filter(stream == 'LL',
+                           sampling <= max(pedigree$sampling) - 2,
+                           sex == "F")
 str(data)
 
 # One fish was captured several times in a month:
@@ -81,7 +88,7 @@ data <- data %>%
 # the study period for this project (2013-02)
 
 # At this stage the number of rows in the dataset is:
-NROW_CHECK <- nrow(data) # 39071
+NROW_CHECK <- nrow(data) # 26324 females
 # and this should not change during the rest of the script since we do only
 # left_join() operations to grow the dataset.
 
@@ -151,15 +158,17 @@ offspringFromMothers <- pedigree %>%
     ungroup() %>%
     mutate(FishID = Maternity) %>% select( -Maternity)
 # Idem for the fathers
-offspringFromFathers <- pedigree %>%
-    group_by(Paternity, cohort_samp) %>%
-    summarize(recruited = n()) %>%
-    mutate(sampling = cohort_samp - 2) %>%
-    ungroup() %>%
-    mutate(FishID = Paternity) %>% select( - Paternity)
+#### NO NEED NOW, there are no males
+# offspringFromFathers <- pedigree %>%
+#     group_by(Paternity, cohort_samp) %>%
+#     summarize(recruited = n()) %>%
+#     mutate(sampling = cohort_samp - 2) %>%
+#     ungroup() %>%
+#     mutate(FishID = Paternity) %>% select( - Paternity)
 # Concatenate the recruitment information for mothers and fathers
-offspringFromFishID = bind_rows(offspringFromMothers,
-                                offspringFromFathers) %>%
+offspringFromFishID = bind_rows(offspringFromMothers
+                                #offspringFromFathers
+                                ) %>%
     filter(FishID != "") %>%
     select( -cohort_samp)
 # Merge this into the full data
