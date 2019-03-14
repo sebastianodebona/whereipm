@@ -13,7 +13,7 @@
 draw.pop.dyn <- function(IPM.model, Hue='Blues', breaks=10){
   
   # creating an empty plot to draw lines in
-  plot(0, xlim=c(min(IPM.model$y), max(IPM.model$y)), ylim=c(0, max(IPM.model$pop.size)), col='white', ylab='population size', xlab='space')
+  plot(0, xlim=c(min(IPM.model$y), max(IPM.model$y)), ylim=c(0, max(IPM.model$pop.size/IPM.model$kernel.params$h)), col='white', ylab='population density (n/m)', xlab='space')
   
   # creating a vector to select columns from the population projection
   selector <- round(seq(1,IPM.model$n.iterations+1, length.out = breaks))
@@ -22,7 +22,7 @@ draw.pop.dyn <- function(IPM.model, Hue='Blues', breaks=10){
   colorz <- as.list(grDevices::colorRampPalette(RColorBrewer::brewer.pal(9,Hue)[2:9])(breaks))
   
   # turning columns of population size into items of a list, to feed them into mapply
-  popsizes <- split(IPM.model$pop.size[, selector], 
+  popsizes <- split(IPM.model$pop.size[, selector]/IPM.model$kernel.params$h, 
                     rep(1:ncol(IPM.model$pop.size[, selector]), each = nrow(IPM.model$pop.size[, selector])))
   
   # using mapply to draw the lines                                                         
