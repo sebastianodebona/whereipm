@@ -171,10 +171,15 @@ offspringFromFishID = bind_rows(offspringFromMothers
                                 ) %>%
     filter(FishID != "") %>%
     select( -cohort_samp)
+
+# checking for absurd recruitment values
+range(offspringFromFishID$recruited)
+
 # Merge this into the full data
 data <- data %>% left_join(offspringFromFishID,
                            by = c("FishID", "sampling")) %>%
     mutate(recruited = ifelse(is.na(recruited), 0, recruited))
+
 
 # TOCHECK!
 # (Is it ok to set to 0 the number of recruits when it was NA? Also, we lose
@@ -188,9 +193,9 @@ data <- data %>% left_join(offspringFromFishID,
 popSize <- data %>% group_by(sampling) %>%
     summarize(pop_size = n()) %>%
     select(sampling, pop_size)
-data <- data %>% left_join(popSize, by = "sampling")
-
 plot(popSize, type='l')
+
+data <- data %>% left_join(popSize, by = "sampling")
 
 # LANDSCAPE population density at each timestep (individuals/m)
 data <- data %>% mutate(land_density = pop_size/100) #total length of LL
@@ -230,7 +235,6 @@ NROW_CHECK <- nrow(data)
 # LOCAL POPULATION DENSITY, at each time point (and each location)
 data$loc_density<-data$spot.pop/data$reach_l
 hist(data$loc_density, col = "lightgrey")
-
 
 # VARIANCE IN LOCAL POP DENSITY
 var_density <- tapply(data$loc_density,data$sampling,var, na.rm=T)
