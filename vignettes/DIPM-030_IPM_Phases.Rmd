@@ -206,19 +206,19 @@ Below, I run the 3 IPM simulations for the early, mid and late phase. The simula
 ```{r}
 # Early phase ipm
 start <- Sys.time()
-IPM.early <- runIPM(kp, vp.early, init.pop = pop0, niter=60)
+IPM.early <- runIPM(kp, vp.early, init.pop = pop0, niter=48)
 early.t <- Sys.time() - start
 print(early.t)
 
 # Mid phase ipm
 start <- Sys.time()
-IPM.mid <- runIPM(kp, vp.mid, init.pop = pop0, niter=60)
+IPM.mid <- runIPM(kp, vp.mid, init.pop = pop0, niter=48)
 mid.t <- Sys.time() - start
 print(mid.t)
 
 # Late phase ipm
 start <- Sys.time()
-IPM.late <- runIPM(kp, vp.late, init.pop = pop0, niter=60)
+IPM.late <- runIPM(kp, vp.late, init.pop = pop0, niter=48)
 late.t <- Sys.time() - start
 print(late.t)
 
