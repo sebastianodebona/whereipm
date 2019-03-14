@@ -37,8 +37,6 @@ To study how the evolution of dispersal and life-history affects the spatial eco
 2. Mid phase, between month 27 and 36;
 3. Late pahse, between month 47 and 62.
 
-The length of the phases is biased to allow more similar sample sizes, which should allow similar power to find significant results.
-
 I will also subset the dataset to include only pools, and only females.
 
 ```{r}
