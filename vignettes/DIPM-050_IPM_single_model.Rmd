@@ -33,7 +33,7 @@ Here we define kernel parameters and initial population size.
 
 ```{r}
 # kernel parameters
-kp <- create.kernel.params(L=-200, U=200, n.bins = 200)
+kp <- create.kernel.params(L=-300, U=300, n.bins = 300)
 
 # initial population size
 pop0 <- makeInitPop(kp, 40, 4)
@@ -235,7 +235,7 @@ Here I use the paramteres just extracted to run the models at beginning, mid and
 
 ```{r}
 # defining uniform total time for simulations
-total_time = 36
+total_time = 48
 
 
 # running IPMs
