@@ -36,7 +36,7 @@ names(phases) <- unlist(singleModelIPMs$phase)
 # here I create a vector of paramters to be perturbed
 params <- c('s.int', 's.slo', 's.slo2',
             'r.int',  'r.slo', 
-            'f.int',  'f.slo',
+            'f.int',  'f.slo', 'r.multiplier',
             'p.stat.int.ad','p.stat.slo.ad', 
             'mu.mob.int.ad', 'sigma.mob.ad',
             'p.stat.int.nat','p.stat.slo.nat', 'p.stat.sloLand.nat', 'p.stat.sloInt.nat',
@@ -92,40 +92,40 @@ singleModelIPMs %>%
 Being warned of the possibly long runtime, I can move on to the simulations:
 
 ```{r}
-# start <- Sys.time()
-# for(I in 1:length(phases)){
-#   for(j in 1:length(params)){
-#     temp <- perturb(orig.IPM = phases[[I]], epsilon = 0.01, par = params[j])
-#     perturbationResults[, params[[j]], I] <- unlist(temp)
-#   }
-# }
-# 
-# # how long it actually took
-# Sys.time() - start
+start <- Sys.time()
+for(I in 1:length(phases)){
+  for(j in 1:length(params)){
+    temp <- perturb(orig.IPM = phases[[I]], epsilon = 0.01, par = params[j])
+    perturbationResults[, params[[j]], I] <- unlist(temp)
+  }
+}
+
+# how long it actually took
+Sys.time() - start
 ```
 
 Now, in the `perturbationResults` array we have stored absolute changes in the output parameters. A better indication on the effect of the perturbation would be to have a proportional change in the output parameters. We calculate this below.
 
 ```{r}
-# # turning absolute values for perturbation analyses into proportional ones
-# # first, I obtain the original values for speed, acceleration, lambda and final core population size:
-# singleModelIPMs <- singleModelIPMs %>%
-#   mutate(
-#     orig.output =   map(IPMs, function(x){
-#                                 speed = x[["speed"]]
-#                                 acceleration = x[["acceleration"]]
-#                                 lambda = sum(x[["pop.size"]][,x[["n.iterations"]]+1])/
-#                                   sum(x[["pop.size"]][,x[["n.iterations"]]])
-#                                 popCore = x[["pop.size"]][x[["kernel.params"]][["n.bins"]]/2,
-#                                       x[["n.iterations"]]+1]
-#                                 return = c(speed, acceleration, lambda, popCore)
-#                                 }
-#                         )
-#     )
-# 
-# for(i in 1:length(phases)){
-#   perturbationResults[,,i] <- perturbationResults[,,i]/singleModelIPMs$orig.output[[i]]
-# }
+# turning absolute values for perturbation analyses into proportional ones
+# first, I obtain the original values for speed, acceleration, lambda and final core population size:
+singleModelIPMs <- singleModelIPMs %>%
+  mutate(
+    orig.output =   map(IPMs, function(x){
+                                speed = x[["speed"]]
+                                acceleration = x[["acceleration"]]
+                                lambda = sum(x[["pop.size"]][,x[["n.iterations"]]+1])/
+                                  sum(x[["pop.size"]][,x[["n.iterations"]]])
+                                popCore = x[["pop.size"]][x[["kernel.params"]][["n.bins"]]/2,
+                                      x[["n.iterations"]]+1]
+                                return = c(speed, acceleration, lambda, popCore)
+                                }
+                        )
+    )
+
+for(i in 1:length(phases)){
+  perturbationResults[,,i] <- perturbationResults[,,i]/singleModelIPMs$orig.output[[i]]
+}
 ```
 
 ## Plotting
@@ -133,78 +133,79 @@ Now, in the `perturbationResults` array we have stored absolute changes in the o
 First, to have a different visual representation of the results from the three phase models, I will plot a comparison of the output variables.
 
 ```{r, fig.height = 6}
-# # extracting original parameters and reading them for plotting
-# outputs <- singleModelIPMs %>%
-#   select(orig.output) %>%
-#   pull() %>%
-#   unlist() %>%
-#   matrix(ncol = length(phases), nrow = length(output)) %>%
-#   t() %>%
-#   as.data.frame()
-# colnames(outputs) <- c('speed', 'acc', 'lambda', 'pop')
-# 
-# # plotting
-# par(mfrow = c(2,2))
-# # Lambda
-# plot(outputs$lambda, type='l', main='Lambda', xlim = c(0.7, 3.3), 
-#      xaxt = 'n', ylab = '', xlab = '', las = 1)
-# axis(1, at = 1:3, labels = c('Initial', 'Middle', 'End'), las=1)
-# points(outputs$lambda, col = Cols, pch=19, cex = 1.5)
-# text(1:3, outputs$lambda + 0.02, labels = round(as.numeric(outputs$lambda), 2), cex = 1)
-# mtext(expression(lambda), 2, line = 2.5, las = 1)
-# 
-# # Core population
-# plot(outputs$pop, type='l', main='Core population size', xaxt = 'n', ylab = '', xlim = c(0.7, 3.3), xlab = '', las = 1)
-# points(outputs$pop, col = Cols, pch=19, cex = 1.5)
-# text(1:3, outputs$pop + 4, labels = round(as.numeric(outputs$pop), 0), cex = 1)
-# axis(1, at = c(1,2,3), labels = c("Initial","Middle", "Late"), las=1)
-# mtext('N', 2, line = 2.5, las = 1)
-# 
-# # Speed
-# plot(outputs$speed, type='l', main='Speed at the front', xaxt = 'n', xlim = c(.7, 3.3), xlab = '', ylab = '')
-# points(outputs$speed, col = Cols, pch=19, cex = 1.5)
-# axis(1, at = c(1,2,3), labels = c("Init", 'Middle', 'End'), las=1)
-# text(1:3, outputs$speed + 2, labels = round(as.numeric(outputs$speed), 2), cex = 1)
-# mtext('m/month', 2, line = 2.5)
-# 
-# # Acceleration
-# plot(outputs$acc, type='l', main='Acceleration', xaxt = 'n', xlim = c(.7, 3.3), xlab = '', ylab = '')
-# axis(1, at = c(1,2,3), labels = c('Initial', 'Middle', 'End'), las=1)
-# points(outputs$acc, col = Cols, pch=19, cex = 1.5)
-# text(1:3, outputs$acc + 0.1, labels = round(as.numeric(outputs$acc), 2), cex = 1)
-# mtext(expression(m/month^2), 2, line = 2.5)
+# extracting original parameters and reading them for plotting
+outputs <- singleModelIPMs %>%
+  select(orig.output) %>%
+  pull() %>%
+  unlist() %>%
+  matrix(ncol = length(phases), nrow = length(output)) %>%
+  t() %>%
+  as.data.frame()
+colnames(outputs) <- c('speed', 'acc', 'lambda', 'pop')
+
+# plotting
+par(mfrow = c(2,2))
+# Lambda
+plot(outputs$lambda, type='l', main='Lambda', xlim = c(0.7, 3.3),
+     xaxt = 'n', ylab = '', xlab = '', las = 1)
+axis(1, at = 1:3, labels = c('Initial', 'Middle', 'End'), las=1)
+points(outputs$lambda, col = Cols, pch=19, cex = 1.5)
+text(1:3, outputs$lambda + 0.02, labels = round(as.numeric(outputs$lambda), 2), cex = 1)
+mtext(expression(lambda), 2, line = 2.5, las = 1)
+
+# Core population
+plot(outputs$pop, type='l', main='Core population size', xaxt = 'n', ylab = '', xlim = c(0.7, 3.3), xlab = '', las = 1)
+points(outputs$pop, col = Cols, pch=19, cex = 1.5)
+text(1:3, outputs$pop + 4, labels = round(as.numeric(outputs$pop), 0), cex = 1)
+axis(1, at = c(1,2,3), labels = c("Initial","Middle", "Late"), las=1)
+mtext('N', 2, line = 2.5, las = 1)
+
+# Speed
+plot(outputs$speed, type='l', main='Speed at the front', xaxt = 'n', xlim = c(.7, 3.3), xlab = '', ylab = '')
+points(outputs$speed, col = Cols, pch=19, cex = 1.5)
+axis(1, at = c(1,2,3), labels = c("Init", 'Middle', 'End'), las=1)
+text(1:3, outputs$speed + 2, labels = round(as.numeric(outputs$speed), 2), cex = 1)
+mtext('m/month', 2, line = 2.5)
+
+# Acceleration
+plot(outputs$acc, type='l', main='Acceleration', xaxt = 'n', xlim = c(.7, 3.3), xlab = '', ylab = '')
+axis(1, at = c(1,2,3), labels = c('Initial', 'Middle', 'End'), las=1)
+points(outputs$acc, col = Cols, pch=19, cex = 1.5)
+text(1:3, outputs$acc + 0.1, labels = round(as.numeric(outputs$acc), 2), cex = 1)
+mtext(expression(m/month^2), 2, line = 2.5)
 ```
 
 Now, I'll plot the results of the perturbation analyses. This will be represented as an horizontal barplot so that the relative effects could be comparable among the three relpicates.
 
 ```{r}
-# # For ease of plotting, handling the array t make it a single data.frame with outputs for columns and parameters for rows
-# 
-# pResults <- aperm(perturbationResults, perm = c(2,1,3))
-# pResults <- data.frame(apply(pResults, 2, c),
-#                        expand.grid(dimnames(perturbationResults)[c(2,3)]))
-# colnames(pResults)[(ncol(pResults)-1):ncol(pResults)] <- c("params", "phase")
-# 
-# # creating a vector of better names for parameteres
-# paramnames <- c('survival (int)', 'survival (slo)', 'survival (quad)',
-#             'repr p (int)',  'repr p (slo)', 
-#             'offspr n (int)',  'offspr n (slo)',
-#             'ad dispersal (int)','ad dispersal (slo)', 
-#             'ad distance (mean)', 'ad distance (sd)',
-#             'nat dispersal (int)','nat dispersal (slo)',
-#             'nat dispersal (landsc)', 'nat dispersal (loc x land)',
-#             'nat distance (mean)', 'nat distance (sd)')
-# 
-# ## plotting all outputs
-# for(i in output){
-#   p <- ggplot(data = pResults, aes_string(x = "params", y = i, fill = "phase")) +
-#   geom_bar(stat = "identity", width = 0.8, position = position_dodge()) + 
-#   scale_fill_manual(values = Cols) +
-#   theme_minimal()
-# print(p + theme(axis.text.x = element_text(angle = -45)) +
-#   scale_x_discrete(labels = paramnames) +
-#   ggtitle(as.character(i)))
-# }
+# For ease of plotting, handling the array t make it a single data.frame with outputs for columns and parameters for rows
+
+pResults <- aperm(perturbationResults, perm = c(2,1,3))
+pResults <- data.frame(apply(pResults, 2, c),
+                       expand.grid(dimnames(perturbationResults)[c(2,3)]))
+colnames(pResults)[(ncol(pResults)-1):ncol(pResults)] <- c("params", "phase")
+
+# creating a vector of better names for parameteres
+paramnames <- c('survival (int)', 'survival (slo)', 'survival (quad)',
+            'repr p (int)',  'repr p (slo)',
+            'offspr n (int)',  'offspr n (slo)',
+            'r multiplier',
+            'ad dispersal (int)','ad dispersal (slo)',
+            'ad distance (mean)', 'ad distance (sd)',
+            'nat dispersal (int)','nat dispersal (slo)',
+            'nat dispersal (landsc)', 'nat dispersal (loc x land)',
+            'nat distance (mean)', 'nat distance (sd)')
+
+## plotting all outputs
+for(i in output){
+  p <- ggplot(data = pResults, aes_string(x = "params", y = i, fill = "phase")) +
+  geom_bar(stat = "identity", width = 0.8, position = position_dodge()) +
+  scale_fill_manual(values = Cols) +
+  theme_minimal()
+print(p + theme(axis.text.x = element_text(angle = -45)) +
+  scale_x_discrete(labels = paramnames) +
+  ggtitle(as.character(i)))
+}
 ```
 
 ## Saving perturbation results
