@@ -150,13 +150,14 @@ plot(outputs$lambda, type='l', main='Lambda', xlim = c(0.7, 3.3),
      xaxt = 'n', ylab = '', xlab = '', las = 1)
 axis(1, at = 1:3, labels = c('Initial', 'Middle', 'End'), las=1)
 points(outputs$lambda, col = Cols, pch=19, cex = 1.5)
-text(1:3, outputs$lambda + 0.02, labels = round(as.numeric(outputs$lambda), 2), cex = 1)
+text(1:3 + 0.1, outputs$lambda, 
+     labels = round(as.numeric(outputs$lambda), 2), cex = 1)
 mtext(expression(lambda), 2, line = 2.5, las = 1)
 
 # Core population
 plot(outputs$pop, type='l', main='Core population size', xaxt = 'n', ylab = '', xlim = c(0.7, 3.3), xlab = '', las = 1)
 points(outputs$pop, col = Cols, pch=19, cex = 1.5)
-text(1:3, outputs$pop + 4, labels = round(as.numeric(outputs$pop), 0), cex = 1)
+text(1:3 + 0.1, outputs$pop, labels = round(as.numeric(outputs$pop), 0), cex = 1)
 axis(1, at = c(1,2,3), labels = c("Initial","Middle", "Late"), las=1)
 mtext('N', 2, line = 2.5, las = 1)
 
@@ -164,14 +165,14 @@ mtext('N', 2, line = 2.5, las = 1)
 plot(outputs$speed, type='l', main='Speed at the front', xaxt = 'n', xlim = c(.7, 3.3), xlab = '', ylab = '')
 points(outputs$speed, col = Cols, pch=19, cex = 1.5)
 axis(1, at = c(1,2,3), labels = c("Init", 'Middle', 'End'), las=1)
-text(1:3, outputs$speed + 2, labels = round(as.numeric(outputs$speed), 2), cex = 1)
+text(1:3 + 0.1, outputs$speed, labels = round(as.numeric(outputs$speed), 2), cex = 1)
 mtext('m/month', 2, line = 2.5)
 
 # Acceleration
 plot(outputs$acc, type='l', main='Acceleration', xaxt = 'n', xlim = c(.7, 3.3), xlab = '', ylab = '')
 axis(1, at = c(1,2,3), labels = c('Initial', 'Middle', 'End'), las=1)
 points(outputs$acc, col = Cols, pch=19, cex = 1.5)
-text(1:3, outputs$acc + 0.1, labels = round(as.numeric(outputs$acc), 2), cex = 1)
+text(1:3 + 0.1, outputs$acc, labels = round(as.numeric(outputs$acc), 2), cex = 1)
 mtext(expression(m/month^2), 2, line = 2.5)
 ```
 
