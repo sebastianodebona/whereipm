@@ -10,13 +10,10 @@ output:
     theme: lumen
 ---
 
-## Rationale and Setup
+## Setup
 
-Here I am performing perturbation analyses to estimate the relative effect of different parameters (and therefore biological processes, such as survival, reproduction, dispersal and their density-dependence) on the spread of the population.
-
-To perform a perturbation analyses on a non deterministic model (which is the case of our IPMs, given density-dependence is included) the parameters are adjusted by a small value, \code{\epsilon}, one at the time. The model is then run again, with all other paramters unperturbed, to obtain some output variables (e.g. long term population growth rate or speed of spread, in our case). A comparison between these output variables and those originated by the unperturbed model give a measure of the effect of the perturbed variable on the overall population dynamics. For more detail, see chapter XX of Ellner, Reese, Childs 2016. Data-driven modelling of structured populations.
-
-Below, I load packages, model outputs and stored vital parameters.
+Here I repeat the perturbation analyses described in the [previous vignette](DIPM-059_Perturbation_analyses_phases.html) for the single model IPMs.
+A lot of the analyses are simply copy pasted, with minor tweaks.
 
 ```{r}
 library(whereipm)
@@ -26,7 +23,7 @@ library(tidyverse)
 singleModelIPMs <- readRDS(file.path(here::here(), "results", "singleModelIPMs.rds"))
 ```
 
-And here I allocate space to store the results of the perturbation analyses, by creating an array.
+Here I allocate space to store the results of the perturbation analyses, by creating an array.
 
 ```{r}
 # here I create a list of IPM for different phases
@@ -62,7 +59,7 @@ str(perturbationResults)
 perturbationResults[,,1]
 ```
 
-I am also picking some colours for later plotting.
+Picking some colours for later plotting.
 
 ```{r}
 Cols <- wesanderson::wes_palette("Zissou1", 3, type = "continuous")[3:1]
