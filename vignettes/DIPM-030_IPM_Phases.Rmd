@@ -57,6 +57,10 @@ Models <- vitalRateModels %>%
 # Storing values into vital params list, divided into early, mid and late
 # given local density is scaled (but not centered) the estimates for the slope have to be transformed back to the non-scaled value.
 
+# The percentage to which the recruitment needs to be buffed is calculated 
+# in the 'Buffing Recruitment' vignette. Here I'll add the phase, specific proportions
+buff_recruit <- c(1.35, 1.17, 1.17)
+
 # Using a general loop to do so for the three phases:
 
 for(i in 1:dim(vitalRateModels)[1]){
@@ -85,7 +89,7 @@ for(i in 1:dim(vitalRateModels)[1]){
                           component == "zi",
                           term == "s_loc_density") %>%
                    pull(estimate))/scalingAttr$loc_density$scale,
-                 r.multiplier = 1.21,
+                 r.multiplier = buff_recruit[i],
                  f.int = Models$recruit[[i]]%>%
                    filter(effect == "fixed",
                           component == "cond",
