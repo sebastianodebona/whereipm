@@ -110,3 +110,22 @@ This can be done easily using the reproduction multiplier `r.multiplier` variabl
 One additional check we need is whether the mean estimated recruitment at the population level in the IPM model is close to the estimated average proportional recruitment of `r round(mean(pop_recruits$p_recruits, na.rm = T)*100, 1)` %.
 
 Yet another option is to check whether setting the recruitment rate in the model at a flat value correponding to the average proportonal recruitment can avoid extinction of the population.
+
+For the phase model, I can estimate the buff percentage per each phase, separately.
+
+```{r}
+# early.buff
+pop_recruits %>% filter(sampling >= 7, sampling <= 18) %>%
+  pull(buff_proportion) %>%
+  mean
+
+# mid buff
+pop_recruits %>% filter(sampling >= 29, sampling <= 40) %>%
+  pull(buff_proportion) %>%
+  mean
+
+#late buff
+pop_recruits %>% filter(sampling >= 51, sampling <= 62) %>%
+  pull(buff_proportion) %>%
+  mean
+```
