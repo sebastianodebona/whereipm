@@ -240,10 +240,12 @@ The results underline how the lack of enough reproduction leads the population t
 ### Storing results
 
 ```{r}
-# adding column with results of IPM runs
-vitalRateModels <- vitalRateModels %>%
-  add_column(list(IPM.early, IPM.mid, IPM.late))
+# creating a tibble to store IPM results
+phaseModelsIPMs <- tibble(phase = list("early", "mid", "late"),
+                          vital.params = list(vp.early, vp.mid, vp.late),
+                          IPMs = list(IPM.early, IPM.mid, IPM.late),
+                          timetorun = list(early.t, mid.t, late.t))
 
 # storing the updated tibble
-saveRDS(vitalRateModels, file = file.path(here::here(), "results", "vitalRateModels.rds"))
+saveRDS(phaseModelsIPMs, file = file.path(here::here(), "results", "phaseModelsIPMs.rds"))
 ```
