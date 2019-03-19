@@ -92,7 +92,7 @@ Being warned of the possibly long runtime, I can move on to the simulations:
 start <- Sys.time()
 for(I in 1:length(phases)){
   for(j in 1:length(params)){
-    temp <- perturb(orig.IPM = phases[[I]], epsilon = 0.10, par = params[j])
+    temp <- perturb(orig.IPM = phases[[I]], epsilon = 0.01, par = params[j])
     perturbationResults[, params[[j]], I] <- unlist(temp)
   }
 }
