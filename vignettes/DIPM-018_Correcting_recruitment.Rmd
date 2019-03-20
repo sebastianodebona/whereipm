@@ -12,6 +12,8 @@ output:
 
 In this vignette I want to compare the number of apparent recruits at each month (i.e. how many individuals have an assigned mother per month) with the actual number of recruits each month (i.e. how many new individuals are captured each month). Doing this will allow me to match the population level recruitment to the individual level one, by including a buff to the number of offpsring produced each month in the IPM model.
 
+I will also calculate the real population $\lambda$ during the three phases specified in the phase model (below, see [Vital rate models: phases](DIPM-020_Vital_rate_models.html)), and the average local population size in the central introduction pool during those months.
+
 Loading the data and packages necessary. I am here subsetting the data for females only, given the model is a model for females.
 
 ```{r}
@@ -22,7 +24,25 @@ library(tidyverse)
 data <- ipmdata %>%
   filter(sex == "F")
 str(data)
+
+# phases
+# I can define here the span of the phases so that the same span can
+# be changed only in one place
+early <- c(5, 16)
+mid <- c(27, 38)
+late <- c(49, 60)
+
+# key to define phases
+phases_table <- data.frame(sampling = 1:60,
+                           phases = c(rep(NA, min(early) - 1),
+                                      rep("early", diff(early) + 1),
+                                      rep(NA, min(mid) - max(early) -1),
+                                      rep("mid", diff(mid)+1),
+                                      rep(NA, min(late) - max(mid) - 1),
+                                      rep("late", diff(late) + 1)))
 ```
+
+## Accounting for individuals without pedigree
 
 I can check now how many individuals are present at the stream level per month, how many of them are new recuits and how many have assigned maternity.
 
@@ -115,17 +135,93 @@ For the phase model, I can estimate the buff percentage per each phase, separate
 
 ```{r}
 # early.buff
-pop_recruits %>% filter(sampling >= 7, sampling <= 18) %>%
+pop_recruits %>% filter(sampling >= min(early), sampling <= max(early)) %>%
   pull(buff_proportion) %>%
   mean
 
 # mid buff
-pop_recruits %>% filter(sampling >= 29, sampling <= 40) %>%
+pop_recruits %>% filter(sampling >= min(mid), sampling <= max(mid)) %>%
   pull(buff_proportion) %>%
   mean
 
 #late buff
-pop_recruits %>% filter(sampling >= 51, sampling <= 62) %>%
+pop_recruits %>% filter(sampling >= min(late), sampling <= max(late)) %>%
   pull(buff_proportion) %>%
   mean
+```
+
+## Calculating phase lambdas
+
+Here I will calculate the observed average population $\lambda$ in the three phases, as the average multiplication factor of population size among consecutive months.
+
+```{r}
+lambdas <- pop_size %>%
+  ungroup() %>%
+  mutate(n1 = lead(n),
+         l = n1/n) %>%
+  left_join(phases_table) %>%
+  filter(!is.na(phases)) %>%
+  group_by(phases) %>%
+  summarize(lambda = mean(l, na.rm = T)) %>%
+  print()
+```
+
+## Calculating average population sizes in intro pools
+
+The guppies were initially introduced in 2 pools, the top pool below the waterfall and a pool at the centre of the stream, at around 35 meters. 
+The first pool got frangmented into smaller interconnected pools, running from meter 0 to meter 9. The second pool shifted and got split into 2 pools. The bottom pool of the two is a large representative pool, so I will use that one for the calculations.
+Both pools (top and mid) were identified in the dataset by consistent `reach` numbers, respectively 1 and 3.
+
+```{r}
+## Calculating average population size and density in top pool
+# ranges assigned to top pool
+data %>%
+  filter(reach == 1) %>%
+  pull(reachId) %>%
+  unique
+
+top_pool <- data %>%
+  filter(reach == 1) %>%
+  group_by(sampling) %>%
+  summarise(n = n(),
+            upper_bound = min(upstream, na.rm = T),
+            lower_bound = max(downstream, na.rm = T)) %>%
+  mutate(pool_length = lower_bound - upper_bound,
+         pool_density = n/pool_length) %>%
+  add_column(pool = "top")
+
+
+## Same for mid pool now
+data %>%
+  filter(reach == 3) %>%
+  pull(reachId) %>%
+  unique
+
+mid_pool <- data %>%
+  filter(reach %in% c(3)) %>%
+  group_by(sampling) %>%
+  summarise(n = n(),
+            upper_bound = min(upstream, na.rm = T),
+            lower_bound = max(downstream, na.rm = T)) %>%
+  mutate(pool_length = lower_bound - upper_bound,
+         pool_density = n/pool_length) %>%
+  add_column(pool = "mid")
+
+# and I can merge the two, and include phase info
+refpool_info <- bind_rows(top_pool, mid_pool) %>%
+  left_join(phases_table)
+
+# I can now calculate average population size and length by phase and pool
+observation_summary <- refpool_info %>%
+  filter(!is.na(phases)) %>%
+  group_by(pool, phases) %>%
+  summarize(avg_n = mean(n, na.rm = T),
+            avg_l = mean(pool_length, na.rm = T)) %>%
+  left_join(lambdas) %>%
+  print()
+```
+
+## Saving
+```{r}
+saveRDS(observation_summary, file = file.path(here::here(), "results", "observation_summary.rds"))
 ```
