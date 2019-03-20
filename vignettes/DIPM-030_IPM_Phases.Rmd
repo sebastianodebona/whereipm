@@ -24,10 +24,11 @@ library(tidyverse)
 data <- ipmdata
 ```
 
-And the models previously run.
+And the models previously run and observation of population parameters.
 
 ```{r}
 vitalRateModels <- readRDS(file.path(here::here(), "results", "vitalRateModels.rds"))
+observation_summary <- readRDS(file.path(here::here(), "results", "observation_summary.rds"))
 ```
 
 ## Parameters and initial Population
@@ -37,8 +38,37 @@ Here we define kernel parameters and initial population size.
 ```{r}
 # kernel parameters
 kp <- create.kernel.params(L=-300, U=300, n.bins = 300)
-# initial population size
-pop0 <- makeInitPop(kp, 40, 4)
+
+# initial population size for all phases
+pop0.early <- makeInitPop(kp, 
+                          observation_summary%>%
+                            filter(phases == "early", pool == "top") %>%
+                            pull(avg_n) %>%
+                            round(),
+                          observation_summary%>%
+                            filter(phases == "early", pool == "top") %>%
+                            pull(avg_l) %>%
+                            round())
+
+pop0.mid <- makeInitPop(kp, 
+                          observation_summary%>%
+                            filter(phases == "mid", pool == "top") %>%
+                            pull(avg_n) %>%
+                            round(),
+                          observation_summary%>%
+                            filter(phases == "mid", pool == "top") %>%
+                            pull(avg_l) %>%
+                            round())
+
+pop0.late <- makeInitPop(kp, 
+                          observation_summary%>%
+                            filter(phases == "late", pool == "top") %>%
+                            pull(avg_n) %>%
+                            round(),
+                          observation_summary%>%
+                            filter(phases == "late", pool == "top") %>%
+                            pull(avg_l) %>%
+                            round())
 ```
 
 And we extract the vital rates parameters from the models fitted in the [Vital Rate Models: phases](DIPM-020_Vital_rate_models.html) vignette.
@@ -188,10 +218,10 @@ Now that all parameters are ready, I can run the Integral Projection models. Fir
 ### Visual checks
 
 ```{r, eval = F}
-test.init.kernel(kp, vp.early, pop0)
+test.init.kernel(kp, vp.early, pop0.early)
 ```
 ```{r, echo = F, fig.height=4, fig.width=8}
-K <- build.kernel(kp, vp.mid, pop.size = pop0, test=T,
+K <- build.kernel(kp, vp.mid, pop.size = pop0.early, test=T,
                   sk = "full", rk = "full", gk = "full", nk = "full")
   par(mfrow=c(2,4))
   image(t(K$S), main='survival')
@@ -210,19 +240,19 @@ Below, I run the 3 IPM simulations for the early, mid and late phase. The simula
 ```{r}
 # Early phase ipm
 start <- Sys.time()
-IPM.early <- runIPM(kp, vp.early, init.pop = pop0, niter=48)
+IPM.early <- runIPM(kp, vp.early, init.pop = pop0.early, niter=48)
 early.t <- Sys.time() - start
 print(early.t)
 
 # Mid phase ipm
 start <- Sys.time()
-IPM.mid <- runIPM(kp, vp.mid, init.pop = pop0, niter=48)
+IPM.mid <- runIPM(kp, vp.mid, init.pop = pop0.mid, niter=48)
 mid.t <- Sys.time() - start
 print(mid.t)
 
 # Late phase ipm
 start <- Sys.time()
-IPM.late <- runIPM(kp, vp.late, init.pop = pop0, niter=48)
+IPM.late <- runIPM(kp, vp.late, init.pop = pop0.late, niter=48)
 late.t <- Sys.time() - start
 print(late.t)
 
