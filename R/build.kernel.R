@@ -45,7 +45,14 @@ build.kernel <- function(kernel.params, vital.params, pop.size,
                                        bin.size = kernel.params$h)
   
   
-  # Survival kernel
+  # The construction of the kernel depends on the order at which events occur.
+  # Since all traits are density dependent, the previous life event (e.g. survival)
+  # that determines density, will affect the following event (e.g. reproduction).
+  # Here we assume individuals first survive, then reproduce, and then disperse (both adults 
+  # and newborn), but dispersal is only affected by the adults present and not the newborn 
+  # individuals (who have small impact on competition).
+  
+  # 1. Survival kernel
   if(sk == "1"){
     # "everyone survives"
     S <- diag(kernel.params$n.bins)
@@ -63,6 +70,39 @@ build.kernel <- function(kernel.params, vital.params, pop.size,
                  s.multiplier = vital.params$s.multiplier))
     }
     
+  
+  # Updating density after survival
+  # local
+  density_after_survival = density*diag(S)
+  # landscape
+  Land.density_after_survival = calculate_nb_density(local_density = density_after_survival,
+                                                     bin.size = kernel.params$h)
+  
+  # 2. Recruitment kernel
+  if(rk == "0"){
+    # no recruitment
+    R <- 0*diag(kernel.params$n.bins)
+    
+  } else if (rk == "small"){
+    # 1 recruited every 2 individuals
+    R <- 0.5*diag(kernel.params$n.bins)
+    
+  } else if (rk == "natural"){
+    # flat recruitment rate, equal to the average proportional recrtuiment rate
+    # observed in the population
+    R <- 0.15*diag(kernel.params$n.bins)  
+    
+  } else if (rk == "full"){
+    # full density-dependent recruitment based on vital parameters
+    R <- diag(rx(density = density_after_survival, 
+                 r.int = vital.params$r.int, 
+                 r.slo = vital.params$r.slo, 
+                 r.multiplier = vital.params$r.multiplier,
+                 f.distribution = vital.params$f.distribution,
+                 f.int = vital.params$f.int,
+                 f.slo = vital.params$f.slo))
+  }
+  
     
   # Movement kernel
   if(gk == "still"){
@@ -98,7 +138,8 @@ build.kernel <- function(kernel.params, vital.params, pop.size,
     
   } else if (gk == "full"){
     # density-dependent redistribution curves made of a compoud gaussian + mirrored lognormal, built from vital paramters
-    G <- mapply(gx_ln, x = kernel.params$y, density.x = density, Land.density.x = Land.density,
+    G <- mapply(gx_ln, x = kernel.params$y, density.x = density_after_survival,
+                Land.density.x = Land.density_after_survival,
                 MoreArgs = list(
                   meshpoints = kernel.params$b,
                   p.stat.int = vital.params$p.stat.int.ad,
@@ -110,34 +151,6 @@ build.kernel <- function(kernel.params, vital.params, pop.size,
                 ))
   }
   
-  
-  
-
-  # Recruitment kernel
-  if(rk == "0"){
-    # no recruitment
-    R <- 0*diag(kernel.params$n.bins)
-    
-  } else if (rk == "small"){
-    # 1 recruited every 2 individuals
-    R <- 0.5*diag(kernel.params$n.bins)
-    
-  } else if (rk == "natural"){
-    # flat recruitment rate, equal to the average proportional recrtuiment rate
-    # observed in the population
-    R <- 0.15*diag(kernel.params$n.bins)  
-    
-  } else if (rk == "full"){
-    # full density-dependent recruitment based on vital parameters
-    R <- diag(rx(density = density, 
-                 r.int = vital.params$r.int, 
-                 r.slo = vital.params$r.slo, 
-                 r.multiplier = vital.params$r.multiplier,
-                 f.distribution = vital.params$f.distribution,
-                 f.int = vital.params$f.int,
-                 f.slo = vital.params$f.slo))
-    }
- 
   
   # Recruited position kernel (natal dispersal)
   if(nk == "still"){
@@ -173,7 +186,8 @@ build.kernel <- function(kernel.params, vital.params, pop.size,
     
   } else if (nk == "full"){
     # density-dependent redistribution curves made of a compoud gaussian + mirrored lognormal, built from vital paramters
-    N <- mapply(gx_ln, x = kernel.params$y, density.x = density, Land.density.x = Land.density,
+    N <- mapply(gx_ln, x = kernel.params$y, density.x = density_after_survival,
+                Land.density.x = Land.density_after_survival,
                 MoreArgs = list(meshpoints = kernel.params$b,
                                 p.stat.int = vital.params$p.stat.int.nat,
                                 p.stat.slo = vital.params$p.stat.slo.nat,
