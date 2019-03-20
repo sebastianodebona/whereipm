@@ -229,22 +229,32 @@ I will here compare the estimate for survival probability derived from a CJS mod
 survival_estimates <- readRDS(file = file.path(here::here(), "results_tokeep", "female_survival_estimates_LL.rds"))
 
 # bringing time scale to sampling
+sampling = rep(c(1, 3, 5, 7), 8) + rep(12*0:7, each = 4)
+
 survival_estimates %<>%
   as.tibble() %>%
   add_column(time = rownames(survival_estimates),
-             sampling = 1:nrow(.))
+             sampling = sampling)
 
 # calculating mean observed survival
 S <- data %>%
   group_by(sampling) %>%
   summarise(avg_S = mean(survival, na.rm = T)) %>%
-  right_join(survival_estimates)
+  left_join(survival_estimates) %>%
+  filter(sampling <= 60)
 
 # plotting
-ggplot(S, aes(x = sampling)) +
-  geom_line(aes(y = avg_S, colour = "red")) + ylim(0,1) +
-  geom_line(aes(y = Sur.P, colour = "black")) +
-  geom_ribbon(aes(ymin = Sur.Plow, ymax = Sur.Pup), alpha = 0.3) +
+ggplot(S) +
+  geom_rect(aes(xmin = min(early), xmax = max(early), ymin = 0, ymax = 1), alpha = 0.01) +
+  annotate(geom = "text", label = "early", x = mean(early), y = 0.05) +
+  geom_rect(aes(xmin = min(mid), xmax = max(mid), ymin = 0, ymax = 1), alpha = 0.01) +
+  annotate(geom = "text", label = "mid", x = mean(mid), y = 0.05) + 
+  geom_rect(aes(xmin = min(late), xmax = max(late), ymin = 0, ymax = 1), alpha = 0.01) +
+  annotate(geom = "text", label = "late", x = mean(late), y = 0.05) +
+
+  geom_line(aes(x = sampling, y = avg_S, colour = "red")) + ylim(0,1) +
+  geom_point(aes(x = sampling, y = Sur.P, colour = "black")) +
+  geom_segment(aes(x = sampling, xend = sampling, y = Sur.Plow, yend = Sur.Pup), alpha = 0.3) +
   scale_colour_manual(name = 'survival', 
          values =c('black'='black','red'='red'), labels = c('estimated','observed'))
 ```
