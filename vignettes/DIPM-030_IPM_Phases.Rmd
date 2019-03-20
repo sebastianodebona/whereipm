@@ -59,7 +59,7 @@ Models <- vitalRateModels %>%
 
 # The percentage to which the recruitment needs to be buffed is calculated 
 # in the 'Buffing Recruitment' vignette. Here I'll add the phase, specific proportions
-buff_recruit <- c(1.35, 1.17, 1.17)
+buff_recruit <- c(1.32, 1.17, 1.15)
 
 # Using a general loop to do so for the three phases:
 
