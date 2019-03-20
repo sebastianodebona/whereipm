@@ -221,6 +221,34 @@ observation_summary <- refpool_info %>%
   print()
 ```
 
+## Comparing estimated survival to observed
+
+I will here compare the estimate for survival probability derived from a CJS model (data for LL, females only) with the mean observed survival at each time point from the IPMdata
+
+```{r}
+survival_estimates <- readRDS(file = file.path(here::here(), "results_tokeep", "female_survival_estimates_LL.rds"))
+
+# bringing time scale to sampling
+survival_estimates %<>%
+  as.tibble() %>%
+  add_column(time = rownames(survival_estimates),
+             sampling = 1:nrow(.))
+
+# calculating mean observed survival
+S <- data %>%
+  group_by(sampling) %>%
+  summarise(avg_S = mean(survival, na.rm = T)) %>%
+  right_join(survival_estimates)
+
+# plotting
+ggplot(S, aes(x = sampling)) +
+  geom_line(aes(y = avg_S, colour = "red")) + ylim(0,1) +
+  geom_line(aes(y = Sur.P, colour = "black")) +
+  geom_ribbon(aes(ymin = Sur.Plow, ymax = Sur.Pup), alpha = 0.3) +
+  scale_colour_manual(name = 'survival', 
+         values =c('black'='black','red'='red'), labels = c('estimated','observed'))
+```
+
 ## Saving
 ```{r}
 saveRDS(observation_summary, file = file.path(here::here(), "results", "observation_summary.rds"))
