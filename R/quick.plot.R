@@ -25,8 +25,10 @@ quick.plot <- function(IPM.model, legend){
   legend('topleft', legend = paste(
     paste("n = ", round(colSums(IPM.model$pop.size)[IPM.model$n.iterations+1]), sep = ""),
     paste("iter = ", IPM.model$n.iterations, sep = ""),
+    paste("lambda = ", round(colSums(IPM.model$pop.size)[IPM.model$n.iterations+1]/
+                                colSums(IPM.model$pop.size)[IPM.model$n.iterations], 3), sep = ""),
     sep = "\n"
-  ), bty = 'n')
+    ), bty = 'n')
   
   # plotting spread through time
   plot(IPM.model$pop.spread + 0.5, col='black', type = 'o', xlab = 'Time', ylab = 'spread')
