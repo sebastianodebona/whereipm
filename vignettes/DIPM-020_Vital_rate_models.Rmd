@@ -33,9 +33,9 @@ col.late <- wesanderson::wes_palette("Darjeeling1", 3)[3]
 
 To study how the evolution of dispersal and life-history affects the spatial ecology of the population we are splitting the 5 years of observation in 3 phases:
 
-1. Early phase, between month 7 and month 18;
-2. Mid phase, between month 29 and 40;
-3. Late pahse, between month 51 and 62.
+1. Early phase, between month 5 and month 16;
+2. Mid phase, between month 27 and 38;
+3. Late pahse, between month 29 and 60.
 
 I will also subset the dataset to include only pools, and only females.
 
@@ -44,11 +44,11 @@ I will also subset the dataset to include only pools, and only females.
 # Here I am considering only females since for males the number of offspring sired
 # is complicated by sperm storage in females.
 data.early <- data %>%
-  filter(sex == "F" & habitat=='P' & time>=7 & time<=18)
+  filter(sex == "F" & habitat=='P' & time>=5 & time<=16)
 data.mid <- data %>% 
-  filter(sex == "F" & habitat=='P' & time>=29 & time<=40)
+  filter(sex == "F" & habitat=='P' & time>=27 & time<=38)
 data.late <- data %>%
-  filter(sex == "F" & habitat=='P' & time>=51 & time<=62)
+  filter(sex == "F" & habitat=='P' & time>=49 & time<=60)
 ```
 
 ## Models
