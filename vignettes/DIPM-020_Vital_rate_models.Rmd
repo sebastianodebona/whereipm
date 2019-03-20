@@ -68,8 +68,8 @@ I will run 6 model trios, for different life-history and dispersal traits:
 # For survival, Local density is the only covariate.
 # Random effects include individual identity, reach and sampling.
 
-e.survival <- lme4::glmer(survival ~ 1 +
-                            + (1|FishID)  + (1|sampling),
+e.survival <- lme4::glmer(survival ~ s_loc_density +
+                            + (1|FishID)  + (s_loc_density|sampling),
                           data=data.early,
                           family=binomial,
                           lme4::glmerControl(optimizer=c('bobyqa')))
@@ -80,8 +80,8 @@ m.survival <- lme4::glmer(survival ~ s_loc_density +
                           family=binomial,
                           lme4::glmerControl(optimizer=c('bobyqa')))
 
-l.survival <- lme4::glmer(survival ~ 1 +
-                            + (1|FishID) + (1|sampling),
+l.survival <- lme4::glmer(survival ~ s_loc_density +
+                            + (1|FishID) + (s_loc_density|sampling),
                           data=data.late,
                           family=binomial,
                           lme4::glmerControl(optimizer=c('bobyqa')))
@@ -130,7 +130,7 @@ legend('bottomright', lty = 1, legend = c("early", "mid", "late"),
 
 e.recruit <- glmmTMB::glmmTMB(recruited ~ s_loc_density +
                                 + (1|FishID) + (1|reach) + (1|sampling),
-                              ziformula = ~ 1 +
+                              ziformula = ~ s_loc_density +
                                 + (1|FishID) +  (1|reach) + (1|sampling),
                               family="truncated_poisson"(link="log"),
                               data = data.early,
@@ -138,7 +138,7 @@ e.recruit <- glmmTMB::glmmTMB(recruited ~ s_loc_density +
 
 m.recruit <- glmmTMB::glmmTMB(recruited ~ s_loc_density +
                                 + (1|FishID) + (1|reach) + (1|sampling),
-                              ziformula = ~ 1 +
+                              ziformula = ~ s_loc_density +
                                 + (1|FishID) + (1|reach) + (1|sampling),
                               family="truncated_poisson"(link="log"),
                               data=data.mid,
@@ -146,7 +146,7 @@ m.recruit <- glmmTMB::glmmTMB(recruited ~ s_loc_density +
 
 l.recruit <- glmmTMB::glmmTMB(recruited ~ s_loc_density +
                                 + (1|FishID)+ (1|reach) + (1|sampling),
-                              ziformula = ~ 1 +
+                              ziformula = ~ s_loc_density +
                                 + (1|FishID)+ (1|reach) +  (1|sampling),
                               family="truncated_poisson"(link="log"),
                               data=data.late,
@@ -219,8 +219,8 @@ e.dispersal.p <- lme4::glmer(p_moving ~ s_loc_density +
                              data = data.early,
                              lme4::glmerControl(optimizer=c('bobyqa')))
 
-m.dispersal.p <- lme4::glmer(p_moving ~ 1 +
-                               + (1|FishID) + (1|reach) + (1|sampling),
+m.dispersal.p <- lme4::glmer(p_moving ~ s_loc_density +
+                               + (1|FishID) + (1|reach) + (s_loc_density|sampling),
                              family = 'binomial',
                              data = data.mid,
                              lme4::glmerControl(optimizer=c('bobyqa')))
@@ -325,13 +325,13 @@ e.natal.p <- lme4::glmer(p_natal ~ s_loc_density.mid*s_land_density.mid +
                          data = subset(data.early, mummoved == 0),
                          lme4::glmerControl(optimizer=c('bobyqa')))
 
-m.natal.p <- lme4::glmer(p_natal ~ 1 +
+m.natal.p <- lme4::glmer(p_natal ~ s_loc_density.mid*s_land_density.mid +
                            + (1|Maternity) + (1|reach.birth) + (s_loc_density.mid|sampling.birth),
                          family = 'binomial',
                          data = subset(data.mid, mummoved == 0),
                          lme4::glmerControl(optimizer=c('bobyqa')))
 
-l.natal.p <- lme4::glmer(p_natal ~ s_loc_density.mid +
+l.natal.p <- lme4::glmer(p_natal ~ s_loc_density.mid*s_land_density.mid +
                            + (1|Maternity) + (1|reach.birth) + (s_loc_density|sampling.birth),
                          family = 'binomial',
                          data = subset(data.late, mummoved == 0), 
