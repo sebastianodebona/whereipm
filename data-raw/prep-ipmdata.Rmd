@@ -75,7 +75,7 @@ data <- gmrdata %>% filter(stream == 'LL',
                            sex == "F")
 str(data)
 
-# One fish was captured several times in a month:
+# One fish was captured several times in the same month, twice:
 nrow(data)
 nrow(unique(data[, c("FishID", "sampling")]))
 x <- table(interaction(data$FishID, data$sampling))
@@ -83,6 +83,8 @@ x[which(x > 1)]
 # It is probably important to fix/remove this duplicate, because it results in
 # cascading duplications after the successive left_join() calls further down
 # this script.
+
+# case 1
 # it looks likely there was a typo during the form filling for one of these fish:
 as.data.frame(data %>% filter(FishID == "FLL-4V6K-1302" & sampling == 60))
 # We decide to remove the row for the capture from a riffle:
@@ -92,8 +94,15 @@ data <- data %>%
 # little consequence in the analysis since the entry occurs towards the end of
 # the study period for this project (2013-02)
 
+# case 2
+as.data.frame(data %>% filter(FishID == "FLL-4V6K-1302" & sampling == 61))
+# the same individual is again scored twice. I will remove one record.
+# this doesn't really matter since month 61 will be trimmed off for the analyses anyways
+data <- data %>%
+    filter(!(FishID == "FLL-4V6K-1302" & sampling == 61 & location == "P56-58L"))
+
 # At this stage the number of rows in the dataset is:
-NROW_CHECK <- nrow(data) # 26324 females
+NROW_CHECK <- nrow(data) # 27123 females
 # and this should not change during the rest of the script since we do only
 # left_join() operations to grow the dataset.
 
@@ -303,7 +312,7 @@ motherData <- data %>% filter(FishID %in% motherIDs) %>%
               reach_l.birth = reach_l)
 # We only want to add the mother's position once, in the row corresponding to
 # the first capture.
-# For that we introduce a new boolean variable, "isFirstCapture"
+# For that we introduce a new boolean variable, "isFirstCapture", for the merging
 motherData$isFirstCapture = TRUE
 data <- data %>% mutate(isFirstCapture = (sampling == firstCapture))
 
@@ -311,17 +320,38 @@ data <- data %>% mutate(isFirstCapture = (sampling == firstCapture))
 table(data$sex_stage[data$isFirstCapture])
 table(data$weight[data$isFirstCapture] > .150)
 table(data$SL[data$isFirstCapture] > 18)
+# On a second thought, these individuals, if not included, will not be accounted for in the model,
+# and this will deflate the number of new recruits. I think it's necessary to account them
+# and live with the fact that some "new recruits" will be rather large individuals.
+# this can be a problem if the "new recruits" are actually large individuals that are
+# recaptured after a while and are given a new mark. This might mess a little with natal dispersal,
+# since their position is not going to be an accurate representation of their natal dispersal many
+# months before. To avoid this, I will not account this individuals when evaluating natal dispersal
+# I will need to account for them when evaluating recruitment though. If this individuals are given
+# a new mark, this means they will be considered dead already. This means I need to have them
+# be born again, to avoid underestimating recruitment.
+# This process might underestimate survival a little and overestimate recruitment, but they should
+# break even to grant the simulated population in the model to be viable.
 
+# To mend the problem, and cope with what described above, I will create two variables:
+# - isFirstCapture, identifying if the individual's mark appears for the first time
+# and - isReallyNewRecruit, identifying those individuals that, being their first capture,
+#      are actually likely to have been new recruits.
 data <- data %>% 
-  mutate(isFirstCapture = (sampling == firstCapture &
+  mutate(isFirstCapture = (sampling == firstCapture),
+         isReallyNewRecruit = (sampling == firstCapture &
                              (weight <= .150 | is.na(weight)) &
                              (SL <= 18 | is.na(SL))
                            ))
+# I will now then need to substitute the 'isFirstCapture' variable from the motherData
+# with a 'isReallyNewRecruit' variable
+motherData <- motherData %>%
+  rename(isReallyNewRecruit = isFirstCapture)
 
 data[is.na(data$isFirstCapture), c('sampling', 'firstCapture', 'weight', 'SL')]
 
-# Now we are ready to merge, using c("Maternity", "sampling", "isFirstCapture")
-data <- data %>% left_join(motherData, by = c("sampling", "Maternity", "isFirstCapture"))
+# Now we are ready to merge, using c("Maternity", "sampling", "isReallyNewRecruit")
+data <- data %>% left_join(motherData, by = c("sampling", "Maternity", "isReallyNewRecruit"))
 
 # for someone to have a position at birth they have to have defined maternity
 # and for the mother to be caught two months before the first capture of the
