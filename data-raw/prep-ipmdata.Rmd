@@ -65,8 +65,13 @@ gmrdata <- read.csv(file.path(here::here(), 'data-raw', 'GuppyData_LL.csv'), hea
 # This is because, if I calculate local and landscape density here, for which
 # I run GLMM later, I will generate male-and-female-density specific resposnes,
 # which I won't be able to carry through in the IPM, since only females are accounted!!!
+
+# I am also trimming the dataset to be the SAME TIME LENGTH as the pedigree. 
+# NOTE!!! Later I will have to trim again the dataset, so that is 2 months SHORTER
+# thank the pedigree. This allows the last newborn with parentage information 
+# (which happen to be at month 62) to be attributed to their mother (at time 60).
 data <- gmrdata %>% filter(stream == 'LL',
-                           sampling <= max(pedigree$sampling) - 2,
+                           sampling <= max(pedigree$sampling),
                            sex == "F")
 str(data)
 
@@ -539,6 +544,10 @@ for(i in 1:nrow(data)){
 ```{r }
 # Last sanity check
 stopifnot(NROW_CHECK == nrow(data))
+
+# And trimming (as stated before) at 60 months
+data <- data %>%
+  filter(sampling <= max(pedigree$sampling) - 2)
 
 # Saving dataset in an R dataset format
 ipmdata = data
