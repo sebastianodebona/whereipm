@@ -28,12 +28,12 @@ str(data)
 # phases
 # I can define here the span of the phases so that the same span can
 # be changed only in one place
-early <- c(5, 16)
-mid <- c(27, 38)
-late <- c(49, 60)
+early <- c(4, 15)
+mid <- c(26, 37)
+late <- c(48, 59)
 
 # key to define phases
-phases_table <- data.frame(sampling = 1:60,
+phases_table <- data.frame(sampling = 1:59,
                            phases = c(rep(NA, min(early) - 1),
                                       rep("early", diff(early) + 1),
                                       rep(NA, min(mid) - max(early) -1),
@@ -50,74 +50,74 @@ I can check now how many individuals are present at the stream level per month, 
 # number of new recruits captured each month and number of recruits with assigned maternity each month
 pop_recruits <- data %>%
   group_by(sampling) %>%
-  summarize(recruits = sum(isFirstCapture),
-            assigned = sum(Maternity != "" & isFirstCapture, na.rm = T))
+  summarize(actual_recruits = sum(isFirstCapture),
+            pedigreed_recruits = sum(Maternity != "" & isFirstCapture, na.rm = T),
+            attributed_recruits = sum(recruited)) %>%
+  mutate(attributed_recruits = lag(attributed_recruits, 2))
+# I need to lag the attributed_recruits since they refer to who was captured 2 months after
 
 # population size (females only!)
 pop_size <- data %>%
   group_by(sampling) %>%
   count()
 
-# What is the mean proportional recruit at each month?
-# In order to do this I need to apply a lead to the number of recruits: 
-# the proportional number of recruits should be based on the population size
-# at the previous time step: n_recruits_t1/n_t0.
-pop_recruits <- pop_recruits %>%
-  mutate(next_recruits = lead(recruits),
-         next_assigned = lead(assigned))
-
+# What is the proportion of new recruits each month, and how does it break down into 
+# unassigned and unpedigreed?
 # merging to two to calculate proportions
 pop_recruits <- left_join(pop_recruits, pop_size) %>%
-  mutate(p_recruits = next_recruits/n,
-         p_assigned = next_assigned/n)
+  mutate(p_actual = actual_recruits/n,
+         p_pedigreed = pedigreed_recruits/n,
+         p_attributed = attributed_recruits/n)
 ```
 
 I am here plotting the numbers of captured, recruited and assigned individuals, to visualise the gap between actual recruits and apparent recruits. I will also plot proportional values (to the total population size).
 
 ```{r}
 # picking colours
-colz <- wesanderson::wes_palette("Royal1", 3, type = "discrete")
+colz <- wesanderson::wes_palette("Royal1", 4, type = "discrete")
 
 p <- ggplot(pop_recruits, aes(sampling)) + 
   geom_ribbon(aes(ymin=0, ymax=n), fill = colz[1]) +
-  geom_ribbon(aes(ymin=0, ymax=recruits), fill = colz[2]) +
-  geom_ribbon(aes(ymin=0, ymax=assigned), fill = colz[3])
+  geom_ribbon(aes(ymin=0, ymax=actual_recruits), fill = colz[2]) +
+  geom_ribbon(aes(ymin=0, ymax=pedigreed_recruits), fill = colz[3]) +
+  geom_ribbon(aes(ymin=0, ymax=attributed_recruits), fill = colz[4])
 
 q <- ggplot(pop_recruits, aes(sampling)) + 
   geom_ribbon(aes(ymin=0, ymax=1), fill = colz[1]) +
-  geom_ribbon(aes(ymin=0, ymax=p_recruits), fill = colz[2]) +
-  geom_ribbon(aes(ymin=0, ymax=p_assigned), fill = colz[3])
+  geom_ribbon(aes(ymin=0, ymax=p_actual), fill = colz[2]) +
+  geom_ribbon(aes(ymin=0, ymax=p_pedigreed), fill = colz[3]) +
+  geom_ribbon(aes(ymin=0, ymax=p_attributed), fill = colz[4])
 
 par(mfrow=c(2,1))
 p
 q
 ```
 
-Calculating what is the average proportional recruit (how many new recruits at the next time step per individual at thi time step) and proportion of recruits that do not have assigned maternity.
+The mean proportional recruit is `r mean(pop_recruits$p_actual)`
+
+Calculating, per each month, what is the proportion of new recruits that is not pedigreed or assigned to a mother.
 
 ```{r}
 # excluding datapoints where recruits are zero (to avoid dividing by zero)
 pop_recruits <- pop_recruits %>%
-  filter(next_recruits > 0) %>%
-  mutate(unass_recruits = 1 - next_assigned/next_recruits)
+  filter(sampling > 2) %>%
+  mutate(unped_recruits = 1 - pedigreed_recruits/actual_recruits,
+         unattr_recruits = 1 - attributed_recruits/actual_recruits)
 
-# average proportional recruit
-mean(pop_recruits$p_recruits, na.rm = T)
-
-# What is the mean proportion of new recruits that are unassigned?
-ggplot(pop_recruits, aes(y = unass_recruits, x = sampling)) + 
-  geom_line(col = colz[2])
-mean(pop_recruits$unass_recruits)
+# What is the mean proportion of new recruits that or unattributed?
+ggplot(pop_recruits, aes(x = sampling)) + 
+  geom_line(aes(y = unattr_recruits), col = colz[4])
+mean(pop_recruits$unattr_recruits)
 ```
 
-It appears 15% of the new recruites don't have assigned maternity. If we assume assigning an individual to a mother has nothing to do with density, time or how many offspring the mother already produced, we could easily fix the lack of recruits by buffing the estimated recruitment in the model.
+It appears `r round(mean(pop_recruits$unattr_recruits), 2)*100`% of the new recruites have not been assigned to a mother. If we assume assigning an individual to a mother has nothing to do with density, time or how many offspring the mother already produced, we could easily fix the lack of recruits by buffing the estimated recruitment in the model.
 
 In order to know by how much that should be buff, I need to see what is the ratio between unassigned recruits and assigned recruits. That proportion is how much the estimate from the unassigned recruits needs to be buffed.
 
 ```{r}
 # calculating the proportion for buffing
 pop_recruits <- pop_recruits %>%
-  mutate(buff_proportion = (next_recruits - next_assigned)/next_assigned)
+  mutate(buff_proportion = (actual_recruits - attributed_recruits)/attributed_recruits)
 
 ggplot(pop_recruits, aes(y = buff_proportion, x = sampling)) + 
   geom_line(col = colz[2])
@@ -149,6 +149,25 @@ pop_recruits %>% filter(sampling >= min(late), sampling <= max(late)) %>%
   pull(buff_proportion) %>%
   mean
 ```
+
+### Mother's perspective
+
+It's worth checking what is the average probability, per each month, of a mother being assigned any babies and if any, how many. This will help to compare the observed values with the results of the model. Also, note that the observed values here caluclated are without accounting for the recruits missing maternity data, so they should be, if anything, lower than the predictions from the model.
+
+```{r}
+ind_recruit <- data %>%
+  group_by(sampling) %>%
+  summarise(avg_repr = mean(as.numeric(recruited > 0)),
+            avg_recr = mean(recruited[recruited > 0]))
+
+ggplot(ind_recruit, aes(x = sampling, y = avg_repr)) +
+  geom_line() + ylim(0, 1) +
+  ggtitle("Average Reproduction")
+ggplot(ind_recruit, aes(x = sampling, y = avg_recr)) +
+  geom_line() +
+  ggtitle("Average n of Recruitment")
+```
+
 
 ## Calculating phase lambdas
 
