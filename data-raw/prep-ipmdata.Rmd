@@ -32,8 +32,10 @@ pedigree <- read.csv2(file.path(here::here(), 'data-raw', 'Pedigree.csv'), heade
     as.tibble()
 str(pedigree)
 # this file is structured according to marking and recapture forms from the field. The information is redundant. To solve this, I will only consider the marking form, reporting individuals at their first capture, and containing the informations on parents.
+# I will also subset females only
 pedigree <- pedigree %>%
-    filter(Form == Cohort)
+    filter(Form == Cohort,
+           str_sub(FishID, 1, 1) == "F")
 
 range(pedigree$Form) #checking how far in time this goes
 # I need to match the time specification of the MR dataset, which is by 'sampling'. Given that sampling starts from March 2008 and proceeds monthly, and that the form specification is the form YYMM, I can sort the Form here by numerical order, and assign increasing integers as sampling. 
@@ -50,6 +52,11 @@ pedigree$sampling <- match(pedigree$Form, sampling)
 pedigree$cohort_samp <- match(pedigree$Cohort, sampling)
 pedigree$last_samp <- match(pedigree$Last_Capture, sampling)
 pedigree$first_samp <- match(pedigree$First_capture, sampling)
+
+# There is no Maternity data for month 62, so I need to trim the dataset at month 61 - 2
+pedigree %>%
+  filter(sampling == 62) %>%
+  pull(Maternity)
 ```
 
 ### Loading the mark-recapture data
@@ -68,8 +75,8 @@ gmrdata <- read.csv(file.path(here::here(), 'data-raw', 'GuppyData_LL.csv'), hea
 
 # I am also trimming the dataset to be the SAME TIME LENGTH as the pedigree. 
 # NOTE!!! Later I will have to trim again the dataset, so that is 2 months SHORTER
-# thank the pedigree. This allows the last newborn with parentage information 
-# (which happen to be at month 62) to be attributed to their mother (at time 60).
+# thank the latest pedigree. This allows the last newborn with parentage information 
+# (which happen to be at month 61) to be attributed to their mother (at time 59).
 data <- gmrdata %>% filter(stream == 'LL',
                            sampling <= max(pedigree$sampling),
                            sex == "F")
@@ -577,7 +584,7 @@ stopifnot(NROW_CHECK == nrow(data))
 
 # And trimming (as stated before) at 60 months
 data <- data %>%
-  filter(sampling <= max(pedigree$sampling) - 2)
+  filter(sampling <= max(pedigree$sampling) - 3)
 
 # Saving dataset in an R dataset format
 ipmdata = data
