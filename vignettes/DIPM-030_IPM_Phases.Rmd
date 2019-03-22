@@ -89,7 +89,7 @@ Models <- vitalRateModels %>%
 
 # The percentage to which the recruitment needs to be buffed is calculated 
 # in the 'Buffing Recruitment' vignette. Here I'll add the phase, specific proportions
-buff_recruit <- c(1.32, 1.17, 1.15)
+buff_recruit <- c(2.10, 1.60, 1.90)
 
 # Using a general loop to do so for the three phases:
 
@@ -240,19 +240,19 @@ Below, I run the 3 IPM simulations for the early, mid and late phase. The simula
 ```{r}
 # Early phase ipm
 start <- Sys.time()
-IPM.early <- runIPM(kp, vp.early, init.pop = pop0.early, niter=48)
+IPM.early <- runIPM(kp, vp.early, init.pop = pop0.early, niter=24)
 early.t <- Sys.time() - start
 print(early.t)
 
 # Mid phase ipm
 start <- Sys.time()
-IPM.mid <- runIPM(kp, vp.mid, init.pop = pop0.mid, niter=48)
+IPM.mid <- runIPM(kp, vp.mid, init.pop = pop0.mid, niter=24)
 mid.t <- Sys.time() - start
 print(mid.t)
 
 # Late phase ipm
 start <- Sys.time()
-IPM.late <- runIPM(kp, vp.late, init.pop = pop0.late, niter=48)
+IPM.late <- runIPM(kp, vp.late, init.pop = pop0.late, niter=24)
 late.t <- Sys.time() - start
 print(late.t)
 
