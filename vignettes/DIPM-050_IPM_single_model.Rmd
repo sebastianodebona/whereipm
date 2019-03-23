@@ -106,7 +106,7 @@ for(i in pickedTimes){
                           component == "zi",
                           term == "s_time:s_loc_density") %>%
                    pull(estimate))*(i/(scalingAttr$loc_density$scale*scalingAttr$time$scale)), # time interaction
-                 r.multiplier = 1.21,
+                 r.multiplier = 1.75,
                 
                  f.int = Models$recruit[[1]]%>%
                    filter(effect == "fixed",
@@ -235,7 +235,7 @@ Here I use the paramteres just extracted to run the models at beginning, mid and
 
 ```{r}
 # defining uniform total time for simulations
-total_time = 48
+total_time = 24
 
 
 # running IPMs
