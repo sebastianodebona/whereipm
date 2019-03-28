@@ -11,7 +11,7 @@
 #' @param store.k Logic value describing whether the kernels at each iteration need to be saved and store in a list
 #'
 
-runIPM <- function(kernel.params, vital.params, init.pop, niter=10,
+runIPM <- function(kernel.params, vital.params, init.pop, niter=24,
                    sk = "full", rk = "full", gk = "full", nk = "full",
                    store.k=FALSE, ...){ 
   
@@ -19,8 +19,10 @@ runIPM <- function(kernel.params, vital.params, init.pop, niter=10,
   pop.size <- matrix(NA, nrow=kernel.params$n.bins, ncol=niter + 1)
   pop.size[,1] <- init.pop
   
-  pop.spread <- vector('numeric', niter + 1)
-  pop.spread[1] <- NA
+  pop.spread <- pioneers <- vector('numeric', niter + 1)
+  pop.spread[1] <- calculate_q_spread(init.pop, kernel.params)
+  pioneers[1] <- if(length(which(init.pop > 1*kernel.params$h)) == 0){NA} else {
+    kernel.params$y[max(which(init.pop > 1*kernel.params$h))]}
   
   #  allocating space for kernels, if specified
   if(store.k){
@@ -44,8 +46,9 @@ runIPM <- function(kernel.params, vital.params, init.pop, niter=10,
     # determining next population size by multiplying current kernel and current population size
     next.pop.size <- K%*%pop.size[,i]
     pop.size[,i+1] <- next.pop.size
-    pop.spread[i+1] <- if(length(which(next.pop.size > 1)) == 0){NA} else {
-      kernel.params$y[max(which(next.pop.size > 1))]}
+    pop.spread[i+1] <- calculate_q_spread(next.pop.size, kernel.params, q = 0.95)
+    pioneers[i+1] <- if(length(which(next.pop.size > 1*kernel.params$h)) == 0){NA} else {
+                          kernel.params$y[max(which(next.pop.size > 1*kernel.params$h))]}
   }
   
   # claculating speed, accelaration and population size at the introduction site at the end of the simulation
