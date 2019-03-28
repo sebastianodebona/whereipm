@@ -11,7 +11,7 @@
 #' @param store.k Logic value describing whether the kernels at each iteration need to be saved and store in a list
 #'
 
-runIPM <- function(kernel.params, vital.params, init.pop, niter=24,
+runIPM <- function(kernel.params, vital.params, init.pop, niter=10,
                    sk = "full", rk = "full", gk = "full", nk = "full",
                    store.k=FALSE, ...){ 
   
@@ -19,9 +19,9 @@ runIPM <- function(kernel.params, vital.params, init.pop, niter=24,
   pop.size <- matrix(NA, nrow=kernel.params$n.bins, ncol=niter + 1)
   pop.size[,1] <- init.pop
   
-  pop.spread <- pioneers <- vector('numeric', niter + 1)
+  pop.spread <- front <- vector('numeric', niter + 1)
   pop.spread[1] <- calculate_q_spread(init.pop, kernel.params)
-  pioneers[1] <- if(length(which(init.pop > 1*kernel.params$h)) == 0){NA} else {
+  front[1] <- if(length(which(init.pop > 1*kernel.params$h)) == 0){NA} else {
     kernel.params$y[max(which(init.pop > 1*kernel.params$h))]}
   
   #  allocating space for kernels, if specified
@@ -47,13 +47,16 @@ runIPM <- function(kernel.params, vital.params, init.pop, niter=24,
     next.pop.size <- K%*%pop.size[,i]
     pop.size[,i+1] <- next.pop.size
     pop.spread[i+1] <- calculate_q_spread(next.pop.size, kernel.params, q = 0.95)
-    pioneers[i+1] <- if(length(which(next.pop.size > 1*kernel.params$h)) == 0){NA} else {
+    front[i+1] <- if(length(which(next.pop.size > 1*kernel.params$h)) == 0){NA} else {
                           kernel.params$y[max(which(next.pop.size > 1*kernel.params$h))]}
   }
   
-  # claculating speed, accelaration and population size at the introduction site at the end of the simulation
-  speed <- pop.spread[niter+1] - pop.spread[niter]
+  # claculating speed at each time step, acceleration and lambda
+  speed <- (front[2:niter] - front[1:(niter-1)])/1
 
+  # acceleration
+  acceleration_avg <- mean((speed[2:(niter-1)] - speed[1:(niter - 2)])/1, na.rm = T)
+  acceleration_tot <- (speed[max(which(!is.na(speed)))] - speed[1])/max(which(!is.na(speed)))
   
   # running a linear model to estimate acceleration
   # I will run the model at two conditions:
@@ -63,19 +66,24 @@ runIPM <- function(kernel.params, vital.params, init.pop, niter=24,
   # https://stackoverflow.com/questions/4752275/test-for-equality-among-all-elements-of-a-single-vector
   
   if(is.na(speed)){
-    acceleration <- NA
-  } else if (zero_range(pop.spread)){
-    acceleration <- NA
+    acceleration_est <- NA
+  } else if (zero_range(front)){
+    acceleration_est <- NA
   } else {
     t <- 1:niter
-    acceleration <- summary(lm(pop.spread[-1] ~ t + I(t^2)))$coefficients['I(t^2)', 'Estimate']
+    acceleration_est <- summary(lm(front[-1] ~ t + I(t^2)))$coefficients['I(t^2)', 'Estimate']
   }
+  
+  acceleration = list(acceleration_avg,
+                      acceleration_tot,
+                      acceleration_est)
 
   
   if(store.k){
     
   return(list(pop.size=pop.size,
               pop.spread=pop.spread,
+              front = front,
               y=kernel.params$y,
               n.iterations=niter,
               kernel.params = kernel.params,
@@ -88,6 +96,7 @@ runIPM <- function(kernel.params, vital.params, init.pop, niter=24,
     
     return(list(pop.size = pop.size,
                 pop.spread = pop.spread,
+                front = front,
                 y = kernel.params$y,
                 n.iterations = niter,
                 kernel.params = kernel.params,
