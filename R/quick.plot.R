@@ -14,9 +14,9 @@ quick.plot <- function(IPM.model, legend){
   # storing original parameters
   op <- par()
   # setting new parameters
-  par(mfrow = c(3,2), mar = c(4,4,2,1), oma = c(2,2,2,2))
+  par(mfrow = c(3,2), mar = c(3,4,2,1), oma = c(2,2,0,2))
   # defining layout matrix
-  m <- matrix(data = c(1,1,2,1,1,3), nrow = 3)
+  m <- matrix(data = c(1,1,2,4,1,1,3,5), nrow = 4)
   layout(mat = m)
   
   # plotting population through space and time
@@ -25,17 +25,29 @@ quick.plot <- function(IPM.model, legend){
   legend('topleft', legend = paste(
     paste("n = ", round(colSums(IPM.model$pop.size)[IPM.model$n.iterations+1]), sep = ""),
     paste("iter = ", IPM.model$n.iterations, sep = ""),
-    paste("lambda = ", round(colSums(IPM.model$pop.size)[IPM.model$n.iterations+1]/
-                                colSums(IPM.model$pop.size)[IPM.model$n.iterations], 3), sep = ""),
+    paste("avg_lambda = ", round(IPM.model$lambda_avg, 3), sep = ""),
     sep = "\n"
     ), bty = 'n')
   
-  # plotting spread through time
-  plot(IPM.model$pop.spread + 0.5, col='black', type = 'o', xlab = 'Time', ylab = 'spread')
+  
   # plotting population growth through time
-  plot(colSums(IPM.model$pop.size), col='black', type = 'o', xlab = 'Time', ylab = 'population size')
+  plot(colSums(IPM.model$pop.size), col='black', type = 'o', xlab = '', 
+       ylab = "", main = 'population size')
+  # plotting lambda through time
+  plot(IPM.model$lambdas, col = "red", type = "o", xlab = "", 
+       ylab = "", main = "lambda")
+  # plotting spread through time
+  plot(IPM.model$pop.spread, col='black', type = 'o', xlab = '', 
+       ylab = "", main = 'spread of 95% of pop (m)')
+  title(xlab = "time", line = 2)
+  # plotting front behaviour
+  plot(IPM.model$front, col = 'black', type = 'o', xlab = "", 
+       ylab = "", main = "position of front (m)")
+  title(xlab = "time", line = 2)
+  
   
   # resetting graphic parameters
   suppressWarnings(par(op))
   
 }
+
