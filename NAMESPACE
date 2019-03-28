@@ -3,6 +3,7 @@
 export(averageHistory)
 export(build.kernel)
 export(calculate_nb_density)
+export(calculate_q_spread)
 export(create.kernel.params)
 export(draw.pop.distr)
 export(draw.pop.dyn)
