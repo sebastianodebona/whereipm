@@ -7,10 +7,11 @@
 #' @param orig.IPM Non-perturbed IPM result. Must contain population size array and population spread through time. Fitted IPM from \code{\link{runIPM}}.
 #' @param epsilon Proportional change to apply to the vital parameter of choice. The default is the inverse of the sensitivity of the Machine to the cube (based on Data-driven modelling of Structured Populations, page 219, Box 7.2)
 #' @param par Parameter to perturb.
-#' @return Produces a proportional change in the accelaration of spread, speed of spread at the end of the simulation, local population size at the origin at the end of the simulation, and lambda at the end of the simulation.
+#' @param outputs Defines which outputs are compared between original and perturbed IPMs.
+#' @return Produced the perturbed IPM and a list of proportional changes in the output variables, as resulting from the perturbation.
 #' 
 
-perturb <- function(orig.IPM, epsilon, par){
+perturb <- function(orig.IPM, epsilon, par, outputs){
   
   # extracting parameters to be identical to those of original IPM
   kernel.params <- orig.IPM$kernel.params
@@ -21,21 +22,20 @@ perturb <- function(orig.IPM, epsilon, par){
   # modifying the chosen parameter
   vital.params[[par]] <- vital.params[[par]] + epsilon*vital.params[[par]]
   
-  #running IPM
+  # running IPM
   perturb.IPM <- runIPM(kernel.params = kernel.params,
                         vital.params = vital.params,
                         init.pop = init.pop,
                         niter = niter)
   
-  # comparing final speed
-  delta.speed <- perturb.IPM$speed - orig.IPM$speed
-  delta.accelaration <- perturb.IPM$acceleration - orig.IPM$acceleration
-  delta.lambda <- sum(perturb.IPM$pop.size[,niter+1])/sum(perturb.IPM$pop.size[,niter]) - sum(orig.IPM$pop.size[,niter+1])/sum(orig.IPM$pop.size[,niter])
-  delta.pop <- perturb.IPM$pop.size[kernel.params$n.bins,niter+1] - orig.IPM$pop.size[kernel.params$n.bins,niter+1]
+  # creating a list to store relative deltas
+  deltas <- list()
+  # comparing output parameters
+  for(i in outputs){
+    deltas[[paste("delta", i, sep = ".")]] <- (perturb.IPM[[i]] - orig.IPM[[i]])/orig.IPM[[i]]
+  }
   
-  return(list(delta.speed = delta.speed,
-              delta.accelaration = delta.accelaration,
-              delta.lambda = delta.lambda,
-              delta.pop = delta.pop))
+  return(list(newIPM = perturb.IPM,
+              deltas = deltas))
   
 }
