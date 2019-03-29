@@ -71,13 +71,19 @@ runIPM <- function(kernel.params, vital.params, init.pop, niter=10,
     t <- 1:niter
     acceleration_est <- summary(lm(front[-1] ~ t + I(t^2)))$coefficients['I(t^2)', 'Estimate']
   }
-  acceleration = list(acceleration_avg,
-                      acceleration_tot,
-                      acceleration_est)
 
+  
   # lambdas
   lambdas <- colSums(pop.size)[2:niter]/colSums(pop.size)[1:(niter-1)]
   lambda_avg = mean(lambdas)
+  
+  # more outputs
+  final_pop_size = sum(pop.size[,niter+1])
+  final_max_density = max(pop.size[,niter+1])/kernel.params$h
+  final_front_position = front[niter + 1]
+  avg_front_speed = mean(speed, na.rm = T)
+  final_front_speed = speed[length(speed)]
+  initial_front_speed = speed[1]
   
   if(store.k){
     
@@ -89,22 +95,38 @@ runIPM <- function(kernel.params, vital.params, init.pop, niter=10,
               kernel.params = kernel.params,
               vital.params = vital.params,
               speed = speed,
-              acceleration = acceleration,
+              acceleration_tot = acceleration_tot,
+              acceleration_avg = acceleration_avg,
+              acceleration_est = acceleration_est,
+              final_pop_size = final_pop_size,
+              final_max_density = final_max_density,
+              final_front_position = final_front_position,
+              avg_front_speed = avg_front_speed,
+              final_front_speed = final_front_speed,
+              initial_front_speed = initial_front_speed,
               lambdas = lambdas,
               lambda_avg = lambda_avg,
               Kernels = K.list))  
     
   } else {
     
-    return(list(pop.size = pop.size,
-                pop.spread = pop.spread,
+    return(list(pop.size=pop.size,
+                pop.spread=pop.spread,
                 front = front,
-                y = kernel.params$y,
-                n.iterations = niter,
+                y=kernel.params$y,
+                n.iterations=niter,
                 kernel.params = kernel.params,
                 vital.params = vital.params,
                 speed = speed,
-                acceleration = acceleration,
+                acceleration_tot = acceleration_tot,
+                acceleration_avg = acceleration_avg,
+                acceleration_est = acceleration_est,
+                final_pop_size = final_pop_size,
+                final_max_density = final_max_density,
+                final_front_position = final_front_position,
+                avg_front_speed = avg_front_speed,
+                final_front_speed = final_front_speed,
+                initial_front_speed = initial_front_speed,
                 lambdas = lambdas,
                 lambda_avg = lambda_avg
                 ))
