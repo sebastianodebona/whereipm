@@ -37,7 +37,7 @@ Here we define kernel parameters and initial population size.
 
 ```{r}
 # kernel parameters
-kp <- create.kernel.params(L=-100, U=100, n.bins = 400)
+kp <- create.kernel.params(L=-200, U=200, n.bins = 200)
 
 # initial population size for all phases
 pop0.early <- makeInitPop(kp, 
@@ -89,7 +89,7 @@ Models <- vitalRateModels %>%
 
 # The percentage to which the recruitment needs to be buffed is calculated 
 # in the 'Buffing Recruitment' vignette. Here I'll add the phase, specific proportions
-buff_recruit <- c(2.7, 2.3, 2.6)
+buff_recruit <- c(2.72, 2.15, 2.7)
 
 # Using a general loop to do so for the three phases:
 
@@ -238,7 +238,7 @@ K <- build.kernel(kp, vp.mid, pop.size = pop0.early, test=T,
 Below, I run the 3 IPM simulations for the early, mid and late phase. The simulations are rather time consuming, so I will store them once run, in the results folder, as part of the tibble containing vital rate models.
 
 ```{r}
-run.time = 12
+run.time = 18
 
 # Early phase ipm
 start <- Sys.time()

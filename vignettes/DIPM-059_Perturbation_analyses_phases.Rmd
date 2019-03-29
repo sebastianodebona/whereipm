@@ -34,26 +34,36 @@ phases <- phasesIPMs$IPMs
 names(phases) <- unlist(phasesIPMs$phase)
 
 # here I create a vector of paramters to be perturbed
-params <- c('s.int', 's.slo', 's.slo2',
+params <- c('s.int', 's.slo',
             'r.int',  'r.slo', 
-            'f.int',  'f.slo', 'r.multiplier',
+            'f.int',  'f.slo',
             'p.stat.int.ad','p.stat.slo.ad', 
             'mu.mob.int.ad', 'sigma.mob.ad',
             'p.stat.int.nat','p.stat.slo.nat', 'p.stat.sloLand.nat', 'p.stat.sloInt.nat',
             'mu.mob.int.nat', 'sigma.mob.nat')
 
 # and a list of output variables
-output <- c('speed', 'acceleration', 'lambda', 'pop')
+# here I'll have a bunch of variables to evaluate the effect of perturbation on
+outputs <- c('lambda_avg',
+            'final_pop_size',
+            'final_max_density',
+            'final_front_position',
+            'avg_front_speed',
+            'final_front_speed',
+            'initial_front_speed',
+            'acceleration_est',
+            'acceleration_avg',
+            'acceleration_tot')
 # these variables should be in the same order the `perturb` function will provide as output.
 
 # the perturbation array will have output variables as rows,
 # perturbed parameters as columns and will store results from different 
 # IPM as a third dimension of the array.
 
-perturbationResults <- array(NA, dim = c(length(output),
+perturbationResults <- array(NA, dim = c(length(outputs),
                                          length(params),
                                          length(phases)),
-                             dimnames = list(output,
+                             dimnames = list(outputs,
                                              params,
                                              names(phases)))
 str(perturbationResults)
@@ -62,11 +72,20 @@ str(perturbationResults)
 perturbationResults[,,1]
 ```
 
-I am also picking some colours for later plotting.
+I will save each of the perturbed IPM in case they are needed later on. So here I will expand on the `phasesIPM` tibble, adding one column per perturbed parameter.
+
+```{r}
+perturbed_phasesIPMs <- phasesIPMs %>%
+  add_column(!!!set_names(as.list(rep(NA, length(params))),nm=params))
+```
+
+Finally, I am picking some colours for later plotting.
 
 ```{r}
 Cols <- wesanderson::wes_palette("Darjeeling1", 3, type = "discrete")
 ```
+
+
 
 ## Perturbations
 
@@ -95,8 +114,12 @@ Being warned of the possibly long runtime, I can move on to the simulations:
 start <- Sys.time()
 for(I in 1:length(phases)){
   for(j in 1:length(params)){
-    temp <- perturb(orig.IPM = phases[[I]], epsilon = 0.01, par = params[j])
-    perturbationResults[, params[[j]], I] <- unlist(temp)
+    temp <- perturb(orig.IPM = phases[[I]],
+                    epsilon = 0.01,
+                    par = params[j],
+                    outputs = outputs)
+    perturbationResults[, params[[j]], I] <- unlist(temp$deltas)
+    perturbed_phasesIPMs[I , params[j]] <- list(list(temp$newIPM))
   }
 }
 
@@ -104,50 +127,44 @@ for(I in 1:length(phases)){
 Sys.time() - start
 ```
 
-Now, in the `perturbationResults` array we have stored absolute changes in the output parameters. A better indication on the effect of the perturbation would be to have a proportional change in the output parameters. We calculate this below.
+Note that in the `perturbationResults` array we have stored *relative* changes in the output parameters.
 
 ```{r}
-# turning absolute values for perturbation analyses into proportional ones
-# first, I obtain the original values for speed, acceleration, lambda and final core population size:
+# obtaining the original values for output variables:
 phasesIPMs <- phasesIPMs %>%
   mutate(
     orig.output =   map(IPMs, function(x){
-                                speed = x[["speed"]]
-                                acceleration = x[["acceleration"]]
-                                lambda = sum(x[["pop.size"]][,x[["n.iterations"]]+1])/
-                                  sum(x[["pop.size"]][,x[["n.iterations"]]])
-                                popCore = x[["pop.size"]][x[["kernel.params"]][["n.bins"]]/2,
-                                      x[["n.iterations"]]+1]
-                                return = c(speed, acceleration, lambda, popCore)
-                                }
-                        )
-    )
-
-for(i in 1:length(phases)){
-  perturbationResults[,,i] <- perturbationResults[,,i]/phasesIPMs$orig.output[[i]]
-}
+      outs <- lapply(outputs, function(i){x[[i]]})
+      names(outs) = outputs
+      return(outs)
+      }
+      ))
 ```
 
 ```{r, fig.height = 6}
 # extracting original parameters and reading them for plotting
-outputs <- phasesIPMs %>%
+orig_outputs <- phasesIPMs %>%
   select(orig.output) %>%
   pull() %>%
   unlist() %>%
-  matrix(ncol = length(phases), nrow = length(output)) %>%
+  matrix(ncol = length(phases), nrow = length(outputs)) %>%
   t() %>%
   as.data.frame()
-colnames(outputs) <- c('speed', 'acc', 'lambda', 'pop')
+colnames(orig_outputs) <- outputs
+rownames(orig_outputs) <- names(phases)
+
+# checking
+orig_outputs
 
 # looping the plot
-par(mfrow = c(2,2))
-for(i in 1:dim(outputs)[2]){
-  plot(outputs[[i]], type='l', main=colnames(outputs)[i], xlim = c(0.7, 3.3),
+par(mfrow = c(round(length(outputs)/2), 2))
+for(i in 1:dim(orig_outputs)[2]){
+  plot(orig_outputs[[i]], type='l', main = colnames(orig_outputs)[i], xlim = c(0.7, 3.3),
      xaxt = 'n', ylab = '', xlab = '', las = 1)
   axis(1, at = 1:3, labels = c('Initial', 'Middle', 'End'), las=1)
-  points(outputs[[i]], col = Cols, pch=19, cex = 1.5)
-  text(1:3 + 0.1, outputs[[i]], 
-     labels = round(as.numeric(outputs[[i]]), 2), cex = 1)
+  points(orig_outputs[[i]], col = Cols, pch=19, cex = 1.5)
+  text(1:3 + 0.1, orig_outputs[[i]], 
+     labels = round(as.numeric(orig_outputs[[i]]), 2), cex = 1)
 }
 ```
 
@@ -162,18 +179,22 @@ pResults <- data.frame(apply(pResults, 2, c),
 colnames(pResults)[(ncol(pResults)-1):ncol(pResults)] <- c("params", "phase")
 
 # creating a vector of better names for parameteres
-paramnames <- c('survival (int)', 'survival (slo)', 'survival (quad)',
+paramnames <- c('survival (int)', 'survival (slo)',
             'repr p (int)',  'repr p (slo)',
             'offspr n (int)',  'offspr n (slo)',
-            'r multiplier',
             'ad dispersal (int)','ad dispersal (slo)',
             'ad distance (mean)', 'ad distance (sd)',
             'nat dispersal (int)','nat dispersal (slo)',
             'nat dispersal (landsc)', 'nat dispersal (loc x land)',
             'nat distance (mean)', 'nat distance (sd)')
 
+# checking the length of parameters and parameter names is the same
+# checking also identity
+stopifnot(length(params) == length(paramnames))
+cbind(params, paramnames)
+
 ## plotting all outputs
-for(i in output){
+for(i in outputs){
   p <- ggplot(data = pResults, aes_string(x = "params", y = i, fill = "phase")) +
   geom_bar(stat = "identity", width = 0.8, position = position_dodge()) +
   scale_fill_manual(values = Cols) +
@@ -188,5 +209,8 @@ print(p + theme(axis.text.x = element_text(angle = 0)) +
 ## Saving perturbation results
 
 ```{r}
-saveRDS(perturbationResults, file = file.path(here::here(), "results", "perturbation_result_phase_models.rds"))
+saveRDS(perturbationResults, file = file.path(here::here(), "results",
+                                              "perturbation_result_phase_models.rds"))
+saveRDS(perturbed_phasesIPMs, file = file.path(here::here(), "results",
+                                               "perturbed_IPMs_phase_models.rds"))
 ```
