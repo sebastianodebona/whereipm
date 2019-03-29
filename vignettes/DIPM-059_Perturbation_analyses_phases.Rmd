@@ -141,7 +141,7 @@ phasesIPMs <- phasesIPMs %>%
       ))
 ```
 
-```{r, fig.height = 6}
+```{r, fig.height = 15}
 # extracting original parameters and reading them for plotting
 orig_outputs <- phasesIPMs %>%
   select(orig.output) %>%
