@@ -46,6 +46,8 @@ navbar:
           href: articles/DIPM-030_IPM_Phases.html
         - text: "Perturbation analyses: phase models"
           href: articles/DIPM-059_Perturbation_analyses_phases.html
+        - text: "Perturbation analyses: long run"
+          href: articles/DIPM-061_Perturbation_analyses_long_run.html
         - text: -------------------------------------
         - text: "Analyses: Single Model"
         - text: -------------------------------------
