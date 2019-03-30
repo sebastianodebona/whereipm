@@ -12,7 +12,7 @@ output:
 
 ## Description
 
-This vignette reports the results of another perturbation analyses, *not* run in the previous vignettes, which was built on the same models as in [Single VR Model](DIPM-040_Single_vr_model.html), but where the IPM was run with limits from -500 to 500, with increments of 1 (`n. bins = 1000`), and for 36 months. This perturbation is too time consuming (~ 3h) to be rendered as a vignette efficiently. I will run here the IPMs with these kernel specifications and number of iterations, but will then load the results of the perturbation analyses stored in the folder `results_tokeep`.
+This vignette reports the results of a longer perturbation analyses (*not* that ran in the previous vignette). This was built on the same vital rate models as in [Single VR Model](DIPM-020_Vital_rate_models.html), but where the IPM was run with limits from -200 to +200, with increments of 0.2 m (`n. bins = 2000`), and for 12 months. This perturbation is time consuming (~ 4h) to be rendered as a vignette efficiently. I will here load the results of the perturbation analyses stored in the folder `results_tokeep`.
 
 ## Setup
 
@@ -23,253 +23,17 @@ Loading data, packages, and models.
 library(whereipm)
 library(tidyverse)
 
-# data
-data <- ipmdata %>%
-  filter(sex == "F", habitat == "P")
 
-# models
-singleVRModels <- readRDS(file.path(here::here(), "results", "singleVRModels.rds"))
+# IPM models
+phasesIPMs <- readRDS(file.path(here::here(), "results_tokeep", "K2000x12_20190330",
+                                "phaseModelsIPMs_K2000x12.rds"))
+perturbationResults <- readRDS(file.path(here::here(), "results_tokeep", "K2000x12_20190330",
+                                         "perturbation_result_phase_models_K2000x12.rds"))
+# extracting output list
+outputs <- rownames(perturbationResults)
 
 # colors
-Cols <- wesanderson::wes_palette("Zissou1", 3, type = "continuous")[3:1]
-```
-
-### Parameters and initial Population
-
-Here we define kernel parameters and initial population size;
-
-```{r}
-# kernel parameters
-kp <- create.kernel.params(L=-500, U=500, n.bins = 1000)
-# initial population size
-pop0 <- c(rep(0, kp$n.bins/2-2), rep(5,3), rep(0, kp$n.bins/2-1))
-```
-
-and here, the vital rate parameters;
-
-```{r, results = "asis"}
-# First I need to extract the info in the model to make it easier to handle
-Models <- singleVRModels %>%
-  transmute(
-    survival = map(survival, broom::tidy),
-    recruit = map(recruitment, broom.mixed::tidy),
-    adDispersal = map(adDispersal, broom::tidy),
-    adDistance = map(adDistance, broom::tidy),
-    natDispersal = map(natDispersal, broom::tidy),
-    natDistance = map(natDistance, broom::tidy))
-
-# Storing values into 3 vital params lists, at different time points (start, mid, end)
-# given local density is scaled (but not centered) the estimates for the slope have to be transformed back to the non-scaled value.
-
-# Using a general loop to do so for the three phases:
-
-pickedTimes <- c(0, 30, 60)
-for(i in pickedTimes){
-
-  temp.vp <- list(# Survival
-                 s.int = (Models$survival[[1]]%>%
-                   filter(term == "(Intercept)") %>%
-                   pull(estimate)) + # true intercept
-                   returnIfExists(Models$survival[[1]]%>%
-                   filter(term == "s_time") %>%
-                   pull(estimate))*(i/scalingAttr$time$scale), # time intercept
-                 s.slo = (Models$survival[[1]]%>%
-                   filter(term == "s_loc_density") %>%
-                   pull(estimate))/scalingAttr$loc_density$scale + # true slope
-                   returnIfExists(Models$survival[[1]]%>%
-                   filter(term == "s_time:s_loc_density") %>%
-                   pull(estimate))*(i/(scalingAttr$time$scale*scalingAttr$loc_density$scale)), # time contribution,
-                 s.slo2 = returnIfExists(Models$survival[[1]]%>%
-                   filter(term == "I(s_loc_density^2)") %>%
-                   pull(estimate))/scalingAttr$loc_density$scale + # quadratic effect
-                   returnIfExists(Models$survival[[1]]%>%
-                   filter(term == "s_time:I(s_loc_density^2)") %>%
-                   pull(estimate))*(i/(scalingAttr$loc_density$scale*scalingAttr$time$scale)),
-                 s.multiplier = 1,
-                 
-                # Recruitment
-                 r.int = Models$recruit[[1]]%>%
-                   filter(effect == "fixed",
-                          component == "zi",
-                          term == "(Intercept)") %>%
-                   pull(estimate) + # true intercept
-                  returnIfExists(Models$recruit[[1]]%>%
-                   filter(effect == "fixed",
-                          component == "zi",
-                          term == "s_time") %>%
-                   pull(estimate))*(i/scalingAttr$time$scale), # time intercept 
-                 r.slo = (Models$recruit[[1]]%>%
-                   filter(effect == "fixed",
-                          component == "zi",
-                          term == "s_loc_density") %>%
-                   pull(estimate))/scalingAttr$loc_density$scale + # true slope
-                  returnIfExists(Models$recruit[[1]]%>%
-                   filter(effect == "fixed",
-                          component == "zi",
-                          term == "s_time:s_loc_density") %>%
-                   pull(estimate))*(i/(scalingAttr$loc_density$scale*scalingAttr$time$scale)), # time interaction
-                 r.multiplier = 1,
-                
-                 f.int = Models$recruit[[1]]%>%
-                   filter(effect == "fixed",
-                          component == "cond",
-                          term == "(Intercept)") %>%
-                   pull(estimate) +                        # true intercept
-                  returnIfExists(Models$recruit[[1]]%>%
-                   filter(effect == "fixed",
-                          component == "cond",
-                          term == "s_time") %>%
-                   pull(estimate))*(i/scalingAttr$time$scale), # time intercept
-                 f.slo = (Models$recruit[[1]]%>%
-                   filter(effect == "fixed",
-                          component == "cond",
-                          term == "s_loc_density") %>%
-                   pull(estimate))/scalingAttr$loc_density$scale + # true slope
-                  returnIfExists(Models$recruit[[1]]%>%
-                   filter(effect == "fixed",
-                          component == "cond",
-                          term == "s_time:s_loc_density") %>%
-                   pull(estimate))*(i/(scalingAttr$time$scale*scalingAttr$loc_density$scale)), # time interaction
-                 f.distribution = 'ztpoisson',
-                 
-                # Adult dispersal
-                 p.stat.int.ad = Models$adDispersal[[1]]%>%
-                   filter(effect == "fixed",
-                          term == "(Intercept)") %>%
-                   pull(estimate) + # true intercept
-                  returnIfExists(Models$adDispersal[[1]]%>%
-                   filter(effect == "fixed",
-                          term == "s_time") %>%
-                   pull(estimate))*(i/scalingAttr$time$scale), # time intercept
-                 p.stat.slo.ad = (Models$adDispersal[[1]]%>%
-                   filter(effect == "fixed",
-                          term == "s_loc_density") %>%
-                   pull(estimate))/scalingAttr$loc_density$scale + # true slope
-                  returnIfExists(Models$adDispersal[[1]]%>%
-                   filter(effect == "fixed",
-                          term == "s_time:s_loc_density") %>%
-                   pull(estimate))*(i/(scalingAttr$loc_density$scale*scalingAttr$time$scale)), # time interaction
-                 sigma.stat.ad = 0.25, 
-                 mu.mob.int.ad = Models$adDistance[[1]]%>%
-                   filter(effect == "fixed",
-                          term == "(Intercept)") %>%
-                   pull(estimate) + # true intercept
-                  returnIfExists(Models$adDistance[[1]]%>%
-                   filter(effect == "fixed",
-                          term == "s_time") %>%
-                   pull(estimate))*(i/scalingAttr$time$scale), #time intercept
-                 mu.mob.slo.ad = returnIfExists(Models$adDistance[[1]]%>%
-                   filter(effect == "fixed",
-                          term == "s_loc_density") %>%
-                   pull(estimate))/scalingAttr$loc_density$scale,
-                 sigma.mob.ad = Models$adDistance[[1]]%>%
-                   filter(effect == "ran_pars") %>%
-                   pull(estimate) %>%
-                   sum %>%
-                   sqrt,
-                 
-                # Natal dispersal
-                 p.stat.int.nat = Models$natDispersal[[1]]%>%
-                   filter(effect == "fixed",
-                          term == "(Intercept)") %>%
-                   pull(estimate) +                       # true intercept
-                  returnIfExists(Models$natDispersal[[1]]%>%
-                   filter(effect == "fixed",
-                          term == "s_time.birth") %>%
-                   pull(estimate))*(i/scalingAttr$time$scale),   # time intercept
-                 p.stat.slo.nat = (Models$natDispersal[[1]]%>%
-                   filter(effect == "fixed",
-                          term == "s_loc_density.mid") %>%
-                   pull(estimate))/scalingAttr$loc_density$scale,
-                 p.stat.sloLand.nat = returnIfExists(Models$natDispersal[[1]]%>%
-                   filter(effect == "fixed",
-                          term == "s_land_density.mid") %>%
-                   pull(estimate))/scalingAttr$land_density$scale,
-                 p.stat.sloInt.nat = returnIfExists(Models$natDispersal[[1]]%>%
-                   filter(effect == "fixed",
-                          term == "s_loc_density.mid:s_land_density.mid") %>%
-                   pull(estimate))/(scalingAttr$loc_density$scale*scalingAttr$land_density$scale),
-                 sigma.stat.nat = 0.25, 
-                 mu.mob.int.nat = Models$natDistance[[1]]%>%
-                   filter(effect == "fixed",
-                          term == "(Intercept)") %>%
-                   pull(estimate) +                           # true intercept
-                  returnIfExists(Models$natDistance[[1]]%>%
-                   filter(effect == "fixed",
-                          term == "s_time.birth") %>%
-                   pull(estimate))*(i/scalingAttr$time$scale), # time intercept
-                 mu.mob.slo.nat = returnIfExists(Models$natDistance[[1]]%>%
-                   filter(effect == "fixed",
-                          term == "s_loc_density.mid") %>%
-                   pull(estimate))/scalingAttr$loc_density$scale,
-                 mu.mob.sloLand.nat = returnIfExists(Models$natDistance[[1]]%>%
-                   filter(effect == "fixed",
-                          term == "s_land_density.mid") %>%
-                   pull(estimate))/scalingAttr$land_density$scale,
-                 mu.mob.sloInt.nat = returnIfExists(Models$natDistance[[1]]%>%
-                   filter(effect == "fixed",
-                          term == "s_loc_density.mid:s_land_density.mid") %>%
-                   pull(estimate))/(scalingAttr$loc_density$scale*scalingAttr$land_density$scale),
-                 sigma.mob.nat = Models$natDistance[[1]]%>%
-                   filter(effect == "ran_pars") %>%
-                   pull(estimate) %>%
-                   sum %>%
-                   sqrt)
- 
-  ### there should be no empty values. let's check
-  stopifnot(all(lapply(temp.vp, function(x)length(x)==0)==FALSE))
-  
-  # renaming list
-  assign(paste("vp.t", i, sep = ""), temp.vp)
-}
-```
-
-The parameters stored here are the same as in IPM: single model, so they can be visualised [here](DIPM-050_IPM_single_model.html).
-
-## Running IPMs
-
-The run time here is 36 months.
-
-```{r}
-# running IPM
-start <- Sys.time()
-IPM.init <- runIPM(kp, vp.t0, init.pop = pop0, niter=36)
-init.t <- Sys.time() - start
-print(init.t)
-
-start <- Sys.time()
-IPM.middle <- runIPM(kp, vp.t30, init.pop = pop0, niter=36)
-middle.t <- Sys.time() - start
-print(middle.t)
-
-start <- Sys.time()
-IPM.end <- runIPM(kp, vp.t60, init.pop = pop0, niter=36)
-end.t <- Sys.time() - start
-print(end.t)
-```
-
-To make life easier later, I store here the models in a tibble, and obtain the output variables from these IPMs.
-
-```{r}
-# collecting all model outputs in a tibble
-singleModelIPMs_long <- tibble(phase = list("init", "middle", "end"),
-                          vital.params = list(vp.t0, vp.t30, vp.t60),
-                          IPMs = list(IPM.init, IPM.middle, IPM.end),
-                          timetorun = list(init.t, middle.t, end.t))
-
-singleModelIPMs_long <- singleModelIPMs_long %>%
-  mutate(
-    orig.output =   map(IPMs, function(x){
-                                speed = x[["speed"]]
-                                acceleration = x[["acceleration"]]
-                                lambda = sum(x[["pop.size"]][,x[["n.iterations"]]+1])/
-                                  sum(x[["pop.size"]][,x[["n.iterations"]]])
-                                popCore = x[["pop.size"]][x[["kernel.params"]][["n.bins"]]/2,
-                                      x[["n.iterations"]]+1]
-                                return = c(speed, acceleration, lambda, popCore)
-                                }
-                        )
-    )
+Cols <- wesanderson::wes_palette("Darjeeling1", 3, type = "discrete")
 ```
 
 ## Plotting
@@ -277,85 +41,70 @@ singleModelIPMs_long <- singleModelIPMs_long %>%
 ### IPM results
 
 ```{r}
-plotly::plot_ly(x=1:ncol(IPM.init$pop.size), 
-                y=rev(kp$y), 
-                z=IPM.init$pop.size, 
+# Early phase
+plotly::plot_ly(x=1:ncol(phasesIPMs$IPMs[[1]]$pop.size), 
+                y=rev(phasesIPMs$IPMs[[1]]$kernel.params$y), 
+                z=phasesIPMs$IPMs[[1]]$pop.size, 
                 type="contour", 
-                colorscale = 'Jet', # or use colors = with RColorBrewer values
-                autocontour = F,
-                contours = list(start = 0, 
-                                end = 28,
-                                size = 2))
-plotly::plot_ly(x=1:ncol(IPM.middle$pop.size),
-                y=rev(kp$y),
-                z=IPM.middle$pop.size,
-                type="contour", colorscale = 'Jet',
-                autocontour = F,
-                contours = list(start = 0, 
-                                end = 28,
-                                size = 2))
-plotly::plot_ly(x=1:ncol(IPM.end$pop.size),
-                y=rev(kp$y),
-                z=IPM.end$pop.size,
-                type="contour", colorscale = 'Jet',
-                autocontour = F,
-                contours = list(start = 0, 
-                                end = 28,
-                                size = 2))
+                colorscale = 'Jet')
+# Mid phase
+plotly::plot_ly(x=1:ncol(phasesIPMs$IPMs[[2]]$pop.size), 
+                y=rev(phasesIPMs$IPMs[[2]]$kernel.params$y), 
+                z=phasesIPMs$IPMs[[2]]$pop.size, 
+                type="contour", 
+                colorscale = 'Jet')
+# Late phase
+plotly::plot_ly(x=1:ncol(phasesIPMs$IPMs[[3]]$pop.size), 
+                y=rev(phasesIPMs$IPMs[[3]]$kernel.params$y), 
+                z=phasesIPMs$IPMs[[3]]$pop.size, 
+                type="contour", 
+                colorscale = 'Jet')
 
-quick.plot(IPM.init, "Init")
-quick.plot(IPM.middle, "Middle")
-quick.plot(IPM.end, "End")
+
+quick.plot(phasesIPMs$IPMs[[1]], "Init")
+quick.plot(phasesIPMs$IPMs[[2]], "Middle")
+quick.plot(phasesIPMs$IPMs[[3]], "End")
 ```
 
 ### Comparing output variables
 
-I am here plotting the output variables from the three IPMs (lambda, core population size, speed and acceleration).
+I am here plotting the output variables from the three IPMs.
 
-```{r, fig.height = 7}
-# and the list of output variables
-output <- c('speed', 'acceleration', 'lambda', 'pop')
+```{r, fig.height = 15}
+# obtaining the original values for output variables:
+phasesIPMs <- phasesIPMs %>%
+  mutate(
+    orig.output =   map(IPMs, function(x){
+      outs <- lapply(outputs, function(i){x[[i]]})
+      names(outs) = outputs
+      return(outs)
+      }
+      ))
 
 # extracting original parameters and reading them for plotting
-outputs <- singleModelIPMs_long %>%
+orig_outputs <- phasesIPMs %>%
   select(orig.output) %>%
   pull() %>%
   unlist() %>%
-  matrix(ncol = nrow(singleModelIPMs_long), nrow = length(output)) %>%
+  matrix(ncol = nrow(phasesIPMs), nrow = length(outputs)) %>%
   t() %>%
   as.data.frame()
-colnames(outputs) <- c('speed', 'acc', 'lambda', 'pop')
+colnames(orig_outputs) <- outputs
+rownames(orig_outputs) <- unlist(phasesIPMs$phase)
 
-# plotting
-par(mfrow = c(2,2))
-# Lambda
-plot(outputs$lambda, type='l', main='Lambda', ylim = c(1, 1.1), xlim = c(0.7, 3.3), 
+# checking
+orig_outputs
+
+# looping the plot
+par(mfrow = c(round(length(outputs)/2), 2))
+for(i in 1:dim(orig_outputs)[2]){
+  plot(orig_outputs[[i]], type='l', main = colnames(orig_outputs)[i], xlim = c(0.7, 3.3),
      xaxt = 'n', ylab = '', xlab = '', las = 1)
-axis(1, at = 1:3, labels = c('Initial', 'Middle', 'End'), las=1)
-points(outputs$lambda, col = Cols, pch=19, cex = 1.5)
-text(1:3, outputs$lambda*0.99, labels = round(as.numeric(outputs$lambda), 2), cex = 1)
-mtext(expression(lambda), 2, line = 2.5, las = 1)
-
-# Core population
-plot(outputs$pop, type='l', main='Core population size', xaxt = 'n', ylab = '', xlim = c(0.7, 3.3), xlab = '', ylim = c(0, 35), las = 1)
-points(outputs$pop, col = Cols, pch=19, cex = 1.5)
-text(1:3, outputs$pop - 4, labels = round(as.numeric(outputs$pop), 0), cex = 1)
-axis(1, at = c(1,2,3), labels = c("Initial","Middle", "Late"), las=1)
-mtext('N', 2, line = 2.5, las = 1)
-
-# Speed
-plot(outputs$speed, type='l', main='Speed at the front', ylim = c(-1,30), xaxt = 'n', xlim = c(.7, 3.3), xlab = '', ylab = '')
-points(outputs$speed, col = Cols, pch=19, cex = 1.5)
-axis(1, at = c(1,2,3), labels = c("Init", 'Middle', 'End'), las=1)
-text(1:3, outputs$speed + 2, labels = round(as.numeric(outputs$speed), 2), cex = 1)
-mtext('m/month', 2, line = 2.5)
-
-# Acceleration
-plot(outputs$acc, type='l', ylim = c(0,1), main='Acceleration', xaxt = 'n', xlim = c(.7, 3.3), xlab = '', ylab = '')
-axis(1, at = c(1,2,3), labels = c('Initial', 'Middle', 'End'), las=1)
-points(outputs$acc, col = Cols, pch=19, cex = 1.5)
-text(1:3, outputs$acc + 0.1, labels = round(as.numeric(outputs$acc), 2), cex = 1)
-mtext(expression(m/month^2), 2, line = 2.5)
+  axis(1, at = 1:3, labels = c('Initial', 'Middle', 'End'), las=1)
+  points(orig_outputs[[i]], col = Cols, pch=19, cex = 1.5)
+  text(1:3 + 0.1, orig_outputs[[i]], 
+     labels = round(as.numeric(orig_outputs[[i]]), 2), cex = 1)
+}
 ```
 
 ### Plotting perturbation results
@@ -365,41 +114,33 @@ Here, I am not running the perturbation analyses (too time consuming), but rathe
 First, loading the perturbation results and rearranging the format to make it easier to plot.
 
 ```{r}
-perturbationResults_long <- readRDS(file.path(here::here(),
-                                              "results_tokeep",
-                               "perturbation_result_single_model_K1000x36.rds"))
-
 # For ease of plotting, handling the array t make it a single data.frame with outputs for columns and parameters for rows
-pResults_long <- aperm(perturbationResults_long, perm = c(2,1,3))
-pResults_long <- data.frame(apply(pResults_long, 2, c),
-                       expand.grid(dimnames(perturbationResults_long)[c(2,3)]))
-colnames(pResults_long)[(ncol(pResults_long)-1):ncol(pResults_long)] <- c("params", "phase")
-```
 
-Now, ready for plotting.
+pResults <- aperm(perturbationResults, perm = c(2,1,3))
+pResults <- data.frame(apply(pResults, 2, c),
+                       expand.grid(dimnames(perturbationResults)[c(2,3)]))
+colnames(pResults)[(ncol(pResults)-1):ncol(pResults)] <- c("params", "phase")
 
-```{r}
 # creating a vector of better names for parameteres
-paramnames <- c('survival (int)', 'survival (slo)', 'survival (quad)',
-            'repr p (int)',  'repr p (slo)', 
+paramnames <- c('survival (int)', 'survival (slo)',
+            'repr p (int)',  'repr p (slo)',
             'offspr n (int)',  'offspr n (slo)',
-            'ad dispersal (int)','ad dispersal (slo)', 
+            'ad dispersal (int)','ad dispersal (slo)',
             'ad distance (mean)', 'ad distance (sd)',
             'nat dispersal (int)','nat dispersal (slo)',
             'nat dispersal (landsc)', 'nat dispersal (loc x land)',
             'nat distance (mean)', 'nat distance (sd)')
 
 ## plotting all outputs
-for(i in output){
-  p <- ggplot(data = pResults_long, aes_string(x = "params", y = i, fill = "phase")) +
-  geom_bar(stat = "identity", width = 0.8, position = position_dodge()) + 
+for(i in outputs){
+  p <- ggplot(data = pResults, aes_string(x = "params", y = i, fill = "phase")) +
+  geom_bar(stat = "identity", width = 0.8, position = position_dodge()) +
   scale_fill_manual(values = Cols) +
+    coord_flip()
   theme_minimal()
-print(p + theme(axis.text.x = element_text(angle = -45)) +
+print(p + theme(axis.text.x = element_text(angle = 0)) +
   scale_x_discrete(labels = paramnames) +
   ggtitle(as.character(i)))
 }
-
-
 ```
 
