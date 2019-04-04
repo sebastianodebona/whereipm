@@ -96,25 +96,17 @@ stargazer::stargazer(e.survival, m.survival, l.survival,
                      dep.var.labels = "")
 
 # plotting survival across densities in the three phases
-dens <- seq(0, 50, length.out = 100)
+dens <- data.frame(loc_density = seq(0, 50, length.out = 100),
+                   s_loc_density = seq(0, 50, length.out = 100)/scalingAttr$loc_density$scale)
 # using custom made function predictGLMM to calculate survival in each phase, across density values
-s.e = predictGLMM(x = dens, 
-                  Coefs = summary(e.survival)$coefficients, 
-                  scalingValue = scalingAttr$loc_density$scale,
-                  link = "logit")
-s.m = predictGLMM(x = dens, 
-                  Coefs = summary(m.survival)$coefficients, 
-                  scalingValue = scalingAttr$loc_density$scale,
-                  link = "logit")
-s.l = predictGLMM(x = dens, 
-                  Coefs = summary(l.survival)$coefficients, 
-                  scalingValue = scalingAttr$loc_density$scale,
-                  link = "logit")
+s.e = plogis(predict(e.survival, newdata = dens, re.form = ~ 0))
+s.m = plogis(predict(m.survival, newdata = dens, re.form = ~ 0))
+s.l = plogis(predict(l.survival, newdata = dens, re.form = ~ 0))
             
 
-plot(s.e ~ dens, ylim = c(0,1), type = 'l', col = col.early, lwd = 2, xaxt = 'n', yaxt = 'n', xlab = 'density (individuals/m)', ylab = '')
-lines(s.m ~ dens, col = col.mid, lwd = 2)
-lines(s.l ~ dens, col = col.late, lwd = 2)
+plot(s.e ~ dens$loc_density, ylim = c(0,1), type = 'l', col = col.early, lwd = 2, xaxt = 'n', yaxt = 'n', xlab = 'density (individuals/m)', ylab = '')
+lines(s.m ~ dens$loc_density, col = col.mid, lwd = 2)
+lines(s.l ~ dens$loc_density, col = col.late, lwd = 2)
 axis(1, at=c(0,10,20,30,40, 50), labels = c(0,10,20,30,40, 50))
 axis(2, at=c(0,.25,.5,.75,1), las = 2)
 mtext('p', side = 2, las=2, line=3)
