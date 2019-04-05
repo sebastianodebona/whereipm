@@ -113,6 +113,8 @@ Here, I am not running the perturbation analyses (too time consuming), but rathe
 
 First, loading the perturbation results and rearranging the format to make it easier to plot.
 
+**NOTE**: reproduction probability is here to be interpreted as the opposite of it. It is coded as the probability to *not* reproduce. So what appears to be a negative effect is actually a positive effect on the probability to have any offspring.
+
 ```{r}
 # For ease of plotting, handling the array t make it a single data.frame with outputs for columns and parameters for rows
 
