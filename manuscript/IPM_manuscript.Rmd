@@ -1,0 +1,37 @@
+---
+title: 'Rapid changes in dispersal and vital rates after introduction alter population invasibility in guppies.'
+bibliography: 
+Authors@R: c(person("Sebastiano De Bona",email= "sebastiano.s.debona@jyu.fi", role=c("aut","cre"),person("Andrés
+  López-Sepulcre",email="alopez@biologie.ens.fr",role=c("aut","cre"))))
+output:
+  pdf_document:
+    fig_caption: yes
+    keep_tex: yes
+    number_sections: no
+  word_document: default
+  html_document:
+    fig_caption: yes
+    force_captions: yes
+    highlight: pygments
+    number_sections: no
+    theme: lumen
+csl: mee.csl
+---
+
+# Abstract
+
+# Introduction
+
+# Materials and Methods
+
+# Results
+
+# Discussion
+
+# Acknowledgements
+
+# Tables
+
+# Figures
+
+
