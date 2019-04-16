@@ -33,9 +33,9 @@ col.late <- wesanderson::wes_palette("Darjeeling1", 3)[3]
 
 To study how the evolution of dispersal and life-history affects the spatial ecology of the population we are splitting the 5 years of observation in 3 phases:
 
-1. Early phase, between month 5 and month 16;
-2. Mid phase, between month 27 and 38;
-3. Late pahse, between month 29 and 60.
+1. Early phase, between month 4 and month 15;
+2. Mid phase, between month 26 and 37;
+3. Late pahse, between month 48 and 59.
 
 I will also subset the dataset to include only pools, and only females.
 
@@ -119,7 +119,6 @@ legend('bottomright', lty = 1, legend = c("early", "mid", "late"),
 
 ```{r, results = "asis", fig.height=4, fig.width=8}
 # For recruitment, the random effect structure is simplified, excluding a random slope for sampling.
-
 e.recruit <- glmmTMB::glmmTMB(recruited ~ s_loc_density +
                                 + (1|FishID) + (1|reach) + (1|sampling),
                               ziformula = ~ s_loc_density +
@@ -154,45 +153,45 @@ sjPlot::tab_model(e.recruit, m.recruit, l.recruit,
 # plotting reproduction probability and number of offspring for the three phases, at various density values
 # Reproduction probability 
 # (remember this is probability to NOT reproduce, since it's a zero inflation model)
-r.e = 1- predictGLMM(x = dens, 
+r.e = 1- predictGLMM(x = dens$loc_density, 
                   Coefs = summary(e.recruit)$coefficients$zi, 
                   scalingValue = scalingAttr$loc_density$scale,
                   link = "logit")
-r.m = 1- predictGLMM(x = dens, 
+r.m = 1- predictGLMM(x = dens$loc_density, 
                   Coefs = summary(m.recruit)$coefficients$zi, 
                   scalingValue = scalingAttr$loc_density$scale,
                   link = "logit")
-r.l = 1- predictGLMM(x = dens, 
+r.l = 1- predictGLMM(x = dens$loc_density, 
                   Coefs = summary(l.recruit)$coefficients$zi, 
                   scalingValue = scalingAttr$loc_density$scale,
                   link = "logit")
 # Offspring number
-o.e = predictGLMM(x = dens, 
+o.e = predictGLMM(x = dens$loc_density, 
                   Coefs = summary(e.recruit)$coefficients$cond, 
                   scalingValue = scalingAttr$loc_density$scale,
                   link = "truncated-pois")
-o.m = predictGLMM(x = dens, 
+o.m = predictGLMM(x = dens$loc_density, 
                   Coefs = summary(m.recruit)$coefficients$cond, 
                   scalingValue = scalingAttr$loc_density$scale,
                   link = "truncated-pois")
-o.l = predictGLMM(x = dens, 
+o.l = predictGLMM(x = dens$loc_density, 
                   Coefs = summary(l.recruit)$coefficients$cond, 
                   scalingValue = scalingAttr$loc_density$scale,
                   link = "truncated-pois")
 
 par(mfrow = c(1,2))
 # Reproduction
-plot(r.e ~ dens, ylim = c(0,1), type = 'l', col = col.early, lwd = 2, xaxt = 'n', yaxt = 'n', xlab = 'density (individuals/m)', ylab = '', main = "Reproduction")
-lines(r.m ~ dens, col = col.mid, lwd = 2)
-lines(r.l ~ dens, col = col.late, lwd = 2)
+plot(r.e ~ dens$loc_density, ylim = c(0,1), type = 'l', col = col.early, lwd = 2, xaxt = 'n', yaxt = 'n', xlab = 'density (individuals/m)', ylab = '', main = "Reproduction")
+lines(r.m ~ dens$loc_density, col = col.mid, lwd = 2)
+lines(r.l ~ dens$loc_density, col = col.late, lwd = 2)
 axis(1, at=c(0,10,20,30,40, 50), labels = c(0,10,20,30,40, 50))
 axis(2, at=c(0,.25,.5,.75,1), las = 2)
 mtext('p', side = 2, las=2, line=3)
 abline(h = 0, lty = 3)
 # Offspring number
-plot(o.e ~ dens, ylim = c(1,2.5), type = 'l', col = col.early, lwd = 2, xaxt = 'n', yaxt = 'n', xlab = 'density (individuals/m)', ylab = '', main = "Offspring number")
-lines(o.m ~ dens, col = col.mid, lwd = 2)
-lines(o.l ~ dens, col = col.late, lwd = 2)
+plot(o.e ~ dens$loc_density, ylim = c(1,2.5), type = 'l', col = col.early, lwd = 2, xaxt = 'n', yaxt = 'n', xlab = 'density (individuals/m)', ylab = '', main = "Offspring number")
+lines(o.m ~ dens$loc_density, col = col.mid, lwd = 2)
+lines(o.l ~ dens$loc_density, col = col.late, lwd = 2)
 axis(1, at=c(0,10,20,30,40, 50), labels = c(0,10,20,30,40, 50))
 axis(2, at=c(0,1, 2, 3), las = 2)
 mtext('n', side = 2, las=2, line=2)
@@ -260,46 +259,32 @@ stargazer::stargazer(e.dispersal.dist, m.dispersal.dist, l.dispersal.dist,
 
 # plotting dispersal probability and distance
 # Probability
-dp.e <- predictGLMM(x = dens, 
-                  Coefs = summary(e.dispersal.p)$coefficients, 
-                  scalingValue = scalingAttr$loc_density$scale,
-                  link = "logit")
-dp.m <- predictGLMM(x = dens, 
-                  Coefs = summary(m.dispersal.p)$coefficients, 
-                  scalingValue = scalingAttr$loc_density$scale,
-                  link = "logit")
-dp.l <- predictGLMM(x = dens, 
-                  Coefs = summary(l.dispersal.p)$coefficients, 
-                  scalingValue = scalingAttr$loc_density$scale,
-                  link = "logit")
+dp.e <- plogis(predict(e.dispersal.p, newdata = dens, re.form = ~ 0))
+dp.m <- plogis(predict(m.dispersal.p, newdata = dens, re.form = ~ 0))
+dp.l <- plogis(predict(l.dispersal.p, newdata = dens, re.form = ~ 0))
 # Distance
-dd.e <- predictGLMM(x = dens, 
-                  Coefs = summary(e.dispersal.dist)$coefficients, 
-                  scalingValue = scalingAttr$loc_density$scale,
-                  link = "log")
-dd.m <- predictGLMM(x = dens, 
-                  Coefs = summary(m.dispersal.dist)$coefficients, 
-                  scalingValue = scalingAttr$loc_density$scale,
-                  link = "log")
-dd.l <- predictGLMM(x = dens, 
-                  Coefs = summary(l.dispersal.dist)$coefficients, 
-                  scalingValue = scalingAttr$loc_density$scale,
-                  link = "log")
+# dd.e <- predictGLMM(x = dens$loc_density, 
+#                   Coefs = summary(e.dispersal.dist)$coefficients, 
+#                   scalingValue = scalingAttr$loc_density$scale,
+#                   link = "log")
+dd.e <- exp(predict(e.dispersal.dist, newdata = dens, re.form = ~ 0))
+dd.m <- exp(predict(m.dispersal.dist, newdata = dens, re.form = ~ 0))
+dd.l <- exp(predict(l.dispersal.dist, newdata = dens, re.form = ~ 0))
 
 # plots
 par(mfrow = c(1,2))
-plot(dp.e ~ dens, ylim = c(0,1), type = 'l', col = col.early, lwd = 2, xaxt = 'n', yaxt = 'n', xlab = 'density (individuals/m)', ylab = '', main = "Dispersal Probability")
-lines(dp.m ~ dens, col = col.mid, lwd = 2)
-lines(dp.l ~ dens, col = col.late, lwd = 2)
+plot(dp.e ~ dens$loc_density, ylim = c(0,1), type = 'l', col = col.early, lwd = 2, xaxt = 'n', yaxt = 'n', xlab = 'density (individuals/m)', ylab = '', main = "Dispersal Probability")
+lines(dp.m ~ dens$loc_density, col = col.mid, lwd = 2)
+lines(dp.l ~ dens$loc_density, col = col.late, lwd = 2)
 axis(1, at=c(0,10,20,30,40, 50), labels = c(0,10,20,30,40, 50))
 axis(2, at=c(0,.25,.5,.75,1), las = 2)
 mtext('p', side = 2, las=2, line=3)
 abline(h = 0, lty = 3)
 abline(h = 1, lty = 3)
 
-plot(dd.e ~ dens, ylim = c(0,10), type = 'l', col = col.early, lwd = 2, xaxt = 'n', xlab = 'density (individuals/m)', ylab = '', main = "Dispersal Distance", las = 1)
-lines(dd.m ~ dens, col = col.mid, lwd = 2)
-lines(dd.l ~ dens, col = col.late, lwd = 2)
+plot(dd.e ~ dens$loc_density, ylim = c(0,10), type = 'l', col = col.early, lwd = 2, xaxt = 'n', xlab = 'density (individuals/m)', ylab = '', main = "Dispersal Distance", las = 1)
+lines(dd.m ~ dens$loc_density, col = col.mid, lwd = 2)
+lines(dd.l ~ dens$loc_density, col = col.late, lwd = 2)
 axis(1, at=c(0,10,20,30,40, 50), labels = c(0,10,20,30,40, 50))
 mtext('distance(m)', side = 2, line=2)
 
@@ -359,54 +344,59 @@ stargazer::stargazer(e.natal.dist, m.natal.dist, l.natal.dist,
                      type = "html",
                      title = "Natal dispersal distance",
                      report = "vcsp*",
-                     covariate.labels = c("Landscape density"),
                      column.labels = c("Early phase", "Mid phase", "Late phase"),
                      dep.var.caption = "Dispersal distance",
                      dep.var.labels = "")
 
 
 # plotting dispersal probability and distance
+# probability depends on local and landscape density together, 
+#  so it will be shown here as a heatmap
+
+land_dens <- data.frame(land_density = seq(0, 8, length.out = 100))
+dens_x <- expand.grid(loc_density = dens$loc_density,
+                      land_density = land_dens$land_density) %>%
+  mutate(s_loc_density.mid = loc_density/scalingAttr$loc_density$scale,
+         s_land_density.mid = land_density/scalingAttr$land_density$scale)
+
 # Probability
-np.e <- predictGLMM(x = dens, 
-                  Coefs = summary(e.natal.p)$coefficients, 
-                  scalingValue = scalingAttr$loc_density$scale,
-                  link = "logit")
-np.m <- predictGLMM(x = dens, 
-                  Coefs = summary(m.natal.p)$coefficients, 
-                  scalingValue = scalingAttr$loc_density$scale,
-                  link = "logit")
-np.l <- predictGLMM(x = dens, 
-                  Coefs = summary(l.natal.p)$coefficients, 
-                  scalingValue = scalingAttr$loc_density$scale,
-                  link = "logit")
+np.e <- cbind(dens_x, preds = plogis(predict(e.natal.p, newdata = dens_x, re.form = ~ 0)))
+np.m <- cbind(dens_x, preds = plogis(predict(m.natal.p, newdata = dens_x, re.form = ~ 0)))
+np.l <- cbind(dens_x, preds = plogis(predict(l.natal.p, newdata = dens_x, re.form = ~ 0)))
+
 # Distance
-nd.e <- predictGLMM(x = dens, 
+nd.e <- predictGLMM(x = dens$loc_density, 
                   Coefs = summary(e.natal.dist)$coefficients, 
                   scalingValue = scalingAttr$loc_density$scale,
                   link = "log")
-nd.m <- predictGLMM(x = dens, 
+nd.m <- predictGLMM(x = dens$loc_density, 
                   Coefs = summary(m.natal.dist)$coefficients, 
                   scalingValue = scalingAttr$loc_density$scale,
                   link = "log")
-nd.l <- predictGLMM(x = dens, 
+nd.l <- predictGLMM(x = dens$loc_density, 
                   Coefs = summary(l.natal.dist)$coefficients, 
                   scalingValue = scalingAttr$loc_density$scale,
                   link = "log")
 
-# plots
-par(mfrow = c(1,2))
-plot(np.e ~ dens, ylim = c(0,1), type = 'l', col = col.early, lwd = 2, xaxt = 'n', yaxt = 'n', xlab = 'density (individuals/m)', ylab = '', main = "Dispersal Probability")
-lines(np.m ~ dens, col = col.mid, lwd = 2)
-lines(np.l ~ dens, col = col.late, lwd = 2)
-axis(1, at=c(0,10,20,30,40, 50), labels = c(0,10,20,30,40, 50))
-axis(2, at=c(0,.25,.5,.75,1), las = 2)
-mtext('p', side = 2, las=2, line=3)
-abline(h = 0, lty = 3)
-abline(h = 1, lty = 3)
 
-plot(nd.e ~ dens, ylim = c(0,20), type = 'l', col = col.early, lwd = 2, xaxt = 'n', xlab = 'density (individuals/m)', ylab = '', main = "Dispersal Distance", las = 1)
-lines(nd.m ~ dens, col = col.mid, lwd = 2)
-lines(nd.l ~ dens, col = col.late, lwd = 2)
+# plots
+# Early
+lattice::levelplot(preds ~ loc_density*land_density, data = np.e, contour = T,
+                   xlab = "local density",
+                   ylab = "landscape density")
+# Mid
+lattice::levelplot(preds ~ loc_density*land_density, data = np.m, contour = T,
+                   xlab = "local density",
+                   ylab = "landscape density")
+# Late
+lattice::levelplot(preds ~ loc_density*land_density, data = np.l, contour = T,
+                   xlab = "local density",
+                   ylab = "landscape density")
+
+# Distance
+plot(nd.e ~ dens$loc_density, ylim = c(0,20), type = 'l', col = col.early, lwd = 2, xaxt = 'n', xlab = 'density (individuals/m)', ylab = '', main = "Dispersal Distance", las = 1)
+lines(nd.m ~ dens$loc_density, col = col.mid, lwd = 2)
+lines(nd.l ~ dens$loc_density, col = col.late, lwd = 2)
 axis(1, at=c(0,10,20,30,40, 50), labels = c(0,10,20,30,40, 50))
 mtext('distance(m)', side = 2, line=2)
 
