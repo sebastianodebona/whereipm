@@ -39,36 +39,38 @@ Here we define kernel parameters and initial population size.
 # kernel parameters
 kp <- create.kernel.params(L=-200, U=200, n.bins = 200)
 
-# initial population size for all phases
-pop0.early <- makeInitPop(kp, 
-                          observation_summary%>%
-                            filter(phases == "early", pool == "top") %>%
-                            pull(avg_n) %>%
-                            round(),
-                          observation_summary%>%
-                            filter(phases == "early", pool == "top") %>%
-                            pull(avg_l) %>%
-                            round())
+# # initial population size for all phases
+# pop0.early <- makeInitPop(kp, 
+#                           observation_summary%>%
+#                             filter(phases == "early", pool == "top") %>%
+#                             pull(avg_n) %>%
+#                             round(),
+#                           observation_summary%>%
+#                             filter(phases == "early", pool == "top") %>%
+#                             pull(avg_l) %>%
+#                             round())
+# 
+# pop0.mid <- makeInitPop(kp, 
+#                           observation_summary%>%
+#                             filter(phases == "mid", pool == "top") %>%
+#                             pull(avg_n) %>%
+#                             round(),
+#                           observation_summary%>%
+#                             filter(phases == "mid", pool == "top") %>%
+#                             pull(avg_l) %>%
+#                             round())
+# 
+# pop0.late <- makeInitPop(kp, 
+#                           observation_summary%>%
+#                             filter(phases == "late", pool == "top") %>%
+#                             pull(avg_n) %>%
+#                             round(),
+#                           observation_summary%>%
+#                             filter(phases == "late", pool == "top") %>%
+#                             pull(avg_l) %>%
+#                             round())
 
-pop0.mid <- makeInitPop(kp, 
-                          observation_summary%>%
-                            filter(phases == "mid", pool == "top") %>%
-                            pull(avg_n) %>%
-                            round(),
-                          observation_summary%>%
-                            filter(phases == "mid", pool == "top") %>%
-                            pull(avg_l) %>%
-                            round())
-
-pop0.late <- makeInitPop(kp, 
-                          observation_summary%>%
-                            filter(phases == "late", pool == "top") %>%
-                            pull(avg_n) %>%
-                            round(),
-                          observation_summary%>%
-                            filter(phases == "late", pool == "top") %>%
-                            pull(avg_l) %>%
-                            round())
+pop0.early = pop0.mid = pop0.late <- makeInitPop(kp, 50, 5)
 ```
 
 And we extract the vital rates parameters from the models fitted in the [Vital Rate Models: phases](DIPM-020_Vital_rate_models.html) vignette.
@@ -89,7 +91,7 @@ Models <- vitalRateModels %>%
 
 # The percentage to which the recruitment needs to be buffed is calculated 
 # in the 'Buffing Recruitment' vignette. Here I'll add the phase, specific proportions
-buff_recruit <- c(2.72, 2.15, 2.7)
+buff_recruit <- c(2.8, 2.15, 2.7)
 
 # Using a general loop to do so for the three phases:
 
