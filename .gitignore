@@ -11,3 +11,4 @@ docs/
 Images4talk/
 data/
 results/*rds
+manuscript/*.tex
