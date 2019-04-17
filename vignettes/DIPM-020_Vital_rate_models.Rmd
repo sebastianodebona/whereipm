@@ -353,16 +353,20 @@ stargazer::stargazer(e.natal.dist, m.natal.dist, l.natal.dist,
 # probability depends on local and landscape density together, 
 #  so it will be shown here as a heatmap
 
-land_dens <- data.frame(land_density = seq(0, 8, length.out = 100))
+land_dens <- data.frame(land_density = seq(0, 8, length.out = 9))
 dens_x <- expand.grid(loc_density = dens$loc_density,
                       land_density = land_dens$land_density) %>%
   mutate(s_loc_density.mid = loc_density/scalingAttr$loc_density$scale,
          s_land_density.mid = land_density/scalingAttr$land_density$scale)
 
 # Probability
-np.e <- cbind(dens_x, preds = plogis(predict(e.natal.p, newdata = dens_x, re.form = ~ 0)))
-np.m <- cbind(dens_x, preds = plogis(predict(m.natal.p, newdata = dens_x, re.form = ~ 0)))
-np.l <- cbind(dens_x, preds = plogis(predict(l.natal.p, newdata = dens_x, re.form = ~ 0)))
+np.e <- cbind(dens_x, preds = plogis(predict(e.natal.p, newdata = dens_x, re.form = ~ 0)),
+              phase = "early")
+np.m <- cbind(dens_x, preds = plogis(predict(m.natal.p, newdata = dens_x, re.form = ~ 0)),
+              phase = "mid")
+np.l <- cbind(dens_x, preds = plogis(predict(l.natal.p, newdata = dens_x, re.form = ~ 0)),
+              phase = "late")
+nps <- rbind(np.e, np.m, np.l)
 
 # Distance
 nd.e <- predictGLMM(x = dens$loc_density, 
@@ -380,18 +384,11 @@ nd.l <- predictGLMM(x = dens$loc_density,
 
 
 # plots
-# Early
-lattice::levelplot(preds ~ loc_density*land_density, data = np.e, contour = T,
-                   xlab = "local density",
-                   ylab = "landscape density")
-# Mid
-lattice::levelplot(preds ~ loc_density*land_density, data = np.m, contour = T,
-                   xlab = "local density",
-                   ylab = "landscape density")
-# Late
-lattice::levelplot(preds ~ loc_density*land_density, data = np.l, contour = T,
-                   xlab = "local density",
-                   ylab = "landscape density")
+ggplot(nps, aes(x = loc_density, y = preds, group = phase)) +
+  geom_line(aes(colour = phase)) +
+  scale_color_manual(values = c(col.early, col.mid, col.late)) +
+  scale_x_continuous(breaks = c(0, 20, 40)) +
+  facet_grid(phase ~ land_density)
 
 # Distance
 plot(nd.e ~ dens$loc_density, ylim = c(0,20), type = 'l', col = col.early, lwd = 2, xaxt = 'n', xlab = 'density (individuals/m)', ylab = '', main = "Dispersal Distance", las = 1)
