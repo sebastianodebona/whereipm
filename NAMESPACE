@@ -2,6 +2,7 @@
 
 export(averageHistory)
 export(build.kernel)
+export(calculate_front_int)
 export(calculate_nb_density)
 export(calculate_q_spread)
 export(create.kernel.params)
