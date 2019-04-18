@@ -32,7 +32,7 @@ perturb <- function(orig.IPM, epsilon, par, outputs){
   deltas <- list()
   # comparing output parameters
   for(i in outputs){
-    deltas[[paste("delta", i, sep = ".")]] <- (perturb.IPM[[i]] - orig.IPM[[i]])/orig.IPM[[i]]
+    deltas[[paste("delta", i, sep = ".")]] <- (perturb.IPM[[i]] - orig.IPM[[i]])/abs(orig.IPM[[i]])
   }
   
   return(list(newIPM = perturb.IPM,
