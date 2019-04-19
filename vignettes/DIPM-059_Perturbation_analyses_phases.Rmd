@@ -44,16 +44,21 @@ params <- c('s.int', 's.slo',
 
 # and a list of output variables
 # here I'll have a bunch of variables to evaluate the effect of perturbation on
-outputs <- c('lambda_avg',
-            'final_pop_size',
-            'final_max_density',
-            'final_front_position',
-            'avg_front_speed',
-            'final_front_speed',
+outputs <- c('final_front_position',
+            'final_pioneer_position',
             'initial_front_speed',
-            'acceleration_est',
-            'acceleration_avg',
-            'acceleration_tot')
+            'initial_pioneer_speed',
+            'final_front_speed',
+            'final_pioneer_speed',
+            'avg_front_speed',
+            'avg_pioneer_speed',
+            'acceleration_tot_front',
+            'acceleration_tot_pioneer',
+            'acceleration_est_front',
+            'acceleration_est_pioneer',
+            'lambda_avg',
+            'final_pop_size',
+            'final_max_density')
 # these variables should be in the same order the `perturb` function will provide as output.
 
 # the perturbation array will have output variables as rows,
