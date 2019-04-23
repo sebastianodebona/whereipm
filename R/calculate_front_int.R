@@ -13,8 +13,7 @@ calculate_front_int <- function(pop_vector, kernel.param, how_many = 1){
   
   # calculating cumulative population size from infinity back towards zero.
   index_front <- 
-    which(rev(cumsum(rev(pop_vector))) >= how_many) %>%
-    max()
+    max(which(rev(cumsum(rev(pop_vector))) >= how_many))
   
   x <- kernel.param$y[index_front]
   return(x)
