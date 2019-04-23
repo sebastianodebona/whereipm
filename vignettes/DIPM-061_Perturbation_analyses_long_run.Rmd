@@ -72,7 +72,7 @@ quick.plot(phasesIPMs$IPMs[[3]], "End")
 
 I am here plotting the output variables from the three IPMs.
 
-```{r, fig.height = 15}
+```{r, fig.height = 12}
 # obtaining the original values for output variables:
 phasesIPMs <- phasesIPMs %>%
   mutate(
@@ -98,7 +98,7 @@ rownames(orig_outputs) <- unlist(phasesIPMs$phase)
 orig_outputs
 
 # looping the plot
-par(mfrow = c(round(length(outputs)/2), 2))
+par(mfrow = c(round(length(outputs)/3), 3))
 for(i in 1:dim(orig_outputs)[2]){
   plot(orig_outputs[[i]], type='l', main = colnames(orig_outputs)[i], xlim = c(0.7, 3.3),
      xaxt = 'n', ylab = '', xlab = '', las = 1)
