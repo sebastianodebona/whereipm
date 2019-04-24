@@ -37,8 +37,8 @@ quick.plot <- function(IPM.model, legend){
   plot(IPM.model$lambdas, col = "red", type = "o", xlab = "", 
        ylab = "", main = "lambda")
   # plotting spread through time
-  plot(IPM.model$pop.spread, col='black', type = 'o', xlab = '', 
-       ylab = "", main = 'spread of 95% of pop (m)')
+  plot(IPM.model$pioneer, col='black', type = 'o', xlab = '', 
+       ylab = "", main = 'position of pioneer (m)')
   title(xlab = "time", line = 2)
   # plotting front behaviour
   plot(IPM.model$front, col = 'black', type = 'o', xlab = "", 
