@@ -20,6 +20,7 @@ As usual, we fist load the package and get the data.
 library(whereipm)
 library(tidyverse)
 library(glmmTMB)
+library(ggplot2)
 
 # loading the data
 data <- ipmdata
@@ -64,7 +65,7 @@ I will run 6 model trios, for different life-history and dispersal traits:
 
 ### Survival
 
-```{r, results = "asis", fig.height=4, fig.width=4}
+```{r, results = "asis"}
 # For survival, Local density is the only covariate.
 # Random effects include individual identity, reach and sampling.
 
@@ -99,20 +100,18 @@ stargazer::stargazer(e.survival, m.survival, l.survival,
 dens <- data.frame(loc_density = seq(0, 50, length.out = 100),
                    s_loc_density = seq(0, 50, length.out = 100)/scalingAttr$loc_density$scale)
 # using custom made function predictGLMM to calculate survival in each phase, across density values
-s.e = plogis(predict(e.survival, newdata = dens, re.form = ~ 0))
-s.m = plogis(predict(m.survival, newdata = dens, re.form = ~ 0))
-s.l = plogis(predict(l.survival, newdata = dens, re.form = ~ 0))
+survival_plot <- dens %>%
+  add_column(early = plogis(predict(e.survival, newdata = dens, re.form = ~ 0)),
+             mid = plogis(predict(m.survival, newdata = dens, re.form = ~ 0)),
+             late = plogis(predict(l.survival, newdata = dens, re.form = ~ 0))) %>%
+  gather(key = "phase", value = "p_surv", -c(loc_density, s_loc_density))
             
-
-plot(s.e ~ dens$loc_density, ylim = c(0,1), type = 'l', col = col.early, lwd = 2, xaxt = 'n', yaxt = 'n', xlab = 'density (individuals/m)', ylab = '')
-lines(s.m ~ dens$loc_density, col = col.mid, lwd = 2)
-lines(s.l ~ dens$loc_density, col = col.late, lwd = 2)
-axis(1, at=c(0,10,20,30,40, 50), labels = c(0,10,20,30,40, 50))
-axis(2, at=c(0,.25,.5,.75,1), las = 2)
-mtext('p', side = 2, las=2, line=3)
-abline(h = 1, lty = 3)
-legend('bottomright', lty = 1, legend = c("early", "mid", "late"), 
-       col = c(col.early, col.mid, col.late))
+ggplot(data = survival_plot, aes(x = loc_density)) +
+  geom_jitter(data = data, aes(y = jitter(survival)), alpha = 0.1, shape = 1, height = 0.001) +
+  geom_line(aes(y = p_surv, col = phase), size = 1.2) + ylim(0,1) +
+  scale_color_manual(values = c(col.early, col.mid, col.late)) +
+  ylab("survival (p)") + xlab("local density (n/m)") +
+  ggtitle("Survival probability")
 ```
 
 ### Recruitment
@@ -153,52 +152,51 @@ sjPlot::tab_model(e.recruit, m.recruit, l.recruit,
 # plotting reproduction probability and number of offspring for the three phases, at various density values
 # Reproduction probability 
 # (remember this is probability to NOT reproduce, since it's a zero inflation model)
-r.e = 1- predictGLMM(x = dens$loc_density, 
+reproduction_plot <- dens %>%
+  add_column(early = 1- predictGLMM(x = dens$loc_density, 
                   Coefs = summary(e.recruit)$coefficients$zi, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  link = "logit")
-r.m = 1- predictGLMM(x = dens$loc_density, 
+                  link = "logit"),
+             mid = 1- predictGLMM(x = dens$loc_density, 
                   Coefs = summary(m.recruit)$coefficients$zi, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  link = "logit")
-r.l = 1- predictGLMM(x = dens$loc_density, 
+                  link = "logit"),
+             late = 1- predictGLMM(x = dens$loc_density, 
                   Coefs = summary(l.recruit)$coefficients$zi, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  link = "logit")
-# Offspring number
-o.e = predictGLMM(x = dens$loc_density, 
+                  link = "logit")) %>%
+  gather(key = "phase", value = "p_repr", -c(loc_density, s_loc_density))
+
+offspring_plot <- dens %>%
+  add_column(early = predictGLMM(x = dens$loc_density, 
                   Coefs = summary(e.recruit)$coefficients$cond, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  link = "truncated-pois")
-o.m = predictGLMM(x = dens$loc_density, 
+                  link = "truncated-pois"),
+             mid = predictGLMM(x = dens$loc_density, 
                   Coefs = summary(m.recruit)$coefficients$cond, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  link = "truncated-pois")
-o.l = predictGLMM(x = dens$loc_density, 
+                  link = "truncated-pois"),
+             late = predictGLMM(x = dens$loc_density, 
                   Coefs = summary(l.recruit)$coefficients$cond, 
                   scalingValue = scalingAttr$loc_density$scale,
-                  link = "truncated-pois")
+                  link = "truncated-pois")) %>%
+  gather(key = "phase", value = "n_off", -c(loc_density, s_loc_density))
 
-par(mfrow = c(1,2))
-# Reproduction
-plot(r.e ~ dens$loc_density, ylim = c(0,1), type = 'l', col = col.early, lwd = 2, xaxt = 'n', yaxt = 'n', xlab = 'density (individuals/m)', ylab = '', main = "Reproduction")
-lines(r.m ~ dens$loc_density, col = col.mid, lwd = 2)
-lines(r.l ~ dens$loc_density, col = col.late, lwd = 2)
-axis(1, at=c(0,10,20,30,40, 50), labels = c(0,10,20,30,40, 50))
-axis(2, at=c(0,.25,.5,.75,1), las = 2)
-mtext('p', side = 2, las=2, line=3)
-abline(h = 0, lty = 3)
-# Offspring number
-plot(o.e ~ dens$loc_density, ylim = c(1,2.5), type = 'l', col = col.early, lwd = 2, xaxt = 'n', yaxt = 'n', xlab = 'density (individuals/m)', ylab = '', main = "Offspring number")
-lines(o.m ~ dens$loc_density, col = col.mid, lwd = 2)
-lines(o.l ~ dens$loc_density, col = col.late, lwd = 2)
-axis(1, at=c(0,10,20,30,40, 50), labels = c(0,10,20,30,40, 50))
-axis(2, at=c(0,1, 2, 3), las = 2)
-mtext('n', side = 2, las=2, line=2)
-abline(h = 1, lty = 3)
+# plotting
+ggplot(data = reproduction_plot, aes(x = loc_density)) +
+  geom_jitter(data = data, aes(y = jitter(as.numeric(recruited != 0))), alpha = 0.1, shape = 1, height = 0.001) +
+  geom_line(aes(y = p_repr, col = phase), size = 1.2) + ylim(0,1) +
+  scale_color_manual(values = c(col.early, col.mid, col.late)) +
+  ylab("reproduction (p)") + xlab("local density (n/m)") +
+  ggtitle("Reproduction probability")
 
-legend('topright', lty = 1, legend = c("early", "mid", "late"), 
-       col = c(col.early, col.mid, col.late))
+ggplot(data = offspring_plot, aes(x = loc_density)) +
+  geom_jitter(data = data%>%filter(recruited>0), 
+              aes(y = jitter(recruited)), alpha = 0.5, shape = 1, height = 0.001) +
+  geom_line(aes(y = n_off, col = phase), size = 1.2) + ylim(1,7) +
+  scale_color_manual(values = c(col.early, col.mid, col.late)) +
+  ylab("offspring (n)") + xlab("local density (n/m)") +
+  ggtitle("Offspring number")
 ```
 
 ### Adult dispersal
@@ -230,7 +228,6 @@ stargazer::stargazer(e.dispersal.p, m.dispersal.p, l.dispersal.p,
                      column.labels = c("Early phase", "Mid phase", "Late phase"),
                      dep.var.caption = "Dispersal probability",
                      dep.var.labels = "")
-
 ```
 
 ### Adult dispersal distance
@@ -259,37 +256,39 @@ stargazer::stargazer(e.dispersal.dist, m.dispersal.dist, l.dispersal.dist,
 
 # plotting dispersal probability and distance
 # Probability
-dp.e <- plogis(predict(e.dispersal.p, newdata = dens, re.form = ~ 0))
-dp.m <- plogis(predict(m.dispersal.p, newdata = dens, re.form = ~ 0))
-dp.l <- plogis(predict(l.dispersal.p, newdata = dens, re.form = ~ 0))
+ad_prob_plot <- dens %>%
+  add_column(early = plogis(predict(e.dispersal.p, newdata = dens, re.form = ~ 0)),
+             mid = plogis(predict(m.dispersal.p, newdata = dens, re.form = ~ 0)),
+             late = plogis(predict(l.dispersal.p, newdata = dens, re.form = ~ 0))) %>%
+  gather(key = "phase", value = "p_add", -c(loc_density, s_loc_density))
+
 # Distance
 # dd.e <- predictGLMM(x = dens$loc_density, 
 #                   Coefs = summary(e.dispersal.dist)$coefficients, 
 #                   scalingValue = scalingAttr$loc_density$scale,
 #                   link = "log")
-dd.e <- exp(predict(e.dispersal.dist, newdata = dens, re.form = ~ 0))
-dd.m <- exp(predict(m.dispersal.dist, newdata = dens, re.form = ~ 0))
-dd.l <- exp(predict(l.dispersal.dist, newdata = dens, re.form = ~ 0))
+ad_dist_plot <- dens %>%
+  add_column(early = exp(predict(e.dispersal.dist, newdata = dens, re.form = ~ 0)),
+             mid = exp(predict(m.dispersal.dist, newdata = dens, re.form = ~ 0)),
+             late = exp(predict(l.dispersal.dist, newdata = dens, re.form = ~ 0))) %>%
+  gather(key = "phase", value = "d_add", -c(loc_density, s_loc_density))
+
+
 
 # plots
-par(mfrow = c(1,2))
-plot(dp.e ~ dens$loc_density, ylim = c(0,1), type = 'l', col = col.early, lwd = 2, xaxt = 'n', yaxt = 'n', xlab = 'density (individuals/m)', ylab = '', main = "Dispersal Probability")
-lines(dp.m ~ dens$loc_density, col = col.mid, lwd = 2)
-lines(dp.l ~ dens$loc_density, col = col.late, lwd = 2)
-axis(1, at=c(0,10,20,30,40, 50), labels = c(0,10,20,30,40, 50))
-axis(2, at=c(0,.25,.5,.75,1), las = 2)
-mtext('p', side = 2, las=2, line=3)
-abline(h = 0, lty = 3)
-abline(h = 1, lty = 3)
+ggplot(data = ad_prob_plot, aes(x = loc_density)) +
+  geom_jitter(data = data, aes(y = jitter(p_moving)), alpha = 0.1, shape = 1, height = 0.001) +
+  geom_line(aes(y = p_add, col = phase), size = 1.2) + ylim(0,1) +
+  scale_color_manual(values = c(col.early, col.mid, col.late)) +
+  ylab("adult dispersal (p)") + xlab("local density (n/m)") +
+  ggtitle("Adult dispersal probability")
 
-plot(dd.e ~ dens$loc_density, ylim = c(0,10), type = 'l', col = col.early, lwd = 2, xaxt = 'n', xlab = 'density (individuals/m)', ylab = '', main = "Dispersal Distance", las = 1)
-lines(dd.m ~ dens$loc_density, col = col.mid, lwd = 2)
-lines(dd.l ~ dens$loc_density, col = col.late, lwd = 2)
-axis(1, at=c(0,10,20,30,40, 50), labels = c(0,10,20,30,40, 50))
-mtext('distance(m)', side = 2, line=2)
-
-legend('bottomright', lty = 1, legend = c("early", "mid", "late"), 
-       col = c(col.early, col.mid, col.late))
+ggplot(data = ad_dist_plot, aes(x = loc_density)) +
+  geom_jitter(data = data, aes(y = jitter(dist_moved)), alpha = 0.1, shape = 1, height = 0.001) +
+  geom_line(aes(y = d_add, col = phase), size = 1.2) +
+  scale_color_manual(values = c(col.early, col.mid, col.late)) +
+  ylab("adult dispersal distance (m)") + xlab("local density (n/m)") +
+  ggtitle("Adult dispersal distance")
 ```
 
 ### Natal dispersal probability
@@ -350,9 +349,7 @@ stargazer::stargazer(e.natal.dist, m.natal.dist, l.natal.dist,
 
 
 # plotting dispersal probability and distance
-# probability depends on local and landscape density together, 
-#  so it will be shown here as a heatmap
-
+# probability depends on local and landscape density together
 land_dens <- data.frame(land_density = seq(0, 8, length.out = 9))
 dens_x <- expand.grid(loc_density = dens$loc_density,
                       land_density = land_dens$land_density) %>%
@@ -369,18 +366,11 @@ np.l <- cbind(dens_x, preds = plogis(predict(l.natal.p, newdata = dens_x, re.for
 nps <- rbind(np.e, np.m, np.l)
 
 # Distance
-nd.e <- predictGLMM(x = dens$loc_density, 
-                  Coefs = summary(e.natal.dist)$coefficients, 
-                  scalingValue = scalingAttr$loc_density$scale,
-                  link = "log")
-nd.m <- predictGLMM(x = dens$loc_density, 
-                  Coefs = summary(m.natal.dist)$coefficients, 
-                  scalingValue = scalingAttr$loc_density$scale,
-                  link = "log")
-nd.l <- predictGLMM(x = dens$loc_density, 
-                  Coefs = summary(l.natal.dist)$coefficients, 
-                  scalingValue = scalingAttr$loc_density$scale,
-                  link = "log")
+juv_dist_plot <- dens %>%
+  add_column(early = exp(predict(e.natal.dist, newdata = dens, re.form = ~ 0)),
+             mid = exp(predict(m.natal.dist, newdata = dens, re.form = ~ 0)),
+             late = exp(predict(l.natal.dist, newdata = dens, re.form = ~ 0))) %>%
+  gather(key = "phase", value = "d_juvd", -c(loc_density, s_loc_density))
 
 
 # plots
@@ -388,17 +378,16 @@ ggplot(nps, aes(x = loc_density, y = preds, group = phase)) +
   geom_line(aes(colour = phase)) +
   scale_color_manual(values = c(col.early, col.mid, col.late)) +
   scale_x_continuous(breaks = c(0, 20, 40)) +
-  facet_grid(phase ~ land_density)
+  facet_grid(phase ~ land_density) +
+  ggtitle("Natal dispersal probability")
 
 # Distance
-plot(nd.e ~ dens$loc_density, ylim = c(0,20), type = 'l', col = col.early, lwd = 2, xaxt = 'n', xlab = 'density (individuals/m)', ylab = '', main = "Dispersal Distance", las = 1)
-lines(nd.m ~ dens$loc_density, col = col.mid, lwd = 2)
-lines(nd.l ~ dens$loc_density, col = col.late, lwd = 2)
-axis(1, at=c(0,10,20,30,40, 50), labels = c(0,10,20,30,40, 50))
-mtext('distance(m)', side = 2, line=2)
-
-legend('bottomright', lty = 1, legend = c("early", "mid", "late"), 
-       col = c(col.early, col.mid, col.late))
+ggplot(data = juv_dist_plot, aes(x = loc_density)) +
+  geom_jitter(data = data, aes(y = jitter(dist_natal)), alpha = 0.1, shape = 1, height = 0.001) +
+  geom_line(aes(y = d_juvd, col = phase), size = 1.2) +
+  scale_color_manual(values = c(col.early, col.mid, col.late)) +
+  ylab("natal dispersal distance (m)") + xlab("local density (n/m)") +
+  ggtitle("Natal dispersal distance")
 ```
 
 ## Storing models
