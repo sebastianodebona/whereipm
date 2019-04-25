@@ -284,7 +284,7 @@ ggplot(data = ad_prob_plot, aes(x = loc_density)) +
   ggtitle("Adult dispersal probability")
 
 ggplot(data = ad_dist_plot, aes(x = loc_density)) +
-  geom_jitter(data = data, aes(y = jitter(dist_moved)), alpha = 0.1, shape = 1, height = 0.001) +
+  geom_point(data = data, aes(y = dist_moved), alpha = 0.1, shape = 1, height = 0.001) +
   geom_line(aes(y = d_add, col = phase), size = 1.2) +
   scale_color_manual(values = c(col.early, col.mid, col.late)) +
   ylab("adult dispersal distance (m)") + xlab("local density (n/m)") +
@@ -365,6 +365,19 @@ np.l <- cbind(dens_x, preds = plogis(predict(l.natal.p, newdata = dens_x, re.for
               phase = "late")
 nps <- rbind(np.e, np.m, np.l)
 
+
+# # THIS NEEDS TO BE INCLUDED
+# # this predictions reflect all possible observations of local and landscape density. 
+# # not all though are observed in all phases. In the graphs, I want to make a distinction
+# # between what's observed (based on the range of local and landscape density in
+# # each phase) and what's extrapolated (outside of those ranges)
+# eloc.range <- range(data.early$loc_density, na.rm = T)
+# eland.range <- range(data.early$land_density, na.rm = T)
+# mloc.range <- range(data.mid$loc_density, na.rm = T)
+# mland.range <- range(data.mid$land_density, na.rm = T)
+# lloc.range <- range(data.late$loc_density, na.rm = T)
+# lland.range <- range(data.late$land_density, na.rm = T)
+
 # Distance
 juv_dist_plot <- dens %>%
   add_column(early = exp(predict(e.natal.dist, newdata = dens, re.form = ~ 0)),
@@ -383,7 +396,7 @@ ggplot(nps, aes(x = loc_density, y = preds, group = phase)) +
 
 # Distance
 ggplot(data = juv_dist_plot, aes(x = loc_density)) +
-  geom_jitter(data = data, aes(y = jitter(dist_natal)), alpha = 0.1, shape = 1, height = 0.001) +
+  geom_point(data = data, aes(y = dist_natal), alpha = 0.1, shape = 1, height = 0.001) +
   geom_line(aes(y = d_juvd, col = phase), size = 1.2) +
   scale_color_manual(values = c(col.early, col.mid, col.late)) +
   ylab("natal dispersal distance (m)") + xlab("local density (n/m)") +
