@@ -102,21 +102,15 @@ orig_outputs <- orig_outputs %>%
 orig_outputs
 
 # plotting selected outputs
-which_to_show <- outputs
+plot_IPM_outputs(orig_outputs, which_to_show = outputs, y_spacing = 10, n_cols = 4)
 
-# show_IPM_outputs
+# saving plot
+selected <- c("final_front_position", "initial_front_speed", "final_front_speed",
+              "avg_front_speed", "acceleration_est_front", "final_max_density")
 
-plops <- list()
-for (i in 1:length(which_to_show)){
-  plops[[i]] <- assign(paste("p", i, sep = ""), 
-           ggplot(orig_outputs %>% filter(output == which_to_show[i]), aes(x = phase)) +
-           geom_point(aes(y = value, col = phase)) +
-           scale_color_manual(values = c(Cols)) + 
-           theme(legend.position = "none") +
-           ggtitle(which_to_show[i]))
-}
-gridExtra::grid.arrange(grobs = plops, ncol = 4)
-
+pdf(file = file.path(here::here(), "results", "Outputs.pdf"), width = 6, height = 5)
+plot_IPM_outputs(orig_outputs, which_to_show = selected, y_spacing = 10, n_cols = 3)
+dev.off()
 ```
 
 ### Plotting perturbation results
