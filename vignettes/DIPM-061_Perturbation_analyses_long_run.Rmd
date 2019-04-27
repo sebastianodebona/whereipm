@@ -72,7 +72,7 @@ quick.plot(phasesIPMs$IPMs[[3]], "End")
 
 I am here plotting the output variables from the three IPMs.
 
-```{r, fig.height = 12}
+```{r, fig.height=5}
 # obtaining the original values for output variables:
 phasesIPMs <- phasesIPMs %>%
   mutate(
@@ -92,21 +92,31 @@ orig_outputs <- phasesIPMs %>%
   t() %>%
   as.data.frame()
 colnames(orig_outputs) <- outputs
-rownames(orig_outputs) <- unlist(phasesIPMs$phase)
+# adding column defining phase and reshaping to long
+orig_outputs <- orig_outputs %>%
+  add_column(phase = unlist(phasesIPMs$phase)) %>%
+  mutate(phase = factor(phase, levels = c("early", "mid", "late"))) %>%
+  gather(key = "output", value = "value", -phase)
 
 # checking
 orig_outputs
 
-# looping the plot
-par(mfrow = c(round(length(outputs)/3), 3))
-for(i in 1:dim(orig_outputs)[2]){
-  plot(orig_outputs[[i]], type='l', main = colnames(orig_outputs)[i], xlim = c(0.7, 3.3),
-     xaxt = 'n', ylab = '', xlab = '', las = 1)
-  axis(1, at = 1:3, labels = c('Initial', 'Middle', 'End'), las=1)
-  points(orig_outputs[[i]], col = Cols, pch=19, cex = 1.5)
-  text(1:3 + 0.1, orig_outputs[[i]], 
-     labels = round(as.numeric(orig_outputs[[i]]), 2), cex = 1)
+# plotting selected outputs
+which_to_show <- outputs
+
+# show_IPM_outputs
+
+plops <- list()
+for (i in 1:length(which_to_show)){
+  plops[[i]] <- assign(paste("p", i, sep = ""), 
+           ggplot(orig_outputs %>% filter(output == which_to_show[i]), aes(x = phase)) +
+           geom_point(aes(y = value, col = phase)) +
+           scale_color_manual(values = c(Cols)) + 
+           theme(legend.position = "none") +
+           ggtitle(which_to_show[i]))
 }
+gridExtra::grid.arrange(grobs = plops, ncol = 4)
+
 ```
 
 ### Plotting perturbation results
