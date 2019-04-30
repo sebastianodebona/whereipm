@@ -124,10 +124,19 @@ First, loading the perturbation results and rearranging the format to make it ea
 ```{r}
 # For ease of plotting, handling the array t make it a single data.frame with outputs for columns and parameters for rows
 
+# first, though, reproduction probability is upside down, since here we're modelling the
+# probability to NOT produce any offspring. I'll flip it for convenience.
+
+perturbationResults[,'r.int',] = - perturbationResults[,'r.int',]
+
 pResults <- aperm(perturbationResults, perm = c(2,1,3))
 pResults <- data.frame(apply(pResults, 2, c),
                        expand.grid(dimnames(perturbationResults)[c(2,3)]))
 colnames(pResults)[(ncol(pResults)-1):ncol(pResults)] <- c("params", "phase")
+
+# reproduction probability is upside down, since here we're modelling the probability 
+# to NOT produce any offspring. I'll flip it for convenience.
+
 
 # creating a vector of better names for parameteres
 paramnames <- c('survival (int)', 'survival (slo)',
@@ -150,5 +159,28 @@ print(p + theme(axis.text.x = element_text(angle = 0)) +
   scale_x_discrete(labels = paramnames) +
   ggtitle(as.character(i)))
 }
+
+## saving key outputs in a single figure
+pResults_long <- pResults %>%
+  select(final_front_position, avg_front_speed, acceleration_est_front, final_max_density, 
+         params, phase) %>%
+  gather(key = "output", value = "p_change", -c(params, phase)) %>%
+  mutate(output = str_replace_all(output, c("final_front_position" = "front position",
+                           "avg_front_speed" = "speed (avg)",
+                           "acceleration_est_front" = "acceleration",
+                           "final_max_density" = "max local density")),
+         output = factor(output, levels = c("front position", "speed (avg)", "acceleration", "max local density")))
+
+pdf(file = file.path(here::here(), "results", "Perturbations.pdf"), width = 9, height = 4)
+ggplot(data = pResults_long, aes_string(x = "params", y = "p_change", fill = "phase"))+
+  geom_bar(stat = "identity", width = 0.8, position = position_dodge()) +
+  scale_fill_manual(values = Cols) +
+  ylab("proportional change") + xlab("modified parameter") +
+  coord_flip() +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 0), axis.text = element_text(size = rel(0.6)), strip.text.x = element_text(size = rel(1.3))) +
+  scale_x_discrete(labels = paramnames) +
+  facet_grid( ~ output)
+dev.off()
 ```
 
