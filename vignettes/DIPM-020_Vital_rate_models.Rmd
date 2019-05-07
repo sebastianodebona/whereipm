@@ -104,7 +104,8 @@ survival_plot <- dens %>%
   add_column(early = plogis(predict(e.survival, newdata = dens, re.form = ~ 0)),
              mid = plogis(predict(m.survival, newdata = dens, re.form = ~ 0)),
              late = plogis(predict(l.survival, newdata = dens, re.form = ~ 0))) %>%
-  gather(key = "phase", value = "p_surv", -c(loc_density, s_loc_density))
+  gather(key = "phase", value = "p_surv", -c(loc_density, s_loc_density)) %>%
+  mutate(phase = factor(phase, levels = c("early", "mid", "late")))
             
 ggplot(data = survival_plot, aes(x = loc_density)) +
   geom_jitter(data = data, aes(y = jitter(survival)), alpha = 0.1, shape = 1, height = 0.001) +
@@ -165,7 +166,8 @@ reproduction_plot <- dens %>%
                   Coefs = summary(l.recruit)$coefficients$zi, 
                   scalingValue = scalingAttr$loc_density$scale,
                   link = "logit")) %>%
-  gather(key = "phase", value = "p_repr", -c(loc_density, s_loc_density))
+  gather(key = "phase", value = "p_repr", -c(loc_density, s_loc_density)) %>%
+  mutate(phase = factor(phase, levels = c("early", "mid", "late")))
 
 offspring_plot <- dens %>%
   add_column(early = predictGLMM(x = dens$loc_density, 
@@ -180,7 +182,8 @@ offspring_plot <- dens %>%
                   Coefs = summary(l.recruit)$coefficients$cond, 
                   scalingValue = scalingAttr$loc_density$scale,
                   link = "truncated-pois")) %>%
-  gather(key = "phase", value = "n_off", -c(loc_density, s_loc_density))
+  gather(key = "phase", value = "n_off", -c(loc_density, s_loc_density)) %>%
+  mutate(phase = factor(phase, levels = c("early", "mid", "late")))
 
 # plotting
 ggplot(data = reproduction_plot, aes(x = loc_density)) +
@@ -260,7 +263,8 @@ ad_prob_plot <- dens %>%
   add_column(early = plogis(predict(e.dispersal.p, newdata = dens, re.form = ~ 0)),
              mid = plogis(predict(m.dispersal.p, newdata = dens, re.form = ~ 0)),
              late = plogis(predict(l.dispersal.p, newdata = dens, re.form = ~ 0))) %>%
-  gather(key = "phase", value = "p_add", -c(loc_density, s_loc_density))
+  gather(key = "phase", value = "p_add", -c(loc_density, s_loc_density)) %>%
+  mutate(phase = factor(phase, levels = c("early", "mid", "late")))
 
 # Distance
 # dd.e <- predictGLMM(x = dens$loc_density, 
@@ -271,7 +275,8 @@ ad_dist_plot <- dens %>%
   add_column(early = exp(predict(e.dispersal.dist, newdata = dens, re.form = ~ 0)),
              mid = exp(predict(m.dispersal.dist, newdata = dens, re.form = ~ 0)),
              late = exp(predict(l.dispersal.dist, newdata = dens, re.form = ~ 0))) %>%
-  gather(key = "phase", value = "d_add", -c(loc_density, s_loc_density))
+  gather(key = "phase", value = "d_add", -c(loc_density, s_loc_density)) %>%
+  mutate(phase = factor(phase, levels = c("early", "mid", "late")))
 
 
 
@@ -397,7 +402,8 @@ juv_dist_plot <- dens %>%
   add_column(early = exp(predict(e.natal.dist, newdata = dens, re.form = ~ 0)),
              mid = exp(predict(m.natal.dist, newdata = dens, re.form = ~ 0)),
              late = exp(predict(l.natal.dist, newdata = dens, re.form = ~ 0))) %>%
-  gather(key = "phase", value = "d_juvd", -c(loc_density, s_loc_density))
+  gather(key = "phase", value = "d_juvd", -c(loc_density, s_loc_density)) %>%
+  mutate(phase = factor(phase, levels = c("early", "mid", "late")))
 
 
 # plots
