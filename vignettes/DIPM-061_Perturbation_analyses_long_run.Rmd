@@ -47,20 +47,17 @@ Cols <- wesanderson::wes_palette("Darjeeling1", 3, type = "discrete")
 plotly::plot_ly(x=1:ncol(phasesIPMs$IPMs[[1]]$pop.size), 
                 y=rev(phasesIPMs$IPMs[[1]]$kernel.params$y), 
                 z=phasesIPMs$IPMs[[1]]$pop.size, 
-                type="contour", 
-                colorscale = 'Jet')
+                type="contour")
 # Mid phase
 plotly::plot_ly(x=1:ncol(phasesIPMs$IPMs[[2]]$pop.size), 
                 y=rev(phasesIPMs$IPMs[[2]]$kernel.params$y), 
                 z=phasesIPMs$IPMs[[2]]$pop.size, 
-                type="contour", 
-                colorscale = 'Jet')
+                type="contour")
 # Late phase
 plotly::plot_ly(x=1:ncol(phasesIPMs$IPMs[[3]]$pop.size), 
                 y=rev(phasesIPMs$IPMs[[3]]$kernel.params$y), 
                 z=phasesIPMs$IPMs[[3]]$pop.size, 
-                type="contour", 
-                colorscale = 'Jet')
+                type="contour")
 
 
 quick.plot(phasesIPMs$IPMs[[1]], "Init")
