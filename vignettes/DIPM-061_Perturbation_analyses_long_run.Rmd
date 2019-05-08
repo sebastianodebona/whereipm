@@ -69,7 +69,43 @@ quick.plot(phasesIPMs$IPMs[[3]], "End")
 
 I am here plotting the output variables from the three IPMs.
 
-```{r, fig.height=5}
+First, we can compare the entire progress of the invasion among the different phases.
+
+```{r, fig.height = 8}
+# extracting and storing IPM info
+phasesIPMs <- phasesIPMs %>%
+  mutate(front = map(IPMs, function(x){x[["front"]]}),
+         speed = map(IPMs, function(x){c(x[["speed_front"]], NA, NA)}),
+         lambda = map(IPMs, function(x){c(x[["lambdas"]], NA, NA)}))
+
+toplot <- data.frame(phase = rep(unlist(phasesIPMs$phase),
+                                 each = phasesIPMs$IPMs[[1]]$n.iterations+1),
+                     time = 1:(phasesIPMs$IPMs[[1]]$n.iterations+1),
+                     front = unlist(phasesIPMs$front),
+                     speed = unlist(phasesIPMs$speed),
+                     lambda = unlist(phasesIPMs$lambda)) %>%
+  mutate(phase = factor(phase, levels = c("early", "mid", "late")))
+
+f <- ggplot(toplot, aes(x = time, y = front, group = phase)) +
+  geom_line(aes(col = phase)) + 
+  ggtitle("Front advance") + ylab("front position (m)") +
+  scale_color_manual(values = Cols)
+
+s <- ggplot(toplot, aes(x = time, y = speed, group = phase)) +
+  geom_line(aes(col = phase)) + 
+  ggtitle("Speed of the front") + ylab("speed (m/month)") +
+  scale_color_manual(values = Cols)
+
+l <- ggplot(toplot, aes(x = time, y = lambda, group = phase)) +
+  geom_line(aes(col = phase)) + 
+  ggtitle("Population growth rate") + ylab(expression(lambda)) +
+  scale_color_manual(values = Cols)
+
+gridExtra::grid.arrange(f, s, l, ncol =1)
+```
+
+
+```{r, fig.height=8}
 # obtaining the original values for output variables:
 phasesIPMs <- phasesIPMs %>%
   mutate(
@@ -80,7 +116,7 @@ phasesIPMs <- phasesIPMs %>%
       }
       ))
 
-# extracting original parameters and reading them for plotting
+# extracting original parameters and readying them for plotting
 orig_outputs <- phasesIPMs %>%
   select(orig.output) %>%
   pull() %>%
