@@ -64,8 +64,8 @@ runIPM <- function(kernel.params, vital.params, init.pop, niter=10,
   }
   
   # claculating speed at each time step, acceleration and lambda
-  speed_front <- (front[2:niter] - front[1:(niter-1)])/1
-  speed_pioneer <- (pioneer[2:niter] - pioneer[1:(niter-1)])/1
+  speed_front <- (front[2:niter + 1] - front[1:(niter)])/1
+  speed_pioneer <- (pioneer[2:niter + 1] - pioneer[1:(niter)])/1
 
   # acceleration
   acceleration_tot_front <- (speed_front[max(which(!is.na(speed_front)))] -
@@ -100,7 +100,7 @@ runIPM <- function(kernel.params, vital.params, init.pop, niter=10,
 
   
   # lambdas
-  lambdas <- colSums(pop.size)[2:niter]/colSums(pop.size)[1:(niter-1)]
+  lambdas <- colSums(pop.size)[2:niter + 1]/colSums(pop.size)[1:(niter)]
   lambda_avg = mean(lambdas)
   
   # more outputs
