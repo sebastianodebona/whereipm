@@ -271,9 +271,6 @@ quick.plot(IPM.mid, "Mid")
 quick.plot(IPM.late, 'Late')
 ```
 
-The results underline how the lack of enough reproduction leads the population to extinction, invariably. I need to address this by inflating artificially the number of offspring produced. This is due to the fact many individuals don't have assigned maternity and therefore won't be accounted for in the GLMM models (individuals are recruited only if assigned to a mother)
-
-
 
 ### Storing results
 
