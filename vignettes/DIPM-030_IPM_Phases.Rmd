@@ -210,7 +210,7 @@ tab <- tibble("parameters" = names(vp.early),
                   "early phase" = as.numeric(unlist(vp.early)),
                   "mid phase" = as.numeric(unlist(vp.mid)),
                   "late phase" = as.numeric(unlist(vp.late)))
-knitr::kable(tab, digits = 2, col.names = c("Parameters", "Early", "Mid", "Late"), caption = "Comparison of vital rates among phases")
+knitr::kable(tab, digits = 3, col.names = c("Parameters", "Early", "Mid", "Late"), caption = "Comparison of vital rates among phases")
 ```
 
 ## Running the IPM model
