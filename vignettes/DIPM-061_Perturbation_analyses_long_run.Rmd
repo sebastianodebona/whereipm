@@ -71,7 +71,7 @@ I am here plotting the output variables from the three IPMs.
 
 First, we can compare the entire progress of the invasion among the different phases.
 
-```{r, fig.height = 8}
+```{r}
 # extracting and storing IPM info
 phasesIPMs <- phasesIPMs %>%
   mutate(front = map(IPMs, function(x){x[["front"]]}),
@@ -80,7 +80,7 @@ phasesIPMs <- phasesIPMs %>%
 
 toplot <- data.frame(phase = rep(unlist(phasesIPMs$phase),
                                  each = phasesIPMs$IPMs[[1]]$n.iterations+1),
-                     time = 1:(phasesIPMs$IPMs[[1]]$n.iterations+1),
+                     time = as.factor(1:(phasesIPMs$IPMs[[1]]$n.iterations+1) - 1),
                      front = unlist(phasesIPMs$front),
                      speed = unlist(phasesIPMs$speed),
                      lambda = unlist(phasesIPMs$lambda)) %>%
@@ -88,20 +88,25 @@ toplot <- data.frame(phase = rep(unlist(phasesIPMs$phase),
 
 f <- ggplot(toplot, aes(x = time, y = front, group = phase)) +
   geom_line(aes(col = phase)) + 
-  ggtitle("Front advance") + ylab("front position (m)") +
+  ggtitle("Front advance") + ylab("front position (m)") + 
+  theme(legend.position = "none") +
   scale_color_manual(values = Cols)
 
 s <- ggplot(toplot, aes(x = time, y = speed, group = phase)) +
   geom_line(aes(col = phase)) + 
   ggtitle("Speed of the front") + ylab("speed (m/month)") +
+  theme(legend.position = "none") +
   scale_color_manual(values = Cols)
 
 l <- ggplot(toplot, aes(x = time, y = lambda, group = phase)) +
   geom_line(aes(col = phase)) + 
   ggtitle("Population growth rate") + ylab(expression(lambda)) +
+  theme(legend.position = c(0.94,0.5), legend.title=element_blank()) +
   scale_color_manual(values = Cols)
 
+png(file.path(here::here(), "results", "Figure1.png"), width = 8, height = 7, unit = "in", res = 200)
 gridExtra::grid.arrange(f, s, l, ncol =1)
+dev.off()
 ```
 
 
