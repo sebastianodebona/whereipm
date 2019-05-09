@@ -107,12 +107,13 @@ survival_plot <- dens %>%
   gather(key = "phase", value = "p_surv", -c(loc_density, s_loc_density)) %>%
   mutate(phase = factor(phase, levels = c("early", "mid", "late")))
             
-ggplot(data = survival_plot, aes(x = loc_density)) +
+s <- ggplot(data = survival_plot, aes(x = loc_density)) +
   geom_jitter(data = data, aes(y = jitter(survival)), alpha = 0.1, shape = 1, height = 0.001) +
-  geom_line(aes(y = p_surv, col = phase), size = 1.2) + ylim(0,1) +
+  geom_line(aes(y = p_surv, col = phase), size = 0.8) + ylim(0,1) +
   scale_color_manual(values = c(col.early, col.mid, col.late)) +
   ylab("survival (p)") + xlab("local density (n/m)") +
   ggtitle("Survival probability")
+s
 ```
 
 ### Recruitment
@@ -186,20 +187,35 @@ offspring_plot <- dens %>%
   mutate(phase = factor(phase, levels = c("early", "mid", "late")))
 
 # plotting
-ggplot(data = reproduction_plot, aes(x = loc_density)) +
+r <- ggplot(data = reproduction_plot, aes(x = loc_density)) +
   geom_jitter(data = data, aes(y = jitter(as.numeric(recruited != 0))), alpha = 0.1, shape = 1, height = 0.001) +
-  geom_line(aes(y = p_repr, col = phase), size = 1.2) + ylim(0,1) +
+  geom_line(aes(y = p_repr, col = phase), size = 0.8) + ylim(0,1) +
   scale_color_manual(values = c(col.early, col.mid, col.late)) +
   ylab("reproduction (p)") + xlab("local density (n/m)") +
   ggtitle("Reproduction probability")
 
-ggplot(data = offspring_plot, aes(x = loc_density)) +
+o <- ggplot(data = offspring_plot, aes(x = loc_density)) +
   geom_jitter(data = data%>%filter(recruited>0), 
               aes(y = jitter(recruited)), alpha = 0.5, shape = 1, height = 0.001) +
-  geom_line(aes(y = n_off, col = phase), size = 1.2) + ylim(1,7) +
+  geom_line(aes(y = n_off, col = phase), size = 0.8) + ylim(1,7) +
   scale_color_manual(values = c(col.early, col.mid, col.late)) +
   ylab("offspring (n)") + xlab("local density (n/m)") +
   ggtitle("Offspring number")
+
+r
+o
+```
+
+Saving plot of survival and reproduction
+
+```{r}
+s <- s + xlab("") + theme(legend.position = "none")
+r <- r + theme(legend.position = "none")
+o <- o + xlab("")
+
+png(file.path(here::here(), "results", "FigureSM1.png"), width = 9, height = 4, unit = "in", res = 200)
+gridExtra::grid.arrange(s, r, o, ncol = 3, widths = c(0.8,0.8,1))
+dev.off()
 ```
 
 ### Adult dispersal
@@ -281,19 +297,27 @@ ad_dist_plot <- dens %>%
 
 
 # plots
-ggplot(data = ad_prob_plot, aes(x = loc_density)) +
-  geom_jitter(data = data, aes(y = jitter(p_moving)), alpha = 0.1, shape = 1, height = 0.001) +
-  geom_line(aes(y = p_add, col = phase), size = 1.2) + ylim(0,1) +
+ap <- ggplot(data = ad_prob_plot, aes(x = loc_density)) +
+  geom_jitter(data = data, aes(y = jitter(p_moving)), alpha = 0.1, shape = 1) +
+  geom_line(aes(y = p_add, col = phase), size = 0.8) + ylim(0,1) +
   scale_color_manual(values = c(col.early, col.mid, col.late)) +
   ylab("adult dispersal (p)") + xlab("local density (n/m)") +
   ggtitle("Adult dispersal probability")
 
-ggplot(data = ad_dist_plot, aes(x = loc_density)) +
-  geom_point(data = data, aes(y = dist_moved), alpha = 0.1, shape = 1, height = 0.001) +
-  geom_line(aes(y = d_add, col = phase), size = 1.2) +
+ad <- ggplot(data = ad_dist_plot, aes(x = loc_density)) +
+  geom_point(data = data, aes(y = dist_moved), alpha = 0.1, shape = 1) +
+  geom_line(aes(y = d_add, col = phase), size = 0.8) +
   scale_color_manual(values = c(col.early, col.mid, col.late)) +
   ylab("adult dispersal distance (m)") + xlab("local density (n/m)") +
   ggtitle("Adult dispersal distance")
+
+ap <- ap + theme(legend.position = "none") + xlab("")
+ad <- ad + xlab("")
+gridExtra::grid.arrange(ap, ad, ncol = 2, bottom = "local density (individuals/m)", padding = unit(1, "line"), widths = c(0.9, 1))
+
+png(file.path(here::here(), "results", "FigureSM2.png"), width = 7, height = 4, units = "in", res = 200)
+gridExtra::grid.arrange(ap, ad, ncol = 2, bottom = "local density (individuals/m)", padding = unit(1, "line"), widths = c(0.9, 1))
+dev.off()
 ```
 
 ### Natal dispersal probability
@@ -407,17 +431,22 @@ juv_dist_plot <- dens %>%
 
 
 # plots
-ggplot(npss %>% filter(!observed), aes(x = loc_density, y = preds, group = phase)) +
+np <- ggplot(npss %>% filter(!observed), aes(x = loc_density, y = preds, group = phase)) +
   geom_line(aes(colour = phase), linetype = 2) +
   geom_line(data = npss %>% filter(observed), aes(colour = phase), linetype = 1) +
   scale_color_manual(values = c(col.early, col.mid, col.late)) +
   scale_x_continuous(breaks = c(0, 20, 40)) +
   facet_grid(phase ~ land_density) +
+  ylab("probability") + xlab("local density (individuals/m)")
   ggtitle("Natal dispersal probability")
+np
+png(file.path(here::here(), "results", "FigureSM3.png"), width = 7, height = 4, units = "in", res = 200)
+np
+dev.off()
 
 # Distance
 ggplot(data = juv_dist_plot, aes(x = loc_density)) +
-  geom_point(data = data, aes(y = dist_natal), alpha = 0.1, shape = 1, height = 0.001) +
+  geom_point(data = data, aes(y = dist_natal), alpha = 0.1, shape = 1) +
   geom_line(aes(y = d_juvd, col = phase), size = 1.2) +
   scale_color_manual(values = c(col.early, col.mid, col.late)) +
   ylab("natal dispersal distance (m)") + xlab("local density (n/m)") +
