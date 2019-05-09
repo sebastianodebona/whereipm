@@ -20,7 +20,8 @@ perturb <- function(orig.IPM, epsilon, par, outputs){
   init.pop <- orig.IPM$pop.size[,1]
   
   # modifying the chosen parameter
-  vital.params[[par]] <- vital.params[[par]] + epsilon*vital.params[[par]]
+  # the parameter is always INCREASED by epsilon*100 % of its original value.
+  vital.params[[par]] <- vital.params[[par]] + abs(epsilon*vital.params[[par]])
   
   # running IPM
   perturb.IPM <- runIPM(kernel.params = kernel.params,
