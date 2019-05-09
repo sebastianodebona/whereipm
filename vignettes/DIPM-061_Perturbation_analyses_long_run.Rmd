@@ -227,3 +227,21 @@ ggplot(data = pResults_long, aes_string(x = "params", y = "p_change", fill = "ph
 dev.off()
 ```
 
+Here, I re-run the linear models used to estimate acceleration.
+
+```{r}
+t <- 1:(phasesIPMs$IPMs[[1]]$n.iterations)
+
+# early phase
+early.front <- phasesIPMs$IPMs[[1]]$front[-1]
+summary(lm(early.front ~ t + I(t^2)))
+
+# mid phase
+mid.front <- phasesIPMs$IPMs[[2]]$front[-1]
+summary(lm(mid.front ~ t + I(t^2)))
+
+# late phase
+late.front <- phasesIPMs$IPMs[[3]]$front[-1]
+summary(lm(late.front ~ t + I(t^2)))
+```
+
