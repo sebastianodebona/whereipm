@@ -26,11 +26,11 @@ library(tidyverse)
 
 # IPM models
 phasesIPMs <- readRDS(file.path(here::here(), "results_tokeep",
-                                "K2000x12_lambda1_20190508",
-                                "phaseModelsIPMs_K2000x12_lamb1_0508.rds"))
+                                "K2000x12_lambda1_20190509",
+                                "phaseModelsIPMs_K2000x12_lamb1_0509.rds"))
 perturbationResults <- readRDS(file.path(here::here(), "results_tokeep",
-                                         "K2000x12_lambda1_20190508",
-                                       "perturbation_result_phase_models_K2000x12_lamb1_0508.rds"))
+                                         "K2000x12_lambda1_20190509",
+                                       "perturbation_result_phase_models_K2000x12_lamb1_0509.rds"))
 # extracting output list
 outputs <- rownames(perturbationResults)
 
