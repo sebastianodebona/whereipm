@@ -21,6 +21,7 @@ Below, I load packages, model outputs and stored vital parameters.
 ```{r}
 library(whereipm)
 library(tidyverse)
+library(furrr)
 
 # loading model outputs (also containing vital params)
 phasesIPMs <- readRDS(file.path(here::here(), "results", "phaseModelsIPMs.rds"))
@@ -80,8 +81,10 @@ perturbationResults[,,1]
 I will save each of the perturbed IPM in case they are needed later on. So here I will expand on the `phasesIPM` tibble, adding one column per perturbed parameter.
 
 ```{r}
-perturbed_phasesIPMs <- phasesIPMs %>%
-  add_column(!!!set_names(as.list(rep(NA, length(params))),nm=params))
+perturbed_phasesIPMs <- phasesIPMs
+for(i in params){
+  perturbed_phasesIPMs[[i]] <- as.list(rep(NA, length(phases)))
+}
 ```
 
 Finally, I am picking some colours for later plotting.
@@ -113,20 +116,43 @@ phasesIPMs %>%
 # so this estimate is on the low range.
 ```
 
-Being warned of the possibly long runtime, I can move on to the simulations:
+Being warned of the possibly long runtime, I can move on to the simulations.
+The setup allows to run the process on multiple cores, to shorten the runtime.
 
 ```{r}
+# creating a tibble of indices
 start <- Sys.time()
-for(I in 1:length(phases)){
-  for(j in 1:length(params)){
-    temp <- perturb(orig.IPM = phases[[I]],
-                    epsilon = 0.01,
-                    par = params[j],
-                    outputs = outputs)
-    perturbationResults[, params[[j]], I] <- unlist(temp$deltas)
-    perturbed_phasesIPMs[I , params[j]] <- list(list(temp$newIPM))
-  }
-}
+run <- expand.grid(I = 1:length(phases),
+                   j = 1:length(params))
+
+plan(multisession)
+run <- run %>%
+  mutate(temp = furrr::future_map2(I, j, 
+                            function(phase.index, param.index){
+                              perturb(orig.IPM = phases[[phase.index]],
+                                      epsilon = 0.01,
+                                      par = params[param.index],
+                                      outputs = outputs)
+                            }))
+
+invisible(pmap(list(run$I, run$j, run$temp), 
+     function(phase.index, param.index, object){
+       perturbationResults[, params[param.index], phase.index] <<- unlist(object$delta)
+       perturbed_phasesIPMs[[params[param.index]]][[phase.index]] <<- object$newIPM
+     }))
+
+
+# start <- Sys.time()
+# for(I in 1:length(phases)){
+#   for(j in 1:length(params)){
+#     temp <- perturb(orig.IPM = phases[[I]],
+#                     epsilon = 0.01,
+#                     par = params[j],
+#                     outputs = outputs)
+#     perturbationResults[, params[[j]], I] <- unlist(temp$deltas)
+#     perturbed_phasesIPMs[I , params[j]] <- list(list(temp$newIPM))
+#   }
+# }
 
 # how long it actually took
 Sys.time() - start
