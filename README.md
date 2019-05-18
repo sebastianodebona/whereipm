@@ -24,7 +24,7 @@ git clone git@gitlab.com:sebadebona/dispersal-ipm.git
 A preparation step is required before the analyses, and it entails installing a list of required packages. Copy-paste the following code in R or RStudio and execute:
 
 ```
-install.packages(c('tidyverse', 'plyr', 'RColorBrewer', 'lme4', 'glmmTMB', 'gridExtra', 'car', 'sticky'))
+install.packages(c('tidyverse', 'plyr', 'RColorBrewer', 'lme4', 'glmmTMB', 'gridExtra', 'car', 'sticky', 'furrr'))
 ```
 
 

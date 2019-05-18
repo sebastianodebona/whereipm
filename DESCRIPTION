@@ -16,6 +16,7 @@ BugReports: https://gitlab.com/sebadebona/dispersal-ipm/issues
 Encoding: UTF-8
 LazyData: true
 Imports: lme4,
+         furrr,
          glmmTMB,
          gridExtra,
          plotly,

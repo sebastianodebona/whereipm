@@ -11,7 +11,7 @@ installAndRender:
   stage: build
   script:
     # Install missing R packages
-    - Rscript -e 'install.packages(c("here", "distr", "lme4", "glmmTMB", "gridExtra","plyr", "sticky", "plotly", "tidyverse", "broom.mixed", "RColorBrewer", "wesanderson", "grDevices", "nlme", "stargazer", "roxygen2","car", "magick", "kable", "sjPlot"))'
+    - Rscript -e 'install.packages(c("here", "distr", "lme4", "furrr", "glmmTMB", "gridExtra","plyr", "sticky", "plotly", "tidyverse", "broom.mixed", "RColorBrewer", "wesanderson", "grDevices", "nlme", "stargazer", "roxygen2","car", "magick", "kable", "sjPlot"))'
     # Build and install our package
     - make install
     # Run pkgdown, including manuscript material preparation
