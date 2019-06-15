@@ -116,12 +116,15 @@ survival_plot <- dens %>%
   gather(key = "phase", value = "p_surv", -c(loc_density, s_loc_density)) %>%
   mutate(phase = factor(phase, levels = c("early", "mid", "late")))
             
-s <- ggplot(data = survival_plot, aes(x = loc_density)) +
-  geom_jitter(data = data, aes(y = jitter(survival)), alpha = 0.1, shape = 1, height = 0.001) +
-  geom_line(aes(y = p_surv, col = phase), size = 0.8) + ylim(0,1) +
+s <- ggplot(data = survival_plot, aes(x = loc_density, colour = phase)) +
+  geom_jitter(data = data %>% filter(!is.na(phase)),
+              aes(y = jitter(survival), colour = phase),
+              alpha = 0.1, shape = 1, height = 0.001) +
+  geom_line(aes(y = p_surv), size = 0.8) + ylim(0,1) +
   scale_color_manual(values = c(col.early, col.mid, col.late)) +
   ylab("survival (p)") + xlab("local density (n/m)") +
-  ggtitle("Survival probability")
+  ggtitle("Survival probability") +
+  theme_bw()
 s
 ```
 
@@ -196,20 +199,25 @@ offspring_plot <- dens %>%
   mutate(phase = factor(phase, levels = c("early", "mid", "late")))
 
 # plotting
-r <- ggplot(data = reproduction_plot, aes(x = loc_density)) +
-  geom_jitter(data = data, aes(y = jitter(as.numeric(recruited != 0))), alpha = 0.1, shape = 1, height = 0.001) +
-  geom_line(aes(y = p_repr, col = phase), size = 0.8) + ylim(0,1) +
+r <- ggplot(data = reproduction_plot, aes(x = loc_density, colour = phase)) +
+  geom_jitter(data = data %>% filter (!is.na(phase)), 
+              aes(y = jitter(as.numeric(recruited != 0)), colour = phase), 
+              alpha = 0.1, shape = 1, height = 0.001) +
+  geom_line(aes(y = p_repr), size = 0.8) + ylim(0,1) +
   scale_color_manual(values = c(col.early, col.mid, col.late)) +
-  ylab("reproduction (p)") + xlab("local density (n/m)") +
-  ggtitle("Reproduction probability")
+  ylab("reproduction (p)") + xlab("local density (individuals/m)") +
+  ggtitle("Reproduction probability") +
+  theme_bw()
 
-o <- ggplot(data = offspring_plot, aes(x = loc_density)) +
-  geom_jitter(data = data%>%filter(recruited>0), 
-              aes(y = jitter(recruited)), alpha = 0.5, shape = 1, height = 0.001) +
+o <- ggplot(data = offspring_plot, aes(x = loc_density, colour = phase)) +
+  geom_jitter(data = data%>%filter(recruited>0, !is.na(phase)), 
+              aes(y = jitter(recruited), colour = phase),
+              alpha = 0.1, shape = 1, height = 0.001) +
   geom_line(aes(y = n_off, col = phase), size = 0.8) + ylim(1,7) +
   scale_color_manual(values = c(col.early, col.mid, col.late)) +
   ylab("offspring (n)") + xlab("local density (n/m)") +
-  ggtitle("Offspring number")
+  ggtitle("Offspring number") +
+  theme_bw()
 
 r
 o
@@ -222,7 +230,7 @@ s <- s + xlab("") + theme(legend.position = "none")
 r <- r + theme(legend.position = "none")
 o <- o + xlab("")
 
-png(file.path(here::here(), "results", "FigureSM1.png"), width = 9, height = 4, unit = "in", res = 200)
+jpeg(file.path(here::here(), "results", "FigureSM1.jpeg"), width = 9, height = 4, unit = "in", res = 400)
 gridExtra::grid.arrange(s, r, o, ncol = 3, widths = c(0.8,0.8,1))
 dev.off()
 ```
@@ -306,25 +314,29 @@ ad_dist_plot <- dens %>%
 
 
 # plots
-ap <- ggplot(data = ad_prob_plot, aes(x = loc_density)) +
-  geom_jitter(data = data, aes(y = jitter(p_moving)), alpha = 0.1, shape = 1) +
-  geom_line(aes(y = p_add, col = phase), size = 0.8) + ylim(0,1) +
+ap <- ggplot(data = ad_prob_plot, aes(x = loc_density, colour = phase)) +
+  geom_jitter(data = data %>% filter(!is.na(phase)),
+              aes(y = jitter(p_moving), colour = phase), alpha = 0.1, shape = 1) +
+  geom_line(aes(y = p_add), size = 0.8) + ylim(0,1) +
   scale_color_manual(values = c(col.early, col.mid, col.late)) +
   ylab("adult dispersal (p)") + xlab("local density (n/m)") +
-  ggtitle("Adult dispersal probability")
+  ggtitle("Adult dispersal probability") +
+  theme_bw()
 
-ad <- ggplot(data = ad_dist_plot, aes(x = loc_density)) +
-  geom_point(data = data, aes(y = dist_moved), alpha = 0.1, shape = 1) +
+ad <- ggplot(data = ad_dist_plot, aes(x = loc_density, colour = phase)) +
+  geom_point(data = data %>% filter(!is.na(phase)),
+             aes(y = dist_moved, colour = phase), alpha = 0.1, shape = 1) +
   geom_line(aes(y = d_add, col = phase), size = 0.8) +
   scale_color_manual(values = c(col.early, col.mid, col.late)) +
   ylab("adult dispersal distance (m)") + xlab("local density (n/m)") +
-  ggtitle("Adult dispersal distance")
+  ggtitle("Adult dispersal distance") +
+  theme_bw()
 
 ap <- ap + theme(legend.position = "none") + xlab("")
 ad <- ad + xlab("")
 gridExtra::grid.arrange(ap, ad, ncol = 2, bottom = "local density (individuals/m)", padding = unit(1, "line"), widths = c(0.9, 1))
 
-png(file.path(here::here(), "results", "FigureSM2.png"), width = 7, height = 4, units = "in", res = 200)
+jpeg(file.path(here::here(), "results", "FigureSM2.jpeg"), width = 7, height = 4, units = "in", res = 400)
 gridExtra::grid.arrange(ap, ad, ncol = 2, bottom = "local density (individuals/m)", padding = unit(1, "line"), widths = c(0.9, 1))
 dev.off()
 ```
@@ -350,6 +362,7 @@ l.natal.p <- lme4::glmer(p_natal ~ s_loc_density.mid*s_land_density.mid +
                          family = 'binomial',
                          data = subset(data.late, mummoved == 0), 
                          lme4::glmerControl(optimizer=c('bobyqa')))
+
 
 stargazer::stargazer(e.natal.p, m.natal.p, l.natal.p,
                      type = "html",
@@ -446,11 +459,11 @@ np <- ggplot(npss %>% filter(!observed), aes(x = loc_density, y = preds, group =
   scale_color_manual(values = c(col.early, col.mid, col.late)) +
   scale_x_continuous(breaks = c(0, 20, 40)) +
   facet_grid(phase ~ land_density) +
-  ylab("probability") + xlab("local density (individuals/m)")
-  ggtitle("Natal dispersal probability")
+  ylab("dispersal probability") + xlab("local density (individuals/m)") +
+  theme_bw()
 np
-png(file.path(here::here(), "results", "FigureSM3.png"), width = 7, height = 4, units = "in", res = 200)
-np
+jpeg(file.path(here::here(), "results", "FigureSM3.jpeg"), width = 7, height = 4, units = "in", res = 400)
+np + theme(legend.position = "none")
 dev.off()
 
 # Distance

@@ -2,6 +2,7 @@
 .Rhistory
 .Ruserdata
 *.png
+*.jpeg
 .Rapp.history
 man/
 sandbox/*.pdf
