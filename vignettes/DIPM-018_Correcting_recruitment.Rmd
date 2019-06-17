@@ -262,6 +262,10 @@ S <- data %>%
   left_join(survival_estimates) %>%
   filter(sampling <= 60)
 
+# saving output as a table
+# FILL IN 
+  
+
 # plotting
 ggplot(S) +
   geom_rect(aes(xmin = min(early), xmax = max(early), ymin = 0, ymax = 1), alpha = 0.01) +
@@ -276,6 +280,36 @@ ggplot(S) +
   geom_segment(aes(x = sampling, xend = sampling, y = Sur.Plow, yend = Sur.Pup), alpha = 0.3) +
   scale_colour_manual(name = 'survival', 
          values =c('black'='black','red'='red'), labels = c('estimated','observed'))
+```
+
+Here I am producing a figure for the manuscript, to show how the phases are built
+
+```{r}
+pop_size # females only!
+
+# colours for phases
+col.early <- wesanderson::wes_palette("Darjeeling1", 3)[1]
+col.mid <- wesanderson::wes_palette("Darjeeling1", 3)[2]
+col.late <- wesanderson::wes_palette("Darjeeling1", 3)[3]
+
+# plot
+p_0 <- ggplot(pop_size) +
+  geom_rect(aes(xmin = min(early), xmax = max(early), ymin = 0, ymax = 800),
+            fill = col.early, alpha = 0.01) +
+  annotate(geom = "text", label = "early", x = mean(early), y = 50) +
+  geom_rect(aes(xmin = min(mid), xmax = max(mid), ymin = 0, ymax = 800), 
+            fill = col.mid, alpha = 0.01) +
+  annotate(geom = "text", label = "mid", x = mean(mid), y = 50) + 
+  geom_rect(aes(xmin = min(late), xmax = max(late), ymin = 0, ymax = 800), 
+            fill = col.late,  alpha = 0.01) +
+  annotate(geom = "text", label = "late", x = mean(late), y = 50) +
+  geom_line(aes(x = sampling, y = n)) +
+  xlab("months since introduction") + ylab("n. of females") +
+  theme_minimal()
+
+jpeg(file = file.path(here::here(), "results", "Figure0.jpeg"), width = 6, height = 4, unit = "in", res = 400)
+p_0
+dev.off()
 ```
 
 ## Saving
