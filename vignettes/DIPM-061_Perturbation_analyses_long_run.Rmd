@@ -110,7 +110,7 @@ l <- ggplot(toplot, aes(x = time, y = lambda, group = phase)) +
         legend.background = element_rect(fill = "transparent"))
 
 
-jpeg(file.path(here::here(), "results", "Figure1.jpeg"), width = 7, height = 7, unit = "in", res = 400)
+pdf(file.path(here::here(), "results", "Figure2.jpeg"), width = 7, height = 7, unit = "in", res = 400)
 gridExtra::grid.arrange(f, s, l, ncol =1)
 dev.off()
 ```
@@ -216,7 +216,7 @@ pResults_long <- pResults %>%
          output = factor(output, levels = c("speed (avg)", "lambda (avg)")),
          params = factor(params, levels = rev(unique(pResults$params))))
 
-jpeg(file = file.path(here::here(), "results", "Figure2.jpeg"), width = 6, height = 4, unit = "in", res = 400)
+jpeg(file = file.path(here::here(), "results", "Figure3.jpeg"), width = 6, height = 4, unit = "in", res = 400)
 ggplot(data = pResults_long, aes_string(x = "params", y = "p_change", fill = "phase"))+
   geom_bar(stat = "identity", width = 0.7, position = position_dodge()) +
   scale_fill_manual(values = Cols) +

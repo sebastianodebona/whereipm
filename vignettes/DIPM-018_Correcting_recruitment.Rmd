@@ -324,7 +324,7 @@ p_0 <- ggplot(pop_size) +
   xlab("months since introduction") + ylab("n. of females") +
   theme_minimal()
 
-png(file = file.path(here::here(), "results", "Figure0.png"), width = 6, height = 4, unit = "in", res = 400)
+png(file = file.path(here::here(), "results", "Figure1.png"), width = 6, height = 4, unit = "in", res = 400)
 p_0
 dev.off()
 ```
