@@ -19,6 +19,7 @@ Loading the data and packages necessary. I am here subsetting the data for femal
 ```{r}
 library(whereipm)
 library(tidyverse)
+library(rtf)
 
 # data
 data <- ipmdata %>%
@@ -263,8 +264,24 @@ S <- data %>%
   filter(sampling <= 60)
 
 # saving output as a table
-# FILL IN 
-  
+s_table <- S %>%
+  filter(!is.na(Sur.P)) %>%
+  select(sampling, avg_S, Sur.P, Sur.Plow, Sur.Pup) %>%
+  mutate_at(2:5, funs(round(.,3))) %>%
+  add_column(left = "[",
+             right = "]",
+             mid = "-") %>%
+  mutate(Sur.Plow = str_c(left, Sur.Plow, sep = ""),
+         Sur.Pup = str_c(Sur.Pup, right, sep = ""),
+         CI = str_c(Sur.Plow, Sur.Pup, sep = " - "),
+         estimated = str_c(Sur.P, CI, sep = " ")) %>%
+  select(sampling, avg_S, estimated)
+
+# saving table
+rtffile <- RTF(file.path(here::here(), "vignettes", "Table_suppl.doc"))  # this can be an .rtf or a .doc
+addTable(rtffile, s_table)
+done(rtffile)
+
 
 # plotting
 ggplot(S) +
@@ -307,7 +324,7 @@ p_0 <- ggplot(pop_size) +
   xlab("months since introduction") + ylab("n. of females") +
   theme_minimal()
 
-jpeg(file = file.path(here::here(), "results", "Figure0.jpeg"), width = 6, height = 4, unit = "in", res = 400)
+png(file = file.path(here::here(), "results", "Figure0.png"), width = 6, height = 4, unit = "in", res = 400)
 p_0
 dev.off()
 ```
