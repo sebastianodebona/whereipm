@@ -110,7 +110,7 @@ l <- ggplot(toplot, aes(x = time, y = lambda, group = phase)) +
         legend.background = element_rect(fill = "transparent"))
 
 
-pdf(file.path(here::here(), "results", "Figure2.jpeg"), width = 7, height = 7, unit = "in", res = 400)
+png(file.path(here::here(), "results", "Figure2.png"), width = 7, height = 7, unit = "in", res = 400)
 gridExtra::grid.arrange(f, s, l, ncol =1)
 dev.off()
 ```
@@ -183,14 +183,24 @@ colnames(pResults)[(ncol(pResults)-1):ncol(pResults)] <- c("params", "phase")
 
 
 # creating a vector of better names for parameteres
-paramnames <- c('survival (int)', 'survival (slo)',
-            'repr p (int)',  'repr p (slo)',
-            'offspr n (int)',  'offspr n (slo)',
-            'ad dispersal (int)','ad dispersal (slo)',
-            'ad distance (mean)', 'ad distance (sd)',
-            'nat dispersal (int)','nat dispersal (slo)',
-            'nat dispersal (landsc)', 'nat dispersal (loc x land)',
-            'nat distance (mean)', 'nat distance (sd)')
+paramnames <- c(expression(paste('survival, ', sigma["int"])),
+                expression(paste('survival, ', sigma["slo"])),
+                expression(paste('repr. p, ', rho["int"])),
+                expression(paste('repr. p, ', rho["slo"])),
+                expression(paste('offspring n, ', phi["int"])),
+                expression(paste('offspring n, ', phi["slo"])),
+                expression(paste('ad. dispersal, ', alpha["int"])),
+                expression(paste('ad. dispersal, ', alpha["slo"])),
+                expression(paste('ad. distance, ', theta["ad"])),
+                expression(paste('ad. distance, ', tau["ad"])),
+                expression(paste('nat. dispersal, ', xi["int"])),
+                expression(paste('nat. dispersal, ', xi["d"])),
+                expression(paste('nat. dispersal, ', xi["D"])),
+                expression(paste('nat. dispersal, ', xi["dD"])),
+                expression(paste('nat. distance, ', theta["nat"])),
+                expression(paste('nat. distance, ', tau["nat"]))
+                )
+              
 
 ## plotting all outputs
 for(i in outputs){
@@ -213,24 +223,28 @@ pResults_long <- pResults %>%
   gather(key = "output", value = "p_change", -c(params, phase)) %>%
   mutate(output = str_replace_all(output, c("avg_front_speed" = "speed (avg)",
                                             "lambda_avg" = "lambda (avg)")),
-         output = factor(output, levels = c("speed (avg)", "lambda (avg)")),
+         output = factor(output, levels = c("speed (avg)", "lambda (avg)"), 
+                         labels = c("speed (avg)", expression(lambda))),
          params = factor(params, levels = rev(unique(pResults$params))))
 
-jpeg(file = file.path(here::here(), "results", "Figure3.jpeg"), width = 6, height = 4, unit = "in", res = 400)
+grid_names <- c("speed (avg)", bquote(lambda))
+
+png(file = file.path(here::here(), "results", "Figure3.png"), width = 6, height = 4, unit = "in", res = 400)
 ggplot(data = pResults_long, aes_string(x = "params", y = "p_change", fill = "phase"))+
   geom_bar(stat = "identity", width = 0.7, position = position_dodge()) +
   scale_fill_manual(values = Cols) +
   ylab("proportional change") + xlab("modified parameter") +
   coord_flip() +
   theme_minimal() + 
-  theme(axis.text.x = element_text(angle = 0), 
-        axis.text = element_text(size = rel(0.6)), 
-        strip.text.x = element_text(size = rel(1.3)), 
+  theme(axis.text.x = element_text(angle = 0),
+        axis.text = element_text(size = rel(.8)), 
+        strip.text.x = element_text(size = rel(1.3)),
+        axis.title.y = element_text(vjust=3),
         panel.grid.major.y = element_line(colour = rgb(0,0,0,.2), size = 0.2),
         panel.grid.major.x = element_blank(), panel.grid.minor = element_blank() ) +
   geom_hline(yintercept = 0, size = 0.2, colour = rgb(0,0,0,.2)) +
   scale_x_discrete(labels = rev(paramnames)) +
-  facet_grid( ~ output, scales = "free")
+  facet_grid( ~ output, scales = "free", labeller = label_parsed)
 dev.off()
 ```
 
