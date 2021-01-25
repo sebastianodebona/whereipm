@@ -48,7 +48,7 @@ For the vital parameters, I am using those obtained from the data pertaining to 
 # First I need to extract the info in the model to make it easier to handle
 Models <- vitalRateModels %>%
   transmute(
-    survival = map(survival, broom::tidy),
+    survival = map(survival, broom.mixed::tidy),
     recruit = map(recruit, broom.mixed::tidy),
     adDispersal = map(adDispersal, broom::tidy),
     adDistance = map(adDistance, broom::tidy),

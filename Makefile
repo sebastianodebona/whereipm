@@ -66,7 +66,7 @@ install: data document
 	@printf "\n"
 	@printf "$(GREEN)*** Installing package ***$(NC)\n"
 	@printf "\n"
-	Rscript -e 'devtools::install(upgrade_dependencies = FALSE)'
+	Rscript -e 'devtools::install(dependencies = "Depends", upgrade = "never")'
 	@printf "\n"
 
 ### ** clean

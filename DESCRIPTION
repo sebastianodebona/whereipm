@@ -25,5 +25,6 @@ Imports: lme4,
          sticky,
          tidyverse,
          wesanderson,
-         distr
-RoxygenNote: 6.1.1
+         distr,
+         sjPlot
+RoxygenNote: 7.1.1

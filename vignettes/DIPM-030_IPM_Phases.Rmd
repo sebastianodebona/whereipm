@@ -79,7 +79,7 @@ And we extract the vital rates parameters from the models fitted in the [Vital R
 # First I need to extract the info in the model to make it easier to handle
 Models <- vitalRateModels %>%
   transmute(
-    survival = map(survival, broom::tidy),
+    survival = map(survival, broom.mixed::tidy),
     recruit = map(recruit, broom.mixed::tidy),
     adDispersal = map(adDispersal, broom::tidy),
     adDistance = map(adDistance, broom::tidy),
@@ -90,7 +90,7 @@ Models <- vitalRateModels %>%
 # given local density is scaled (but not centered) the estimates for the slope have to be transformed back to the non-scaled value.
 
 # The percentage to which the recruitment needs to be buffed is calculated 
-# in the 'Buffing Recruitment' vignette. Here I'll add the phase, specific proportions
+# in the 'Correcting Recruitment' vignette. Here I'll add the phase-specific proportions
 buff_recruit <- c(2.86, 1.90, 2.55)
 
 # Using a general loop to do so for the three phases:

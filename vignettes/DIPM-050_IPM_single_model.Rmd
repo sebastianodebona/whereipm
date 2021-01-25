@@ -49,7 +49,7 @@ As opposed to what done previously (see [IPM Phases](DIPM-030_IPM_Phases.html)),
 # First I need to extract the info in the model to make it easier to handle
 Models <- singleVRModels %>%
   transmute(
-    survival = map(survival, broom::tidy),
+    survival = map(survival, broom.mixed::tidy),
     recruit = map(recruitment, broom.mixed::tidy),
     adDispersal = map(adDispersal, broom::tidy),
     adDistance = map(adDistance, broom::tidy),
