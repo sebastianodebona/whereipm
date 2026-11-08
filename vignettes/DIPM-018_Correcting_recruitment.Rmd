@@ -19,7 +19,7 @@ Loading the data and packages necessary. I am here subsetting the data for femal
 ```{r}
 library(whereipm)
 library(tidyverse)
-library(rtf)
+library(r2rtf)
 
 # data
 data <- ipmdata %>%
@@ -252,7 +252,7 @@ survival_estimates <- readRDS(file = file.path(here::here(), "results_tokeep", "
 sampling = rep(c(1, 3, 5, 7), 8) + rep(12*0:7, each = 4)
 
 survival_estimates %<>%
-  as.tibble() %>%
+  as_tibble() %>%
   add_column(time = rownames(survival_estimates),
              sampling = sampling)
 
@@ -278,9 +278,10 @@ s_table <- S %>%
   select(sampling, avg_S, estimated)
 
 # saving table
-rtffile <- RTF(file.path(here::here(), "vignettes", "Table_suppl.doc"))  # this can be an .rtf or a .doc
-addTable(rtffile, s_table)
-done(rtffile)
+#### NEED TO FIND A SUBSTITUTE FUNCTION
+# rtffile <- RTF(file.path(here::here(), "vignettes", "Table_suppl.doc"))  # this can be an .rtf or a .doc
+# addTable(rtffile, s_table)
+# done(rtffile)
 
 
 # plotting

@@ -34,6 +34,6 @@ makeInitPop <- function(kp, nIntro, widthIntro) {
   introPerCell <- nIntro/length(indicesIntroduction)
   init.pop <- rep(0, kp$n.bins)
   init.pop[indicesIntroduction] <- introPerCell
-  stopifnot(abs(sum(init.pop) - nIntro) < 2e-16)
+  stopifnot(paste0("Difference between seeded population and introduced one is") abs(sum(init.pop) - nIntro) < 2e-16)
   return(init.pop)
 }

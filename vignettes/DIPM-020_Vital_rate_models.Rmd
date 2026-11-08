@@ -84,17 +84,19 @@ e.survival <- lme4::glmer(survival ~ s_loc_density +
                           family=binomial,
                           lme4::glmerControl(optimizer=c('bobyqa')))
 
-m.survival <- lme4::glmer(survival ~ s_loc_density +
+m.survival <- lme4::glmer(survival ~ 1 +
                             + (1|FishID) + (1|reach)  + (s_loc_density|sampling),
                           data=data.mid,
                           family=binomial,
                           lme4::glmerControl(optimizer=c('bobyqa')))
+# s_loc_density not significant, removed from fixed factors
 
-l.survival <- lme4::glmer(survival ~ s_loc_density +
+l.survival <- lme4::glmer(survival ~ 1 +
                             + (1|FishID) + (1|reach) + (s_loc_density|sampling),
                           data=data.late,
                           family=binomial,
                           lme4::glmerControl(optimizer=c('bobyqa')))
+# s_loc_density not significant, removed from fixed factors
 
 stargazer::stargazer(e.survival, m.survival, l.survival,
                      type = "html",
@@ -162,6 +164,31 @@ sjPlot::tab_model(e.recruit, m.recruit, l.recruit,
                   dv.labels = c("Early phase", "Mid phase", "Late phase"),
                   show.ci = F)
 
+
+# local density only positively affects early phase Poisson. Intercept is set to 1 for all other models
+e.recruit <- glmmTMB::glmmTMB(recruited ~ s_loc_density +
+                                + (1|FishID) + (1|reach) + (1|sampling),
+                              ziformula = ~ 1 +
+                                + (1|FishID) +  (1|reach) + (1|sampling),
+                              family="truncated_poisson"(link="log"),
+                              data = data.early,
+                              na.action = na.omit)
+
+m.recruit <- glmmTMB::glmmTMB(recruited ~ 1 +
+                                + (1|FishID) + (1|reach) + (1|sampling),
+                              ziformula = ~ 1 +
+                                + (1|FishID) + (1|reach) + (1|sampling),
+                              family="truncated_poisson"(link="log"),
+                              data=data.mid,
+                              na.action = na.omit)
+
+l.recruit <- glmmTMB::glmmTMB(recruited ~ 1 +
+                                + (1|FishID)+ (1|reach) + (1|sampling),
+                              ziformula = ~ 1 +
+                                + (1|FishID)+ (1|reach) +  (1|sampling),
+                              family="truncated_poisson"(link="log"),
+                              data=data.late,
+                              na.action = na.omit)
 
 # plotting reproduction probability and number of offspring for the three phases, at various density values
 # Reproduction probability 
@@ -246,7 +273,8 @@ e.dispersal.p <- lme4::glmer(p_moving ~ s_loc_density +
                              data = data.early,
                              lme4::glmerControl(optimizer=c('bobyqa')))
 
-m.dispersal.p <- lme4::glmer(p_moving ~ s_loc_density +
+# density does not significantly affect dispersal in the mid phase, so the intercept is set to 1
+m.dispersal.p <- lme4::glmer(p_moving ~ 1 +
                                + (1|FishID) + (1|reach) + (s_loc_density|sampling),
                              family = 'binomial',
                              data = data.mid,
@@ -361,6 +389,40 @@ m.natal.p <- lme4::glmer(p_natal ~ s_loc_density.mid*s_land_density.mid +
 
 l.natal.p <- lme4::glmer(p_natal ~ s_loc_density.mid*s_land_density.mid +
                            + (1|Maternity) + (1|reach.birth) + (s_loc_density|sampling.birth),
+                         family = 'binomial',
+                         data = subset(data.late, mummoved == 0), 
+                         lme4::glmerControl(optimizer=c('bobyqa')))
+
+
+stargazer::stargazer(e.natal.p, m.natal.p, l.natal.p,
+                     type = "html",
+                     title = "Natal dispersal probability",
+                     report = "vcsp*",
+                     covariate.labels = c("Local density", "Landscape density",
+                                          "Local x Landscape desity"),
+                     column.labels = c("Early phase", "Mid phase", "Late phase"),
+                     dep.var.caption = "Dispersal probability",
+                     dep.var.labels = "")
+```
+
+Due to lack of convergence and significance, all models are adapted to remove non-significant factors.
+
+```{r, results = "asis"}
+# Since the DDD paper show importance of landscape density on natal dispersal, here I include it in the analyses
+e.natal.p <- lme4::glmer(p_natal ~ 1 +
+                           + (1|Maternity) + (1|reach.birth),
+                         family = 'binomial',
+                         data = subset(data.early, mummoved == 0),
+                         lme4::glmerControl(optimizer=c('bobyqa')))
+
+m.natal.p <- lme4::glmer(p_natal ~ s_loc_density.mid*s_land_density.mid +
+                           + (1|Maternity) + (1|reach.birth),
+                         family = 'binomial',
+                         data = subset(data.mid, mummoved == 0),
+                         lme4::glmerControl(optimizer=c('bobyqa')))
+
+l.natal.p <- lme4::glmer(p_natal ~ s_loc_density.mid+s_land_density.mid +
+                           + (1|Maternity) ,
                          family = 'binomial',
                          data = subset(data.late, mummoved == 0), 
                          lme4::glmerControl(optimizer=c('bobyqa')))

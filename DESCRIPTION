@@ -21,10 +21,10 @@ Imports: lme4,
          gridExtra,
          plotly,
          plyr,
-         rtf,
+         r2rtf,
          sticky,
          tidyverse,
          wesanderson,
          distr,
          sjPlot
-RoxygenNote: 7.1.1
+RoxygenNote: 7.3.3

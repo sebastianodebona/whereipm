@@ -37,7 +37,7 @@ Here we define kernel parameters and initial population size.
 
 ```{r}
 # kernel parameters
-kp <- create.kernel.params(L=-200, U=200, n.bins = 200)
+kp <- create.kernel.params(L=-1000, U=1000, n.bins = 2000)
 
 # # initial population size for all phases
 # pop0.early <- makeInitPop(kp, 
@@ -91,7 +91,8 @@ Models <- vitalRateModels %>%
 
 # The percentage to which the recruitment needs to be buffed is calculated 
 # in the 'Correcting Recruitment' vignette. Here I'll add the phase-specific proportions
-buff_recruit <- c(2.86, 1.90, 2.55)
+#buff_recruit <- c(2.86, 1.90, 2.55)
+buff_recruit <- c(3, 3, 3)
 
 # Using a general loop to do so for the three phases:
 
